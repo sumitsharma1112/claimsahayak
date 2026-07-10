@@ -29,6 +29,8 @@ describe("QuestionRenderer — arbitrary single-select question", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("heading", { name: "A totally made-up single-select question" })).toBeTruthy();
@@ -51,6 +53,8 @@ describe("QuestionRenderer — arbitrary single-select question", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(container.textContent).toBe("");
@@ -74,6 +78,8 @@ describe("QuestionRenderer — arbitrary single-select question", () => {
         answer={answer}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("button", { name: "Continue" })).toHaveProperty("disabled", true);
@@ -93,6 +99,8 @@ describe("QuestionRenderer — arbitrary single-select question", () => {
         answer={answer}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("button", { name: "Continue" })).toHaveProperty("disabled", false);
@@ -123,6 +131,8 @@ describe("QuestionRenderer — arbitrary multi-select question with an exclusive
         answer={answer}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     await user.click(screen.getByRole("checkbox", { name: "None of these" }));
@@ -144,6 +154,8 @@ describe("QuestionRenderer — hypothetical boolean question", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("radio", { name: "Yes" })).toBeTruthy();
@@ -170,6 +182,8 @@ describe("QuestionRenderer — hypothetical monthYear question", () => {
         answer={answer}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("button", { name: "Continue" })).toHaveProperty("disabled", true);
@@ -188,6 +202,8 @@ describe("QuestionRenderer — hypothetical monthYear question", () => {
         answer={answer}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByRole("button", { name: "Continue" })).toHaveProperty("disabled", false);
@@ -208,6 +224,8 @@ describe("QuestionRenderer — localization", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByText("English text")).toBeTruthy();
@@ -226,6 +244,8 @@ describe("QuestionRenderer — localization", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByText("हिन्दी पाठ")).toBeTruthy();
@@ -246,6 +266,8 @@ describe("QuestionRenderer — localization", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     expect(screen.getByText("Only English exists")).toBeTruthy();
@@ -271,6 +293,8 @@ describe("QuestionRenderer — keyboard navigation", () => {
         answer={undefined}
         onAnswer={onAnswer}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     const optionA = screen.getByRole("radio", { name: "A" });
@@ -302,6 +326,8 @@ describe("QuestionRenderer — keyboard navigation", () => {
         answer={{ kind: "single", optionId: "a" }}
         onAnswer={() => undefined}
         onContinue={onContinue}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     const continueButton = screen.getByRole("button", { name: "Continue" });

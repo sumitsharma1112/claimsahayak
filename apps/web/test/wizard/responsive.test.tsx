@@ -36,6 +36,8 @@ describe("QuestionRenderer — responsive rendering", () => {
       answer: undefined,
       onAnswer: () => undefined,
       onContinue: () => undefined,
+      onBack: () => undefined,
+      canGoBack: false,
     };
 
     setViewport(375); // mobile

@@ -3,6 +3,7 @@ import { QuestionCard } from "./QuestionCard";
 import { WhyPanel } from "./WhyPanel";
 import { OptionList, type QuestionOptionView } from "./OptionList";
 import { ContinueButton } from "./ContinueButton";
+import { PreviousButton } from "./PreviousButton";
 
 /**
  * The ONE generic renderer for every Rule Pack question, regardless of
@@ -24,6 +25,8 @@ export interface QuestionRendererProps {
   readonly answer: AnswerValue | undefined;
   readonly onAnswer: (next: AnswerValue) => void;
   readonly onContinue: () => void;
+  readonly onBack: () => void;
+  readonly canGoBack: boolean;
 }
 
 function hasCompleteAnswer(answer: AnswerValue | undefined): boolean {
@@ -53,6 +56,8 @@ export function QuestionRenderer({
   answer,
   onAnswer,
   onContinue,
+  onBack,
+  canGoBack,
 }: QuestionRendererProps) {
   if (!visible) {
     return null;
@@ -69,7 +74,10 @@ export function QuestionRenderer({
         answer={answer}
         onAnswer={onAnswer}
       />
-      <ContinueButton locale={locale} disabled={!hasCompleteAnswer(answer)} onClick={onContinue} />
+      <div className="mt-s4 flex gap-s3">
+        <PreviousButton locale={locale} disabled={!canGoBack} onClick={onBack} />
+        <ContinueButton locale={locale} disabled={!hasCompleteAnswer(answer)} onClick={onContinue} />
+      </div>
     </section>
   );
 }

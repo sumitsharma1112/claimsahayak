@@ -1,8 +1,8 @@
 import type { LocaleCode } from "@claimsahayak/shared-types";
 import { getWizardDictionary } from "@/i18n/wizard";
 
-/** Presentation only: the existing `.cs-btn-primary` shell button style. */
-export function ContinueButton({
+/** Presentation only: the existing `.cs-btn-secondary` shell button style. */
+export function PreviousButton({
   locale,
   disabled,
   onClick,
@@ -15,11 +15,11 @@ export function ContinueButton({
   return (
     <button
       type="button"
-      className="cs-btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+      className="cs-btn-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={disabled}
       onClick={onClick}
     >
-      {t.continueLabel}
+      {t.previousLabel}
     </button>
   );
 }

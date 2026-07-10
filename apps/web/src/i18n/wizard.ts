@@ -9,6 +9,7 @@ import { type LocaleCode } from "@claimsahayak/shared-types";
  */
 export interface WizardDictionary {
   readonly continueLabel: string;
+  readonly previousLabel: string;
   readonly whyToggleLabel: string;
   readonly yesLabel: string;
   readonly noLabel: string;
@@ -32,6 +33,7 @@ export interface WizardDictionary {
 
 const en: WizardDictionary = {
   continueLabel: "Continue",
+  previousLabel: "Previous",
   whyToggleLabel: "Why we ask",
   yesLabel: "Yes",
   noLabel: "No",
@@ -56,6 +58,7 @@ const en: WizardDictionary = {
 
 const hi: WizardDictionary = {
   continueLabel: "जारी रखें",
+  previousLabel: "पिछला",
   whyToggleLabel: "हम यह क्यों पूछते हैं",
   yesLabel: "हाँ",
   noLabel: "नहीं",

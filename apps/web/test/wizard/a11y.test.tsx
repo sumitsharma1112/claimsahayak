@@ -40,6 +40,8 @@ describe("a11y — wizard foundation", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     await expectNoViolations(container);
@@ -61,6 +63,8 @@ describe("a11y — wizard foundation", () => {
         answer={{ kind: "multi", optionIds: [] }}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     await expectNoViolations(container);
@@ -79,6 +83,8 @@ describe("a11y — wizard foundation", () => {
         answer={undefined}
         onAnswer={() => undefined}
         onContinue={() => undefined}
+        onBack={() => undefined}
+        canGoBack={false}
       />,
     );
     await expectNoViolations(container);
