@@ -1,0 +1,39 @@
+{
+  "name": "@claimsahayak/rule-pack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The complete, versioned Rule Pack (V3 §2.3): the ONLY location for Post Office savings death-claim business rules. Schema, authored data, validation pipeline, truth-table fixtures, and CLI. No UI, no wizard, no engine evaluator (see Milestone 3).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./validate": "./src/validate/index.ts",
+    "./fixtures": "./src/fixtures/index.ts"
+  },
+  "bin": {
+    "validate-pack": "./src/cli/validate-pack.ts",
+    "build-pack": "./src/cli/build-pack.ts",
+    "lint-pack": "./src/cli/lint-pack.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "validate-pack": "tsx src/cli/validate-pack.ts",
+    "build-pack": "tsx src/cli/build-pack.ts",
+    "lint-pack": "tsx src/cli/lint-pack.ts"
+  },
+  "dependencies": {
+    "@claimsahayak/shared-types": "workspace:*",
+    "@claimsahayak/shared-utils": "workspace:*",
+    "@claimsahayak/shared-config": "workspace:*",
+    "@claimsahayak/rule-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.7.2",
+    "vitest": "2.1.8",
+    "tsx": "4.19.2",
+    "@types/node": "20.17.10"
+  }
+}

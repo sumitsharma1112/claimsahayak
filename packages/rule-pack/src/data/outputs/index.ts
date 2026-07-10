@@ -1,0 +1,40 @@
+import type { OutputRule } from "@claimsahayak/shared-types";
+import {
+  ROUTE_A_OUTPUTS,
+  T10_EXTRA_OUTPUTS,
+  T11_EXTRA_OUTPUTS,
+  T13_EXTRA_OUTPUTS,
+  T14_EXTRA_OUTPUTS,
+  ROUTE_A_HEIRS_OF_NOMINEE_OUTPUTS,
+} from "./route-a.js";
+import { ROUTE_B_OUTPUTS } from "./route-b.js";
+import { ROUTE_C_OUTPUTS } from "./route-c.js";
+import { ROUTE_SURVIVOR_OUTPUTS } from "./survivor.js";
+import {
+  ROUTE_SSA_MINOR_OUTPUTS,
+  ROUTE_PPF_MINOR_OUTPUTS,
+  T2_GUARDIAN_CHANGE_OUTPUTS,
+} from "./minors.js";
+import { CONTINUE_ADDON_OUTPUTS } from "./continue-addon.js";
+import { PAYMENT_BANK_TRANSFER_OUTPUTS, PAYMENT_OWN_POSB_OUTPUTS } from "./payment.js";
+import { GOOD_TO_KNOW_OUTPUTS, VERIFICATION_PANEL_OUTPUTS } from "./global.js";
+
+export const OUTPUTS: readonly OutputRule[] = [
+  ...ROUTE_A_OUTPUTS,
+  ...T10_EXTRA_OUTPUTS,
+  ...T11_EXTRA_OUTPUTS,
+  ...T13_EXTRA_OUTPUTS,
+  ...T14_EXTRA_OUTPUTS,
+  ...ROUTE_A_HEIRS_OF_NOMINEE_OUTPUTS,
+  ...ROUTE_B_OUTPUTS,
+  ...ROUTE_C_OUTPUTS,
+  ...ROUTE_SURVIVOR_OUTPUTS,
+  ...ROUTE_SSA_MINOR_OUTPUTS,
+  ...ROUTE_PPF_MINOR_OUTPUTS,
+  ...T2_GUARDIAN_CHANGE_OUTPUTS,
+  ...CONTINUE_ADDON_OUTPUTS,
+  ...PAYMENT_BANK_TRANSFER_OUTPUTS,
+  ...PAYMENT_OWN_POSB_OUTPUTS,
+  ...GOOD_TO_KNOW_OUTPUTS,
+  ...VERIFICATION_PANEL_OUTPUTS,
+];

@@ -1,0 +1,10 @@
+{
+  "name": "ClaimSahayak — independent Post Office claim guide",
+  "short_name": "ClaimSahayak",
+  "description": "Prepare complete Post Office savings death-claim papers before visiting. Not an official India Post website.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F4EE",
+  "theme_color": "#14555A",
+  "icons": []
+}

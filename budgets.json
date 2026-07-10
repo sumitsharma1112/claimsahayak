@@ -1,0 +1,10 @@
+{
+  "note": "Critical-path allocation per V3 Architecture §5.3. Gate enforced from Milestone 12.",
+  "criticalPathKb": {
+    "htmlAndCss": 60,
+    "wizardAndEngineJs": 90,
+    "rulePackGzipped": 60,
+    "fontsSubset": 40
+  },
+  "lazyLoaded": ["pdf-renderer", "devanagari-fonts", "scheme-illustrations"]
+}
