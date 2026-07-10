@@ -116,3 +116,27 @@
     border: 0;
   }
 }
+
+/*
+ * Print pipeline (Milestone 4.3): no print rendering existed anywhere in
+ * the app before this. Rather than touch the frozen Header/Footer/layout
+ * to add print-hide classes to them, this uses the standard
+ * visibility-based "print just one subtree" technique — it hides
+ * everything, then re-reveals only `.cs-print-area` and its descendants,
+ * so it works regardless of where that area is nested in the page.
+ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .cs-print-area,
+  .cs-print-area * {
+    visibility: visible;
+  }
+  .cs-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

@@ -66,12 +66,17 @@ describe("Wizard navigation — forward, branch-aware, hidden-question skipping"
     expect(visible).not.toContain("q4_death_month");
     expect(visible).not.toContain("q5_nomination");
 
-    // The wizard must never render or land on any of those hidden questions —
-    // it should jump straight to the next one that's still visible.
+    // The wizard must never render or land on any of those hidden questions.
+    // T2 ("guardian") is a card-terminal route (Milestone 4.3 §4), so the
+    // wizard shows that card immediately instead of continuing to q9_payment
+    // — there's no money claim here, so asking about payment would be wrong.
     expect(screen.queryByRole("heading", { name: questionText("q3_holding") })).toBeNull();
     expect(screen.queryByRole("heading", { name: questionText("q4_death_month") })).toBeNull();
     expect(screen.queryByRole("heading", { name: questionText("q5_nomination") })).toBeNull();
-    expect(screen.getByRole("heading", { name: questionText("q9_payment") })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: questionText("q9_payment") })).toBeNull();
+    const guardianCard = RULE_PACK.cards.find((c) => c.id === "card_guardian_change");
+    if (!guardianCard) throw new Error("Fixture assumption broken: card_guardian_change missing.");
+    expect(screen.getByRole("heading", { name: guardianCard.title.en })).toBeTruthy();
   });
 
   it("advances through single/monthYear/multi question types in the pack's own authored order", async () => {

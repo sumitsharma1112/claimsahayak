@@ -92,7 +92,13 @@ describe("a11y — wizard foundation", () => {
 
   it("a11y: ResumeBanner has no axe violations", async () => {
     const { container } = render(
-      <ResumeBanner visible locale="en" onResume={() => undefined} />,
+      <ResumeBanner
+        visible
+        locale="en"
+        onResume={() => undefined}
+        onStartNew={() => undefined}
+        onClearPrevious={() => undefined}
+      />,
     );
     await expectNoViolations(container);
   });

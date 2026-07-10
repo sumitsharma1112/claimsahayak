@@ -4,6 +4,7 @@ import { WhyPanel } from "./WhyPanel";
 import { OptionList, type QuestionOptionView } from "./OptionList";
 import { ContinueButton } from "./ContinueButton";
 import { PreviousButton } from "./PreviousButton";
+import { ReadAloudButton } from "./ReadAloudButton";
 
 /**
  * The ONE generic renderer for every Rule Pack question, regardless of
@@ -65,6 +66,7 @@ export function QuestionRenderer({
   return (
     <section aria-labelledby={`question-${questionId}-heading`} className="flex flex-col gap-s3">
       <QuestionCard questionId={questionId} text={text} locale={locale} />
+      <ReadAloudButton text={text} locale={locale} />
       <WhyPanel questionId={questionId} whyText={whyText} locale={locale} />
       <OptionList
         questionId={questionId}

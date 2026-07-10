@@ -1,4 +1,4 @@
-import { type LocaleCode } from "@claimsahayak/shared-types";
+import { type CardKind, type LocaleCode } from "@claimsahayak/shared-types";
 
 /**
  * Wizard-SHELL strings only — UI chrome around the Rule-Pack-driven
@@ -20,6 +20,18 @@ export interface WizardDictionary {
   readonly resumeBannerTitle: string;
   readonly resumeBannerBody: string;
   readonly resumeBannerAction: string;
+  readonly resumeBannerStartNewAction: string;
+  readonly resumeBannerClearAction: string;
+  readonly startOverLabel: string;
+  readonly startOverConfirmTitle: string;
+  readonly startOverConfirmBody: string;
+  readonly startOverConfirmAction: string;
+  readonly startOverCancelAction: string;
+  readonly printLetterLabel: string;
+  readonly cardNextStepLabel: string;
+  readonly cardKindLabels: Readonly<Record<CardKind, string>>;
+  readonly readAloudLabel: string;
+  readonly readAloudStopLabel: string;
   readonly debugPanelTitle: string;
   readonly debugRulePackVersion: string;
   readonly debugEngineVersion: string;
@@ -41,9 +53,28 @@ const en: WizardDictionary = {
   yearLabel: "Year",
   monthYearPlaceholder: "Select",
   loadingLabel: "Loading your checklist…",
-  resumeBannerTitle: "Welcome back",
+  resumeBannerTitle: "Resume previous claim?",
   resumeBannerBody: "You have answers saved on this device from before.",
-  resumeBannerAction: "Continue where you left off",
+  resumeBannerAction: "Resume",
+  resumeBannerStartNewAction: "Start New",
+  resumeBannerClearAction: "Clear Previous",
+  startOverLabel: "Start Over",
+  startOverConfirmTitle: "Start over?",
+  startOverConfirmBody:
+    "This deletes your saved answers from this device. This can't be undone.",
+  startOverConfirmAction: "Yes, start over",
+  startOverCancelAction: "Cancel",
+  printLetterLabel: "Print Letter",
+  cardNextStepLabel: "What to do next",
+  cardKindLabels: {
+    pause: "Pause",
+    stop: "Stop",
+    wait: "Wait",
+    info: "Information",
+    dual: "Decision needed",
+  },
+  readAloudLabel: "Read question aloud",
+  readAloudStopLabel: "Stop reading",
   debugPanelTitle: "Debug panel (development only)",
   debugRulePackVersion: "Rule Pack version",
   debugEngineVersion: "Engine version",
@@ -66,9 +97,28 @@ const hi: WizardDictionary = {
   yearLabel: "वर्ष",
   monthYearPlaceholder: "चुनें",
   loadingLabel: "आपकी चेकलिस्ट लोड हो रही है…",
-  resumeBannerTitle: "वापसी पर स्वागत है",
+  resumeBannerTitle: "क्या पिछला क्लेम फिर से शुरू करें?",
   resumeBannerBody: "इस डिवाइस पर आपके पहले के सहेजे गए उत्तर मौजूद हैं।",
-  resumeBannerAction: "जहाँ छोड़ा था वहीं से जारी रखें",
+  resumeBannerAction: "फिर से शुरू करें",
+  resumeBannerStartNewAction: "नया शुरू करें",
+  resumeBannerClearAction: "पिछला हटाएँ",
+  startOverLabel: "फिर से शुरू करें",
+  startOverConfirmTitle: "क्या फिर से शुरू करें?",
+  startOverConfirmBody:
+    "इससे इस डिवाइस पर सहेजे गए आपके उत्तर मिट जाएँगे। इसे पूर्ववत नहीं किया जा सकता।",
+  startOverConfirmAction: "हाँ, फिर से शुरू करें",
+  startOverCancelAction: "रद्द करें",
+  printLetterLabel: "पत्र प्रिंट करें",
+  cardNextStepLabel: "आगे क्या करें",
+  cardKindLabels: {
+    pause: "रुकें",
+    stop: "रोकें",
+    wait: "प्रतीक्षा करें",
+    info: "जानकारी",
+    dual: "निर्णय आवश्यक",
+  },
+  readAloudLabel: "प्रश्न ज़ोर से पढ़ें",
+  readAloudStopLabel: "पढ़ना रोकें",
   debugPanelTitle: "डीबग पैनल (केवल डेवलपमेंट में)",
   debugRulePackVersion: "रूल पैक संस्करण",
   debugEngineVersion: "इंजन संस्करण",
