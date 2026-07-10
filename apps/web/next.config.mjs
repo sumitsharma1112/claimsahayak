@@ -1,11 +1,8 @@
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
-  // V3 §5.5 controls. CSP tightened further when analytics endpoint lands (M11).
-  {
-    key: 'Content-Security-Policy',
-    value:
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
-  },
+  // Content-Security-Policy is set per-request (with a hydration-safe
+  // script nonce) by middleware.ts instead of here — see that file's
+  // header comment for why a static CSP broke client hydration entirely.
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -28,6 +25,8 @@ const nextConfig = {
   // so these must be listed explicitly.
   transpilePackages: [
     '@claimsahayak/design-tokens',
+    '@claimsahayak/rule-engine',
+    '@claimsahayak/rule-pack',
     '@claimsahayak/shared-config',
     '@claimsahayak/shared-types',
     '@claimsahayak/shared-utils',

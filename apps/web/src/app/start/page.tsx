@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { MilestonePlaceholder } from "@/components/MilestonePlaceholder";
+import { RULE_PACK } from "@claimsahayak/rule-pack";
+import { Wizard } from "@/components/wizard/Wizard";
 
 export const metadata: Metadata = { title: "Start your checklist" };
 
 export default function StartPage() {
-  return (
-    <MilestonePlaceholder
-      title="Start — prepare my claim papers"
-      milestone="Milestone 4 (Wizard UI) on the approved roadmap"
-    />
-  );
+  return <Wizard rulePack={RULE_PACK} />;
 }

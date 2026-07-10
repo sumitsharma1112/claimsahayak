@@ -15,7 +15,8 @@
   },
   "devDependencies": {
     "typescript": "5.7.2",
-    "vitest": "2.1.8"
+    "vitest": "2.1.8",
+    "tailwindcss": "3.4.14"
   },
   "dependencies": {
     "@claimsahayak/shared-utils": "workspace:*"
