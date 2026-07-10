@@ -8,6 +8,7 @@ import { type CardKind, type LocaleCode } from "@claimsahayak/shared-types";
  * here (same data/code split as i18n/shell.ts).
  */
 export interface WizardDictionary {
+  readonly pageTitle: string;
   readonly continueLabel: string;
   readonly previousLabel: string;
   readonly whyToggleLabel: string;
@@ -44,6 +45,7 @@ export interface WizardDictionary {
 }
 
 const en: WizardDictionary = {
+  pageTitle: "Prepare my claim papers",
   continueLabel: "Continue",
   previousLabel: "Previous",
   whyToggleLabel: "Why we ask",
@@ -88,6 +90,7 @@ const en: WizardDictionary = {
 };
 
 const hi: WizardDictionary = {
+  pageTitle: "मेरे क्लेम के कागज़ तैयार करें",
   continueLabel: "जारी रखें",
   previousLabel: "पिछला",
   whyToggleLabel: "हम यह क्यों पूछते हैं",

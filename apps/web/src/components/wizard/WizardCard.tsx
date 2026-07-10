@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import type { CardDefinition, CardKind, LocaleCode, TemplateDefinition } from "@claimsahayak/shared-types";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 import { PortableText } from "./PortableText";
-import { PrintableTemplate } from "./PrintableTemplate";
+import { PreviousButton } from "./PreviousButton";
+
+// Code-split out of the initial bundle: only a "pause" card that declares a
+// templateId ever needs this, so most sessions never fetch it at all.
+const PrintableTemplate = dynamic(() => import("./PrintableTemplate").then((m) => m.PrintableTemplate));
 
 /** Existing design tokens only, per card `kind` — no new colors introduced. */
 const KIND_STYLES: Readonly<Record<CardKind, string>> = {
@@ -25,15 +30,24 @@ const KIND_STYLES: Readonly<Record<CardKind, string>> = {
  * appears, the same "new page-like content arrived" pattern
  * AccessibilityProvider already uses for route changes — plus a quiet
  * aria-live announcement for screen-reader users who aren't watching focus.
+ *
+ * A card is a terminal OUTCOME, not a dead end: `onBack` lets the user
+ * return to the answer that produced it and try a different branch
+ * (Milestone 4.4 — "branch change" must work from every screen, cards
+ * included, not just from a question screen).
  */
 export function WizardCard({
   card,
   template,
   locale,
+  onBack,
+  canGoBack,
 }: {
   readonly card: CardDefinition;
   readonly template: TemplateDefinition | undefined;
   readonly locale: LocaleCode;
+  readonly onBack: () => void;
+  readonly canGoBack: boolean;
 }) {
   const t = getWizardDictionary(locale);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -69,6 +83,9 @@ export function WizardCard({
         <p className="mb-0 mt-s1 text-ink">{pickText(card.nextPhysicalStep, locale)}</p>
       </div>
       {card.kind === "pause" && template ? <PrintableTemplate template={template} locale={locale} /> : null}
+      <div className="flex gap-s3">
+        <PreviousButton locale={locale} disabled={!canGoBack} onClick={onBack} />
+      </div>
     </section>
   );
 }

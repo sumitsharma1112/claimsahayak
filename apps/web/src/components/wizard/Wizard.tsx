@@ -234,6 +234,11 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
 
   return (
     <div className="flex flex-col gap-s4">
+      {/* Page-level h1 (WCAG 1.3.1/2.4.6): every question/card heading below
+          is an h2, so the document must start one level up, not skip to h2.
+          Visually hidden — the question itself is the page's visual focus;
+          screen-reader users navigating by heading still get a real h1. */}
+      <h1 className="cs-visually-hidden">{t.pageTitle}</h1>
       <ResumeBanner
         visible={Boolean(pendingSession)}
         locale={locale}
@@ -244,7 +249,13 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
       <ProgressBar current={current} total={Math.max(total, 1)} />
       <RerouteBanner banner={rerouteBanner} locale={locale} />
       {editIndex === null && terminalCard ? (
-        <WizardCard card={terminalCard} template={terminalTemplate} locale={locale} />
+        <WizardCard
+          card={terminalCard}
+          template={terminalTemplate}
+          locale={locale}
+          onBack={handleBack}
+          canGoBack={canGoBack}
+        />
       ) : currentQuestion ? (
         <QuestionRenderer
           questionId={currentQuestion.id}

@@ -22,7 +22,7 @@ export function WhyPanel({
       id={`question-${questionId}-why`}
       className="mt-s2 rounded-control border border-ink-soft/20 bg-paper px-s3 py-s2"
     >
-      <summary className="cursor-pointer font-semibold text-peacock">
+      <summary className="flex min-h-touch cursor-pointer items-center font-semibold text-peacock">
         {t.whyToggleLabel}
       </summary>
       <p className="mb-0 mt-s2 text-ink-soft">{pickText(whyText, locale)}</p>
