@@ -62,6 +62,29 @@ export interface WizardDictionary {
   readonly resultsVerificationHeading: string;
   readonly resultsDisclaimersHeading: string;
   readonly printChecklistLabel: string;
+  readonly generateClaimPackageLabel: string;
+  readonly claimDetailsHeading: string;
+  readonly claimDetailsIntro: string;
+  readonly claimDetailsOfficeLabel: string;
+  readonly claimDetailsClaimantLabel: string;
+  readonly claimDetailsDepositorLabel: string;
+  readonly claimDetailsGuardianLabel: string;
+  readonly claimDetailsAccountNumberLabel: string;
+  readonly claimDetailsNomineeLabel: string;
+  readonly claimDetailsLegalHeirLabel: string;
+  readonly claimDetailsWitnessLabel: string;
+  readonly claimDetailsRelationshipLabel: string;
+  readonly claimDetailsAddressLabel: string;
+  readonly claimDetailsRemoveLabel: string;
+  readonly claimDetailsAddLabel: string;
+  readonly officialFormBlankFieldLabel: string;
+  readonly claimPackageHeading: string;
+  readonly claimPackageMissingInfoHeading: string;
+  readonly claimPackageAutoFilledHeading: string;
+  readonly claimPackageOfficeChecklistHeading: string;
+  readonly claimPackageOfficeChecklistItemColumn: string;
+  readonly claimPackageOfficeChecklistSectionColumn: string;
+  readonly claimPackageOfficeChecklistVerifiedByColumn: string;
 }
 
 const en: WizardDictionary = {
@@ -136,6 +159,30 @@ const en: WizardDictionary = {
   resultsVerificationHeading: "The Post Office will verify",
   resultsDisclaimersHeading: "Please note",
   printChecklistLabel: "Print checklist (save as PDF)",
+  generateClaimPackageLabel: "Generate complete Claim Package",
+  claimDetailsHeading: "Claim details",
+  claimDetailsIntro:
+    "Enter these once — every form and letter below fills in automatically. Nothing here is saved after you close this page.",
+  claimDetailsOfficeLabel: "Name of Post Office",
+  claimDetailsClaimantLabel: "Claimant's name",
+  claimDetailsDepositorLabel: "Depositor's name (the account holder who passed away)",
+  claimDetailsGuardianLabel: "Guardian's name (if applicable)",
+  claimDetailsAccountNumberLabel: "Account / certificate number",
+  claimDetailsNomineeLabel: "Nominee",
+  claimDetailsLegalHeirLabel: "Legal heir",
+  claimDetailsWitnessLabel: "Witness",
+  claimDetailsRelationshipLabel: "Relationship to the depositor",
+  claimDetailsAddressLabel: "Address",
+  claimDetailsRemoveLabel: "Remove",
+  claimDetailsAddLabel: "Add",
+  officialFormBlankFieldLabel: "(fill in by hand)",
+  claimPackageHeading: "Complete Claim Package",
+  claimPackageMissingInfoHeading: "Still missing — you can fill these in by hand instead",
+  claimPackageAutoFilledHeading: "Auto-filled forms and letters",
+  claimPackageOfficeChecklistHeading: "Office checklist",
+  claimPackageOfficeChecklistItemColumn: "Item",
+  claimPackageOfficeChecklistSectionColumn: "Category",
+  claimPackageOfficeChecklistVerifiedByColumn: "Verified by",
 };
 
 const hi: WizardDictionary = {
@@ -210,6 +257,30 @@ const hi: WizardDictionary = {
   resultsVerificationHeading: "डाकघर यह सत्यापित करेगा",
   resultsDisclaimersHeading: "कृपया ध्यान दें",
   printChecklistLabel: "चेकलिस्ट प्रिंट करें (PDF के रूप में सहेजें)",
+  generateClaimPackageLabel: "पूरा क्लेम पैकेज बनाएँ",
+  claimDetailsHeading: "क्लेम का विवरण",
+  claimDetailsIntro:
+    "इन्हें एक बार भरें — नीचे हर फ़ॉर्म और पत्र अपने आप भर जाएगा। यह पेज बंद करने के बाद कुछ भी सहेजा नहीं जाता।",
+  claimDetailsOfficeLabel: "डाकघर का नाम",
+  claimDetailsClaimantLabel: "दावेदार का नाम",
+  claimDetailsDepositorLabel: "जमाकर्ता का नाम (जिस खाताधारक का निधन हुआ)",
+  claimDetailsGuardianLabel: "अभिभावक का नाम (यदि लागू हो)",
+  claimDetailsAccountNumberLabel: "खाता / प्रमाणपत्र संख्या",
+  claimDetailsNomineeLabel: "नामांकित व्यक्ति",
+  claimDetailsLegalHeirLabel: "कानूनी उत्तराधिकारी",
+  claimDetailsWitnessLabel: "गवाह",
+  claimDetailsRelationshipLabel: "जमाकर्ता से संबंध",
+  claimDetailsAddressLabel: "पता",
+  claimDetailsRemoveLabel: "हटाएँ",
+  claimDetailsAddLabel: "जोड़ें",
+  officialFormBlankFieldLabel: "(हाथ से भरें)",
+  claimPackageHeading: "पूरा क्लेम पैकेज",
+  claimPackageMissingInfoHeading: "अभी भी शेष — इन्हें आप हाथ से भर सकते हैं",
+  claimPackageAutoFilledHeading: "अपने आप भरे गए फ़ॉर्म और पत्र",
+  claimPackageOfficeChecklistHeading: "कार्यालय चेकलिस्ट",
+  claimPackageOfficeChecklistItemColumn: "वस्तु",
+  claimPackageOfficeChecklistSectionColumn: "श्रेणी",
+  claimPackageOfficeChecklistVerifiedByColumn: "किसके द्वारा सत्यापित",
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };

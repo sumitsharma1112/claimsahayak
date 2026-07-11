@@ -1,6 +1,7 @@
 import type { Condition } from "./condition.js";
 import type { LocaleCode, LocalizedText, PortableTextBlock } from "./locale.js";
 import type { SchemeDefinition } from "./scheme.js";
+import type { ClaimDataField } from "./claim-data.js";
 
 export type { SchemeDefinition } from "./scheme.js";
 
@@ -206,6 +207,14 @@ export interface TemplateField {
   readonly label: LocalizedText;
   readonly kind: 'staticText' | 'blankLine' | 'checkboxRow';
   readonly text?: LocalizedText;
+  /**
+   * Milestone 7 — when this `blankLine` field corresponds to a Claim Data
+   * Model slot, the auto-fill renderer prints the resolved value instead of
+   * a bare underline. Optional and additive: templates authored before M7
+   * (and any field without a value yet entered) render exactly as before —
+   * a blank line for the claimant to hand-fill.
+   */
+  readonly claimDataField?: ClaimDataField;
 }
 
 export interface ContentPage {

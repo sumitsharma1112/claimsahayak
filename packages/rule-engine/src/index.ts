@@ -66,6 +66,11 @@ export { evaluateAccount, type AccountEvaluation } from "./account.js";
 
 export { evaluateChecklist, type ChecklistEvaluation } from "./checklist.js";
 
+// Milestone 7 — document generation, auto-fill, claim-package validation.
+export { resolveDocumentSelection, type DocumentSelectionEntry } from "./documents.js";
+export { resolveClaimDataValue, resolveAccountNumber } from "./autofill.js";
+export { validateClaimPackage, type ClaimValidationIssue } from "./claim-validation.js";
+
 export { validateAnswers } from "./validate-answers.js";
 
 export { computeContentHash, isPlaceholderHash } from "./hash.js";
@@ -101,4 +106,13 @@ export type {
   CourtOrderRequired,
   CompetentAuthority,
   OfficialReference,
+  ClaimDataModel,
+  ClaimDataField,
+  Party,
+  FormDefinition,
+  DocumentDefinition,
+  TemplateDefinition,
+  TemplateField,
+  OfficialFormLayout,
+  OfficialFormField,
 } from "@claimsahayak/shared-types";

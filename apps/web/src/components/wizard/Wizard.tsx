@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { AnswerValue, LocalizedText, RulePack } from "@claimsahayak/shared-types";
+import type {
+  AnswerValue,
+  ClaimDataModel,
+  LocalizedText,
+  OfficialFormLayout,
+  RulePack,
+} from "@claimsahayak/shared-types";
+import { EMPTY_CLAIM_DATA } from "@claimsahayak/shared-types";
 import { DEFAULT_LOCALE } from "@claimsahayak/shared-config";
 import {
   ENGINE_VERSION,
@@ -17,6 +24,8 @@ import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
 import { ChecklistResults } from "./ChecklistResults";
 import { DocumentNotes } from "./DocumentNotes";
 import { PrintChecklistButton } from "./PrintChecklistButton";
+import { ClaimDetailsForm } from "./ClaimDetailsForm";
+import { ClaimPackage } from "./ClaimPackage";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DebugPanel } from "./DebugPanel";
 import {
@@ -62,7 +71,14 @@ import type { SessionState } from "@claimsahayak/shared-types";
  * as it did in M4/M5 (card or decision summary) and two-plus accounts
  * render the engine's whole `ChecklistDocument` via `ChecklistResults`.
  */
-export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
+export function Wizard({
+  rulePack,
+  officialFormLayouts = [],
+}: {
+  readonly rulePack: RulePack;
+  /** Milestone 7, Tier A of the document-fidelity model — see claim-data.ts. */
+  readonly officialFormLayouts?: readonly OfficialFormLayout[];
+}) {
   const [locale] = useState(DEFAULT_LOCALE);
   const [answers, setAnswers] = useState<AnswersState>({});
   const [draft, setDraft] = useState<AnswerValue | undefined>(undefined);
@@ -75,6 +91,15 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
   /** undefined = not checked yet (client-only); null = checked, nothing to resume. */
   const [pendingSession, setPendingSession] = useState<SessionState | null | undefined>(undefined);
   const [startOverOpen, setStartOverOpen] = useState(false);
+  // Milestone 7 — the Claim Data Model lives ONLY in this component's React
+  // state: never passed to saveSession/localStorage (see claim-data.ts's
+  // privacy note), reset on Start Over exactly like every other piece of
+  // wizard state. `showClaimPackage` is purely a display toggle — the
+  // default terminal (ClaimDecisionSummary/ChecklistResults, unchanged
+  // since M5/M6) always renders first; the full auto-filled package is
+  // opt-in via a button, so this milestone adds nothing to the default path.
+  const [claimData, setClaimData] = useState<ClaimDataModel>(EMPTY_CLAIM_DATA);
+  const [showClaimPackage, setShowClaimPackage] = useState(false);
 
   // Storage only exists client-side; checking after mount avoids a hydration mismatch.
   useEffect(() => {
@@ -163,6 +188,16 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     onlyResolution?.terminal?.kind === "route"
       ? checklistEvaluation?.document.accounts[0]
       : undefined;
+  // Milestone 7: every account whose decision is genuinely PAYABLE — never
+  // a card-kind terminal (stop/wait/pause never reach this point at all)
+  // and never a route-kind "not_payable"/"not_applicable"/"pending_information"
+  // decision (e.g. a dispute-forces-court-order referral, or the survivor
+  // "no claim needed" outcome) — auto-filling a full document package only
+  // makes sense once there is a real amount to actually pay out.
+  const packageAccounts = useMemo(
+    () => checklistEvaluation?.document.accounts.filter((a) => a.decision?.decisionStatus === "payable") ?? [],
+    [checklistEvaluation],
+  );
 
   const total = visibleQuestions.length;
   const current =
@@ -266,6 +301,8 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     setEditIndex(null);
     setRerouteBanner(undefined);
     setStartedAtIso(new Date().toISOString());
+    setClaimData(EMPTY_CLAIM_DATA);
+    setShowClaimPackage(false);
   };
 
   const handleResume = () => {
@@ -335,6 +372,29 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
           onBack={handleBack}
           canGoBack={canGoBack}
         />
+      ) : showClaimPackage && packageAccounts.length > 0 ? (
+        <div className="flex flex-col gap-s4">
+          <ClaimDetailsForm
+            claimData={claimData}
+            onChange={setClaimData}
+            accounts={packageAccounts}
+            locale={locale}
+          />
+          <div className="cs-print-area flex flex-col gap-s4">
+            <ClaimPackage
+              accounts={packageAccounts}
+              rulePack={rulePack}
+              officialFormLayouts={officialFormLayouts}
+              claimData={claimData}
+              locale={locale}
+              onBack={() => {
+                setShowClaimPackage(false);
+              }}
+              canGoBack
+            />
+          </div>
+          <PrintChecklistButton locale={locale} />
+        </div>
       ) : activeSchemes.length >= 2 && checklistEvaluation ? (
         <div className="flex flex-col gap-s4">
           <div className="cs-print-area flex flex-col gap-s4">
@@ -346,7 +406,20 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
               canGoBack={canGoBack}
             />
           </div>
-          <PrintChecklistButton locale={locale} />
+          <div className="flex flex-wrap gap-s3">
+            <PrintChecklistButton locale={locale} />
+            {packageAccounts.length > 0 ? (
+              <button
+                type="button"
+                className="cs-btn-primary"
+                onClick={() => {
+                  setShowClaimPackage(true);
+                }}
+              >
+                {t.generateClaimPackageLabel}
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : singleAccount?.decision && checklistEvaluation ? (
         <div className="flex flex-col gap-s4">
@@ -360,7 +433,20 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
             />
             <DocumentNotes document={checklistEvaluation.document} locale={locale} />
           </div>
-          <PrintChecklistButton locale={locale} />
+          <div className="flex flex-wrap gap-s3">
+            <PrintChecklistButton locale={locale} />
+            {packageAccounts.length > 0 ? (
+              <button
+                type="button"
+                className="cs-btn-primary"
+                onClick={() => {
+                  setShowClaimPackage(true);
+                }}
+              >
+                {t.generateClaimPackageLabel}
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : (
         <div role="status" className="rounded-control border border-ok/30 bg-ok-bg p-s4">

@@ -82,6 +82,14 @@ export interface ChecklistItem {
   readonly attrs: OutputItemAttributes;
   readonly handbookRef: string;
   readonly nvRef?: string;
+  /**
+   * Milestone 7 — carries `OutputRule.refId` through so document generation
+   * can join this item back to its `FormDefinition`/`DocumentDefinition`
+   * record (signatories, stamp paper, official source URL). Never rendered
+   * as visible text (it's an internal id, e.g. "form_11") — used only for
+   * the lookup in `resolveDocumentSelection`.
+   */
+  readonly refId?: string;
 }
 
 export interface ExtraItem {

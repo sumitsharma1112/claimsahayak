@@ -1,5 +1,17 @@
 import type { OutputRule, RulePack } from "@claimsahayak/shared-types";
 import { issue, type ValidationIssue } from "../schema/issue.js";
+import { OFFICE_DOCUMENT_TEMPLATES } from "../data/office-documents.js";
+
+/**
+ * Milestone 7's office-facing composed documents (forwarding letter,
+ * approval note) are always available in the Claim Package view for every
+ * payable decision — they are never gated behind a specific route/card the
+ * way a claimant-facing letter template is, so they have no `OutputRule`/
+ * `CardDefinition` reference to find. Treated as reachable-by-design here
+ * rather than fabricating a fake output/card reference just to satisfy
+ * this check.
+ */
+const ALWAYS_AVAILABLE_TEMPLATE_IDS = new Set(OFFICE_DOCUMENT_TEMPLATES.map((t) => t.id));
 
 /** All OutputRule instances in the pack — route outputs AND overlay items. */
 function allOutputs(pack: RulePack): readonly OutputRule[] {
@@ -91,7 +103,11 @@ export function checkNoOrphanTemplates(pack: RulePack): readonly ValidationIssue
   );
   const issues: ValidationIssue[] = [];
   pack.templates.forEach((template, i) => {
-    if (!referencedByOutputs.has(template.id) && !referencedByCards.has(template.id)) {
+    if (
+      !referencedByOutputs.has(template.id) &&
+      !referencedByCards.has(template.id) &&
+      !ALWAYS_AVAILABLE_TEMPLATE_IDS.has(template.id)
+    ) {
       issues.push(
         issue(
           `templates[${String(i)}]`,

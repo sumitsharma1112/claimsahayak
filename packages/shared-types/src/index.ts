@@ -5,3 +5,4 @@ export * from "./rule-pack.js";
 export * from "./checklist.js";
 export * from "./session.js";
 export * from "./analytics.js";
+export * from "./claim-data.js";

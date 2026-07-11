@@ -36,7 +36,11 @@ function toChecklistItem(output: OutputRule): ChecklistItem {
     attrs: output.attrs,
     handbookRef: output.handbookRef,
   };
-  return output.nvRef === undefined ? base : { ...base, nvRef: output.nvRef };
+  const withNvRef = output.nvRef === undefined ? base : { ...base, nvRef: output.nvRef };
+  // Milestone 7: carries refId through so document generation can join
+  // this item back to its FormDefinition/DocumentDefinition — never
+  // rendered as visible text, only used for that lookup.
+  return output.refId === undefined ? withNvRef : { ...withNvRef, refId: output.refId };
 }
 
 export interface BuiltSections {

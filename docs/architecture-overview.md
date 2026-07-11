@@ -57,5 +57,13 @@ without changing the handler.
 
 Strict security headers (CSP, HSTS, frame-deny, referrer policy) ship with
 the shell; the admin origin is `noindex` and expected to sit behind edge
-auth until Milestone 10 delivers application auth. No cookies, no trackers,
-no PII surface exists.
+auth until Milestone 10 delivers application auth. No cookies, no trackers.
+
+**Updated at M7**: the Wizard now has one narrow, deliberate PII surface —
+the Claim Data Model (`packages/shared-types/src/claim-data.ts`), used to
+auto-fill generated claim documents. It exists ONLY in React state for the
+current browser tab: never written to `localStorage` (the session-resume
+mechanism still persists only enum/boolean/monthYear answers, exactly as
+before), never transmitted (the app still makes zero fetch calls), and is
+discarded the moment the tab closes. See `docs/HANDOVER_M7.md` §"PII
+storage decision" for the full reasoning.
