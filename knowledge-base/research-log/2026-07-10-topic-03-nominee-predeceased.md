@@ -1,0 +1,8 @@
+# Research Log — 10.07.2026 — Topic 3: Nominee Predeceased
+
+1. **Topic 2 locked** as ClaimSahayak Official Rule Book v1.0 Topic 2 (user approval 10.07.2026).
+2. **Discovery check:** searched for any dedicated SB Order / Directorate circular on death of nominee before payment — none exists on official hosts; the doctrine lives in ACT s.4(2)/s.4A(2)-(3), GSPR 15(2)-(5)/(7), 14(6)-(7) and R60(2)(iii)-(vi)/(xi) (SB Order 31/2020), with identical legacy language in POSB Manual Vol I Rule 87(2)(iii). Blogs merely reproduce R60(2)(iv).
+3. **New official acquisition:** statutory **Form 11** PDF from nsiindia.gov.in → `sources/gspr-form-11-nsi.pdf` (M-10 partially closed; nominee-death enclosure item confirmed).
+4. **Drafted `official-rule-book/topic-03-nominee-predeceased.md`** — 8 rule records (CS-PRE-001…008) implementing the verified doctrinal split: predecease = lapse/redistribution (heirs of predeceased nominee take nothing); post-depositor death before settlement = vesting in the last deceased nominee's legal heirs; includes minor-nominee payee death, fresh-nomination duty, scheme-wise notes (SCSS spouse-option lapse; MIS joint-holder survivorship distinction).
+5. **Registers updated:** supersession **S-13** (legacy partial-payment mechanism → R60(2)(xi)); conflict **C-10** (post-depositor co-nominee death — statute pays survivors; vesting only when none survive) with engine resolution; open questions **OQ-10/11/12**; commorientes deliberately excluded (general law, no DoP instruction).
+6. **Stopped** — verification report issued; awaiting approval for Topic 4 (Multiple Nominees).

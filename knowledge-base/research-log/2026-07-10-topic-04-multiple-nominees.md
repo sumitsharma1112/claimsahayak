@@ -1,0 +1,7 @@
+# Research Log — 10.07.2026 — Topic 4: Multiple Nominees
+
+1. **Topic 3 locked** as ClaimSahayak Official Rule Book v1.0 Topic 3 (user approval 10.07.2026).
+2. **Discovery check:** searched official hosts and reference sites for any SB Order / Directorate circular on (a) untraceable or unwilling co-nominees, (b) joint continuation of accounts by several nominees — **none exists**; the governing texts remain ACT s.4/4A, GSPR 14/15, R60(2) (SB Order 31/2020) and the Form 1/10/11/14 statutory forms already in `sources/`.
+3. **Drafted `official-rule-book/topic-04-multiple-nominees.md`** — 9 rule records (CS-MNM-001…009): 1–4 nominees with per-nominee share & owner/trustee capacity; equal-share default (GSPR 15(3)); pro-rata redistribution on predecease; pay-all-per-shares mechanics with per-nominee payment instruments; Form-14 disclaimer/renunciation route; minor+major mix handling; consolidated documents/powers; scheme-wise notes (SCSS spouse-continuation requires sole nominee — multi-nomination forecloses it).
+4. **Gaps logged rather than guessed:** OQ-13 (shares≠100% validation), OQ-14 (untraceable/unwilling co-nominee — genuine regulatory gap since S-13 superseded partial payment), OQ-15 (joint continuation unregulated), OQ-16 (separate claims post-R60(2)(xi)). Engine defaults documented conservatively for each.
+5. **Stopped** — verification report `topic-04-multiple-nominees-verification.md` issued; awaiting approval before Topic 5.

@@ -1,0 +1,8 @@
+# Research Log — 10.07.2026 — Topic 5: Minor Nominee
+
+1. **Topic 4 locked** as ClaimSahayak Official Rule Book v1.0 Topic 4 (user approval 10.07.2026). User additionally mandated a standing **Master Rule Matrix** — created at `official-rule-book/master-rule-matrix.md` (64 records, Topics 1–5).
+2. **Discovery check:** searched for SB Orders/circulars on minor-nominee edge cases (guardian death before settlement, nominee attaining majority, guardianship certificates) — none exist on official hosts. Found **POSB Manual Volume III** (Acts & Rules of Savings Schemes) officially hosted on indiapost.gov.in → logged M-14 for the scheme-wise topic.
+3. **Drafted `official-rule-book/topic-05-minor-nominee.md`** — 13 records (CS-MIN-001…013) using the expanded field template (scenario, rule statement, schemes, documents, forms, affidavits/indemnity/declarations, competent authority, limits, court requirement, sources with page/para, effective date, status). Anchors: ACT s.3(h)/(i), 4(3), 4A(2), 5, 10; GSPR 14(2)/(5), 15(5)/(7), 10(3)/(4)-2023, 6(4), 12(2), 20(2); R60(2)(vi), (4)(A) Note 2(iii), (6)(iii), (7)+Notes; Forms 1/10/11.
+4. **Key determinations:** appointee→guardian→succeeding-guardian routing; natural guardian exempt from guardianship certificate; Muslim mother valid guardian; "minor alive" declaration; direct payment to minor void (s.10 own-deposit boundary documented); majority attained → direct payment (statutory construction, OQ-17); minor status never changes sanction powers.
+5. **Registers:** S-14 added (legacy bar on minor-account nominations → GSPR 14(5) guardian nominations); OQ-17/18/19 logged; Master Rule Matrix created.
+6. **Stopped** — verification report issued; awaiting approval before Topic 6.
