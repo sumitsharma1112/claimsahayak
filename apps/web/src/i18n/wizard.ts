@@ -40,6 +40,7 @@ export interface WizardDictionary {
   readonly debugLocale: string;
   readonly debugAnswers: string;
   readonly debugVisibleQuestions: string;
+  readonly debugDerived: string;
   readonly foundationCompleteTitle: string;
   readonly foundationCompleteBody: string;
   readonly decisionStatusLabels: Readonly<Record<DecisionStatus, string>>;
@@ -97,6 +98,7 @@ const en: WizardDictionary = {
   debugLocale: "Locale",
   debugAnswers: "Current answers",
   debugVisibleQuestions: "Currently visible questions",
+  debugDerived: "Derived date values",
   foundationCompleteTitle: "Foundation preview complete",
   foundationCompleteBody:
     "Every currently-visible question has an answer. The full wizard flow (navigation, resume, and the result checklist) ships in its own scheduled milestone.",
@@ -164,6 +166,7 @@ const hi: WizardDictionary = {
   debugLocale: "भाषा",
   debugAnswers: "वर्तमान उत्तर",
   debugVisibleQuestions: "अभी दिखने वाले प्रश्न",
+  debugDerived: "व्युत्पन्न तिथि मान",
   foundationCompleteTitle: "फ़ाउंडेशन पूर्वावलोकन पूर्ण",
   foundationCompleteBody:
     "अभी दिखने वाले हर प्रश्न का उत्तर दिया जा चुका है। पूरा विज़ार्ड प्रवाह (नेविगेशन, फिर से शुरू करना, और अंतिम चेकलिस्ट) अपने निर्धारित माइलस्टोन में आएगा।",

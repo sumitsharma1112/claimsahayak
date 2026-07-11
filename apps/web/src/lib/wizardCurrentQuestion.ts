@@ -1,5 +1,5 @@
 import type { QuestionDefinition, RulePack, SchemeDefinition } from "@claimsahayak/shared-types";
-import { resolveVisibleQuestions, type AnswerMap } from "@claimsahayak/rule-engine";
+import { resolveVisibleQuestions, type AnswerMap, type DerivedValues } from "@claimsahayak/rule-engine";
 import type { AnswersState } from "./wizardAnswers";
 
 /**
@@ -22,7 +22,8 @@ export function getCurrentQuestion(
   scheme: SchemeDefinition,
   flatAnswers: AnswerMap,
   answers: AnswersState,
+  derived: DerivedValues | undefined,
 ): QuestionDefinition | undefined {
-  const visible = resolveVisibleQuestions(rulePack, scheme, flatAnswers, undefined);
+  const visible = resolveVisibleQuestions(rulePack, scheme, flatAnswers, derived);
   return visible.find((q) => !Object.prototype.hasOwnProperty.call(answers, q.id));
 }

@@ -1,5 +1,5 @@
 import type { LocalizedText, RulePack, SchemeDefinition } from "@claimsahayak/shared-types";
-import { buildVarAssignment, resolveRoute, type AnswerMap } from "@claimsahayak/rule-engine";
+import { buildVarAssignment, resolveRoute, type AnswerMap, type DerivedValues } from "@claimsahayak/rule-engine";
 
 /**
  * Detects whether editing a PAST answer changed this account's resolved
@@ -8,6 +8,12 @@ import { buildVarAssignment, resolveRoute, type AnswerMap } from "@claimsahayak/
  * Pack's own `RouteRule.banner` field — never authored here). Returns
  * `undefined` when the terminal outcome didn't change, or changed without
  * a reroute rule declaring a banner for it.
+ *
+ * Takes a before AND an after `derived` bag (Milestone 6 Part 1): editing
+ * the month-of-death answer changes no flat-map key at all (monthYear
+ * never enters the flat map — privacy, see wizardAnswers.ts), only the
+ * derived values — so a date-driven reroute is invisible unless both
+ * evaluations see their own derived state.
  *
  * Pure engine-only logic: this only calls the frozen `resolveRoute` /
  * `buildVarAssignment` exports and reads `rulePack.routes` for banner
@@ -18,9 +24,11 @@ export function detectRerouteBanner(
   scheme: SchemeDefinition,
   previousFlatAnswers: AnswerMap,
   nextFlatAnswers: AnswerMap,
+  previousDerived: DerivedValues | undefined,
+  nextDerived: DerivedValues | undefined,
 ): LocalizedText | undefined {
-  const varsBefore = buildVarAssignment(rulePack, scheme, previousFlatAnswers, undefined);
-  const varsAfter = buildVarAssignment(rulePack, scheme, nextFlatAnswers, undefined);
+  const varsBefore = buildVarAssignment(rulePack, scheme, previousFlatAnswers, previousDerived);
+  const varsAfter = buildVarAssignment(rulePack, scheme, nextFlatAnswers, nextDerived);
   const before = resolveRoute(rulePack, varsBefore);
   const after = resolveRoute(rulePack, varsAfter);
 

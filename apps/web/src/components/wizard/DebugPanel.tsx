@@ -1,4 +1,5 @@
 import type { LocaleCode } from "@claimsahayak/shared-types";
+import type { DerivedValues } from "@claimsahayak/rule-engine";
 import { getWizardDictionary } from "@/i18n/wizard";
 import type { AnswersState } from "@/lib/wizardAnswers";
 
@@ -16,6 +17,7 @@ export function DebugPanel({
   locale,
   answers,
   visibleQuestionIds,
+  derived,
 }: {
   readonly rulePackVersion: string;
   readonly engineVersion: string;
@@ -23,6 +25,7 @@ export function DebugPanel({
   readonly locale: LocaleCode;
   readonly answers: AnswersState;
   readonly visibleQuestionIds: readonly string[];
+  readonly derived: DerivedValues | undefined;
 }) {
   if (process.env.NODE_ENV === "production") {
     return null;
@@ -45,6 +48,8 @@ export function DebugPanel({
         <dd className="m-0">{locale}</dd>
         <dt className="text-ink-soft">{t.debugVisibleQuestions}</dt>
         <dd className="m-0">{visibleQuestionIds.join(", ") || "—"}</dd>
+        <dt className="text-ink-soft">{t.debugDerived}</dt>
+        <dd className="m-0">{derived ? JSON.stringify(derived) : "—"}</dd>
         <dt className="text-ink-soft">{t.debugAnswers}</dt>
         <dd className="m-0">
           <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-all">

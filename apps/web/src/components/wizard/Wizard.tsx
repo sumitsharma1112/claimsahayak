@@ -26,6 +26,7 @@ import {
   type AnswersState,
 } from "@/lib/wizardAnswers";
 import { getCurrentQuestion } from "@/lib/wizardCurrentQuestion";
+import { computeSessionDerived } from "@/lib/wizardDerived";
 import { detectRerouteBanner } from "@/lib/wizardReroute";
 import { clearSession, loadSession, saveSession } from "@/lib/wizardSession";
 import { getWizardDictionary } from "@/i18n/wizard";
@@ -82,21 +83,30 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     [rulePack],
   );
   const flatAnswers = useMemo(() => toAnswerMap(answers), [answers]);
+  // Milestone 6 Part 1: the derived date-math bag (monthsSinceDeath etc.),
+  // computed OUTSIDE the pure engine from the monthYear answer and the
+  // session-start instant — `startedAtIso` (persisted/restored with the
+  // session) rather than a per-render "now", so the same answers resolve
+  // the same route for the whole sitting. See wizardDerived.ts.
+  const derived = useMemo(
+    () => computeSessionDerived(answers, startedAtIso, rulePack.constants),
+    [answers, startedAtIso, rulePack],
+  );
   const visibleQuestions = useMemo(
-    () => resolveVisibleQuestions(rulePack, scheme, flatAnswers, undefined),
-    [rulePack, scheme, flatAnswers],
+    () => resolveVisibleQuestions(rulePack, scheme, flatAnswers, derived),
+    [rulePack, scheme, flatAnswers, derived],
   );
   const frontierQuestion = useMemo(
-    () => getCurrentQuestion(rulePack, scheme, flatAnswers, answers),
-    [rulePack, scheme, flatAnswers, answers],
+    () => getCurrentQuestion(rulePack, scheme, flatAnswers, answers, derived),
+    [rulePack, scheme, flatAnswers, answers, derived],
   );
   const currentQuestion =
     editIndex !== null ? questionsById.get(visited[editIndex] ?? "") : frontierQuestion;
 
   const routeResolution = useMemo(() => {
-    const vars = buildVarAssignment(rulePack, scheme, flatAnswers, undefined);
+    const vars = buildVarAssignment(rulePack, scheme, flatAnswers, derived);
     return resolveRoute(rulePack, vars);
-  }, [rulePack, scheme, flatAnswers]);
+  }, [rulePack, scheme, flatAnswers, derived]);
   const terminalCard = useMemo(() => {
     if (routeResolution.terminal?.kind !== "card") {
       return undefined;
@@ -124,8 +134,8 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     if (routeResolution.terminal?.kind !== "route") {
       return undefined;
     }
-    return evaluateAccount(rulePack, scheme.id, flatAnswers, undefined, 0);
-  }, [rulePack, scheme, flatAnswers, routeResolution]);
+    return evaluateAccount(rulePack, scheme.id, flatAnswers, derived, 0);
+  }, [rulePack, scheme, flatAnswers, derived, routeResolution]);
 
   const total = visibleQuestions.length;
   const current =
@@ -174,7 +184,12 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
         Reflect.deleteProperty(nextAnswers, id);
       }
       if (wasEditing) {
-        banner = detectRerouteBanner(rulePack, scheme, flatAnswers, result.answers);
+        // Derived values are re-computed for the post-edit answer state
+        // (after invalidation) — a month-of-death edit changes no flat
+        // key, only `derived`, so passing before/after bags is the only
+        // way a date-driven route change is detectable at all.
+        const nextDerived = computeSessionDerived(nextAnswers, startedAtIso, rulePack.constants);
+        banner = detectRerouteBanner(rulePack, scheme, flatAnswers, result.answers, derived, nextDerived);
       }
     }
 
@@ -324,6 +339,7 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
         locale={locale}
         answers={answers}
         visibleQuestionIds={visibleQuestions.map((q) => q.id)}
+        derived={derived}
       />
     </div>
   );

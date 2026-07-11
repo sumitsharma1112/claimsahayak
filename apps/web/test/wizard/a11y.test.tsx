@@ -112,6 +112,7 @@ describe("a11y — wizard foundation", () => {
         locale="en"
         answers={{}}
         visibleQuestionIds={["q1_schemes"]}
+        derived={undefined}
       />,
     );
     await expectNoViolations(container);

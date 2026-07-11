@@ -34,6 +34,19 @@ function card(id: string) {
   return c;
 }
 
+/**
+ * Month/year exactly `monthsAgo` whole months before now, as the wizard's
+ * <select> string values. Time-relative (not a fixed date) because since
+ * Milestone 6 the Wizard really computes `derived.monthsSinceDeath` — a
+ * hardcoded month would silently drift across the T17/T19 6-month gate as
+ * real time passes. UTC math mirrors the engine's own `monthsBetween`.
+ */
+function monthYearMonthsAgo(monthsAgo: number): { month: string; year: string } {
+  const now = new Date();
+  const total = now.getUTCFullYear() * 12 + now.getUTCMonth() - monthsAgo;
+  return { month: String((total % 12) + 1), year: String(Math.floor(total / 12)) };
+}
+
 async function tickSchemeAndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("checkbox", { name: optionLabel("q1_schemes", "SB") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
@@ -50,15 +63,16 @@ async function answerBooleanNoAndContinue(user: ReturnType<typeof userEvent.setu
   await user.click(screen.getByRole("button", { name: "Continue" }));
 }
 
-async function reachQ6(user: ReturnType<typeof userEvent.setup>) {
+async function reachQ6(user: ReturnType<typeof userEvent.setup>, deathMonthsAgo = 2) {
   await tickSchemeAndContinue(user);
   await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
   await answerBooleanNoAndContinue(user); // q_armed_forces
   await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
-  await user.selectOptions(screen.getByLabelText("Month"), "3");
-  await user.selectOptions(screen.getByLabelText("Year"), "2024");
+  const death = monthYearMonthsAgo(deathMonthsAgo);
+  await user.selectOptions(screen.getByLabelText("Month"), death.month);
+  await user.selectOptions(screen.getByLabelText("Year"), death.year);
   await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "no") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));

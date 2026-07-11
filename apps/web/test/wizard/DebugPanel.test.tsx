@@ -18,6 +18,7 @@ const baseProps = {
   locale: "en" as const,
   answers: {},
   visibleQuestionIds: ["q1_schemes", "q2_who_died"],
+  derived: { monthsSinceDeath: 28, yearsSinceDeath: 2 },
 };
 
 describe("DebugPanel", () => {
@@ -29,6 +30,7 @@ describe("DebugPanel", () => {
     expect(screen.getByText("q1_schemes")).toBeTruthy();
     expect(screen.getByText("en")).toBeTruthy();
     expect(screen.getByText("q1_schemes, q2_who_died")).toBeTruthy();
+    expect(screen.getByText('{"monthsSinceDeath":28,"yearsSinceDeath":2}')).toBeTruthy();
   });
 
   it("renders nothing at all in production", () => {

@@ -3,6 +3,7 @@ import { RULE_PACK } from "@claimsahayak/rule-pack";
 import { pickText } from "@/lib/locale";
 import { answerToPatch, toAnswerMap, withoutQuestionKeys } from "@/lib/wizardAnswers";
 import { getCurrentQuestion } from "@/lib/wizardCurrentQuestion";
+import { computeSessionDerived } from "@/lib/wizardDerived";
 import { detectRerouteBanner } from "@/lib/wizardReroute";
 
 describe("pickText", () => {
@@ -68,6 +69,28 @@ describe("answerToPatch", () => {
   });
 });
 
+describe("computeSessionDerived", () => {
+  it("returns undefined until a monthYear answer exists (engine sees no derived bag)", () => {
+    const answers = {
+      q1_schemes: { kind: "multi" as const, optionIds: ["SB"] },
+      q2_who_died: { kind: "single" as const, optionId: "adult" },
+    };
+    expect(computeSessionDerived(answers, "2026-07-01T00:00:00.000Z", RULE_PACK.constants)).toBeUndefined();
+  });
+
+  it("computes the derived bag from the monthYear answer, keyed on kind — never a question id", () => {
+    // Any question id works: dispatch is purely structural on kind:"monthYear".
+    const answers = {
+      whatever_the_pack_calls_it: { kind: "monthYear" as const, month: 3, year: 2024 },
+    };
+    const derived = computeSessionDerived(answers, "2026-07-01T00:00:00.000Z", RULE_PACK.constants);
+    // 2024-03 → 2026-07 is 28 whole months (engine monthsBetween semantics).
+    expect(derived?.monthsSinceDeath).toBe(28);
+    expect(derived?.yearsSinceDeath).toBe(2);
+    expect(derived?.freezeRequired).toBe(false);
+  });
+});
+
 describe("getCurrentQuestion — determinism", () => {
   const sb = RULE_PACK.schemes.find((s) => s.id === "SB");
   if (!sb) throw new Error("Fixture assumption broken: SB scheme missing.");
@@ -78,7 +101,7 @@ describe("getCurrentQuestion — determinism", () => {
       q2_who_died: { kind: "single" as const, optionId: "adult" },
     };
     const flat = toAnswerMap(answers);
-    const results = Array.from({ length: 5 }, () => getCurrentQuestion(RULE_PACK, sb, flat, answers)?.id);
+    const results = Array.from({ length: 5 }, () => getCurrentQuestion(RULE_PACK, sb, flat, answers, undefined)?.id);
     expect(new Set(results).size).toBe(1);
     expect(results[0]).toBe("q_armed_forces");
   });
@@ -93,7 +116,7 @@ describe("getCurrentQuestion — determinism", () => {
     };
     const flat = toAnswerMap(answers);
     expect(flat).not.toHaveProperty("q4_death_month");
-    expect(getCurrentQuestion(RULE_PACK, sb, flat, answers)?.id).toBe("q5_nomination");
+    expect(getCurrentQuestion(RULE_PACK, sb, flat, answers, undefined)?.id).toBe("q5_nomination");
   });
 });
 
@@ -113,7 +136,7 @@ describe("detectRerouteBanner", () => {
       q9_payment: "own_posb",
     };
     const after = { "q1_schemes.SB": true, q2_who_died: "child" };
-    expect(detectRerouteBanner(RULE_PACK, sb, before, after)).toEqual(t5.banner);
+    expect(detectRerouteBanner(RULE_PACK, sb, before, after, undefined, undefined)).toEqual(t5.banner);
   });
 
   it("returns undefined when the terminal route is unchanged", () => {
@@ -125,6 +148,6 @@ describe("detectRerouteBanner", () => {
       q9_payment: "own_posb",
     };
     const after = { ...before };
-    expect(detectRerouteBanner(RULE_PACK, sb, before, after)).toBeUndefined();
+    expect(detectRerouteBanner(RULE_PACK, sb, before, after, undefined, undefined)).toBeUndefined();
   });
 });

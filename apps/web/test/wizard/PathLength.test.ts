@@ -18,6 +18,13 @@ import type { AnswerValue, QuestionDefinition } from "@claimsahayak/shared-types
 import type { SchemeDefinition } from "@claimsahayak/shared-types";
 import { toAnswerMap, type AnswersState } from "@/lib/wizardAnswers";
 import { getCurrentQuestion } from "@/lib/wizardCurrentQuestion";
+import { computeSessionDerived } from "@/lib/wizardDerived";
+
+// A fixed "as of" instant (rather than the wall clock) keeps this
+// exploration byte-deterministic across runs, exactly like the engine's
+// own truth-table fixtures. The monthYear candidates below are chosen
+// relative to THIS date, not to "today".
+const AS_OF_ISO = "2026-07-01T00:00:00.000Z";
 
 // An explicitly-typed binding (not `SchemeDefinition | undefined` narrowed by
 // a guard) so `scheme` stays non-undefined inside `explore()` below — a
@@ -40,10 +47,14 @@ function candidateAnswers(q: QuestionDefinition): readonly AnswerValue[] {
         { kind: "boolean", value: false },
       ];
     case "monthYear":
-      // The raw date never drives visibility itself (only a derived boolean
-      // the Wizard doesn't compute — see rule-engine/variables.ts), so one
-      // representative value is sufficient to explore every branch.
-      return [{ kind: "monthYear", month: 3, year: 2024 }];
+      // The raw date never enters the flat map, but since Milestone 6 the
+      // Wizard computes derived.monthsSinceDeath from it — so exploration
+      // needs one value on each side of the NO_NOMINATION_WAIT_MONTHS gate
+      // (relative to AS_OF_ISO) to walk both the T17 and T19 branches.
+      return [
+        { kind: "monthYear", month: 6, year: 2026 },
+        { kind: "monthYear", month: 3, year: 2024 },
+      ];
     case "multi": {
       const singles: AnswerValue[] = q.options.map((o) => ({ kind: "multi", optionIds: [o.id] }));
       const nonExclusiveIds = q.options.filter((o) => !o.exclusive).map((o) => o.id);
@@ -71,13 +82,14 @@ function explore(
     );
   }
   const flat = toAnswerMap(answers);
-  const vars = buildVarAssignment(RULE_PACK, scheme, flat, undefined);
+  const derived = computeSessionDerived(answers, AS_OF_ISO, RULE_PACK.constants);
+  const vars = buildVarAssignment(RULE_PACK, scheme, flat, derived);
   const route = resolveRoute(RULE_PACK, vars);
   if (route.terminal?.kind === "card") {
     onLeaf(depth, path);
     return;
   }
-  const current = getCurrentQuestion(RULE_PACK, scheme, flat, answers);
+  const current = getCurrentQuestion(RULE_PACK, scheme, flat, answers, derived);
   if (!current) {
     onLeaf(depth, path);
     return;
@@ -93,15 +105,18 @@ function explore(
 }
 
 describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
-  it("never exceeds 11 screens for any reachable SB-scheme path", () => {
-    // Was <=10 under the original M4 roadmap budget. The ClaimSahayak
-    // Official Rule Book v1.0 integration adds two mandatory questions to
-    // the worst-case path — q_armed_forces (D-14) and q_dispute (D-11) —
-    // both genuine competent-authority/decision forks the Rule Book
-    // requires; not addable via an existing screen without misreporting
-    // the outcome. Budget bumped by exactly the two new questions;
-    // flagged in the integration report as a deliberate, reported
-    // trade-off.
+  it("never exceeds 13 screens for any reachable SB-scheme path", () => {
+    // Was <=10 under the original M4 roadmap budget, <=11 after the Rule
+    // Book v1.0 integration added q_armed_forces (D-14) and q_dispute
+    // (D-11). Milestone 6's derived-date wiring raised the TRUE worst case
+    // to 13: the over-six-months no-nomination path now correctly reaches
+    // T17/ROUTE_C (a route-kind terminal), so it continues through
+    // q9_payment and q10_docs_check instead of stopping early at the T19
+    // WAIT card — those two screens were always part of the pack's design
+    // for that path; they were just unreachable while the Wizard passed
+    // `derived: undefined` (the pre-M6 correctness gap this milestone
+    // fixed). No new question was added; the budget now measures the path
+    // the engine's truth-table fixtures always intended.
     let maxDepth = 0;
     let maxPath: readonly string[] = [];
     explore({}, 0, [], (depth, path) => {
@@ -111,7 +126,7 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
       }
     });
     expect(maxDepth, `Longest path found (${String(maxDepth)} screens): ${maxPath.join(" -> ")}`).toBeLessThanOrEqual(
-      11,
+      13,
     );
   });
 
@@ -138,7 +153,8 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
     let current: AnswersState = {};
     let depth = 0;
     for (;;) {
-      const q = getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current);
+      const derived = computeSessionDerived(current, AS_OF_ISO, RULE_PACK.constants);
+      const q = getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current, derived);
       if (!q) break;
       const planned = plannedAnswers[q.id];
       if (!planned) {
@@ -149,6 +165,7 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
     }
 
     expect(depth).toBeLessThanOrEqual(8);
-    expect(getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current)).toBeUndefined();
+    const finalDerived = computeSessionDerived(current, AS_OF_ISO, RULE_PACK.constants);
+    expect(getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current, finalDerived)).toBeUndefined();
   });
 });
