@@ -426,4 +426,249 @@ export const TRUTH_TABLE_FIXTURES: readonly TruthTableFixture[] = [
       outputBuckets: ["ROUTE_B", "GLOBAL", "PAYMENT_OWN_POSB"],
     },
   },
+
+  // -----------------------------------------------------------------------
+  // ClaimSahayak Official Rule Book v1.0 integration — fixtures for the new
+  // D-row/M-row routes, overlays, and the SCSS scheme addition (Topic 11 §8
+  // acceptance criteria: armed-forces override, dispute-forces-succession-
+  // certificate, untraceable co-nominee referral, the 6-month gate boundary,
+  // SCSS, SCSS spouse continuation, RD-PSS, and each new M-row modifier at
+  // least once).
+  // -----------------------------------------------------------------------
+  {
+    id: "fx28_armed_forces_override",
+    description:
+      "Adult depositor serving in the armed forces dies with a CO/Committee requisition — overrides everything, even an in-force nomination.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q_armed_forces: true,
+      q5_nomination: "yes_alive",
+    },
+    expected: {
+      firedRouteIds: ["RB-D14"],
+      cardId: "card_referral_armed_forces",
+      outputBuckets: ["GLOBAL"],
+    },
+  },
+  {
+    id: "fx29_dispute_forces_succession_certificate",
+    description:
+      "No nomination, no evidence, but a dispute has been raised before payment — only a court Succession Certificate is accepted, regardless of amount.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "no",
+      q_dispute: true,
+      q6_legal_evidence: "no",
+      q7a_amount: "up_to_5_lakh",
+    },
+    expected: {
+      firedRouteIds: ["RB-D11"],
+      cardId: "card_stop_dispute_succession_certificate",
+      outputBuckets: ["GLOBAL"],
+    },
+  },
+  {
+    id: "fx30_untraceable_co_nominee_referral",
+    description:
+      "A co-nominee is untraceable/unwilling with no disclaimer — no official procedure exists; referred as a doubtful/special case.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_complication",
+      "q5a_complication.co_nominee_untraceable": true,
+    },
+    expected: {
+      firedRouteIds: ["RB-D07X"],
+      cardId: "card_referral_untraceable_nominee",
+      outputBuckets: ["GLOBAL"],
+    },
+  },
+  {
+    id: "fx31_no_nomination_gate_under_6_months",
+    description:
+      "No nomination, no evidence, within the affidavit limit, heirs together, but only 5 months since death — WAIT card (6-month gate boundary, under side).",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "no",
+      q6_legal_evidence: "no",
+      q7a_amount: "up_to_5_lakh",
+      q7b_heirs_together: "yes",
+    },
+    derived: { monthsSinceDeath: 5, yearsSinceDeath: 0 },
+    expected: {
+      firedRouteIds: ["T19"],
+      cardId: "card_wait_or_court",
+      outputBuckets: ["GLOBAL"],
+    },
+  },
+  {
+    id: "fx32_no_nomination_gate_at_6_months",
+    description:
+      "Same facts as fx31, but exactly 6 months since death — the discretionary affidavit route opens (6-month gate boundary, at side).",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "no",
+      q6_legal_evidence: "no",
+      q7a_amount: "up_to_5_lakh",
+      q7b_heirs_together: "yes",
+      q9_payment: "own_posb",
+    },
+    derived: { monthsSinceDeath: 6, yearsSinceDeath: 0 },
+    expected: {
+      firedRouteIds: ["T17"],
+      outputBuckets: ["ROUTE_C", "GLOBAL", "PAYMENT_OWN_POSB"],
+    },
+  },
+  {
+    id: "fx33_scss_nomination_alive",
+    description: "Senior Citizen Savings Scheme (SCSS), adult died, nominee alive — Route A (proves the new scheme is wired end-to-end).",
+    schemeId: "SCSS",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      q9_payment: "own_posb",
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "PAYMENT_OWN_POSB"],
+    },
+  },
+  {
+    id: "fx34_scss_spouse_continuation",
+    description: "SCSS, nominee alive, continuing — the surviving spouse ticks the SCSS spouse-continuation flag, adding SCSS Form-4 and the eligibility note.",
+    schemeId: "SCSS",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      q8_close_or_continue: "continue",
+      "q10_docs_check.scss_spouse_continuing": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "CONTINUE_ADDON", "OVERLAY_scss_spouse_continuing"],
+      overlayFlags: ["scss_spouse_continuing"],
+    },
+  },
+  {
+    id: "fx35_rd_pss_candidate",
+    description: "RD, nominee alive, the claimant ticks the Protected Savings Scheme flag — adds the PSS declaration, age proof, and 1-year deadline warning.",
+    schemeId: "RD",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      "q10_docs_check.rd_pss_candidate": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "OVERLAY_rd_pss_candidate"],
+      overlayFlags: ["rd_pss_candidate"],
+    },
+  },
+  {
+    id: "fx36_pledge_or_freeze",
+    description: "Nominee alive, but the account is pledged or frozen — adds the pledge-release certificate and the freeze-release note.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      "q10_docs_check.pledge_or_freeze": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "OVERLAY_pledge_or_freeze"],
+      overlayFlags: ["pledge_or_freeze"],
+    },
+  },
+  {
+    id: "fx37_minor_attained_majority",
+    description: "Nominee alive, and the (former) minor nominee has since turned 18 — paid directly, own KYC.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      "q10_docs_check.minor_attained_majority": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "OVERLAY_minor_attained_majority"],
+      overlayFlags: ["minor_attained_majority"],
+    },
+  },
+  {
+    id: "fx38_guardian_died_after_depositor",
+    description: "Nominee alive, and the guardian managing a minor's share has since died/changed — succeeding guardian acts.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      "q10_docs_check.guardian_died_after_depositor": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "OVERLAY_guardian_died_after_depositor"],
+      overlayFlags: ["guardian_died_after_depositor"],
+    },
+  },
+  {
+    id: "fx39_nri_nominee",
+    description: "Nominee alive, and the nominee lives outside India — payment on a non-repatriation basis.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "yes_alive",
+      "q10_docs_check.nri_nominee": true,
+    },
+    expected: {
+      firedRouteIds: ["T9"],
+      outputBuckets: ["ROUTE_A", "GLOBAL", "OVERLAY_nri_nominee"],
+      overlayFlags: ["nri_nominee"],
+    },
+  },
+  {
+    id: "fx40_mis_excess_ceiling",
+    description: "MIS joint account, survivor's balance may exceed the single-account ceiling — excess refunded, interest adjusted.",
+    schemeId: "MIS",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "two_names_survivor",
+      "q10_docs_check.mis_excess_ceiling": true,
+    },
+    expected: {
+      firedRouteIds: ["T7"],
+      outputBuckets: ["ROUTE_SURVIVOR", "GLOBAL", "OVERLAY_mis_excess_ceiling"],
+      overlayFlags: ["mis_excess_ceiling"],
+    },
+  },
+  {
+    id: "fx41_unregistered_valid_nomination",
+    description: "No nomination on record, but a filled-in, signed nomination form was found unregistered — posthumous registration guidance.",
+    schemeId: "SB",
+    answers: {
+      q2_who_died: "adult",
+      q3_holding: "one_name",
+      q5_nomination: "no",
+      q6_legal_evidence: "yes",
+      "q10_docs_check.unregistered_valid_nomination": true,
+    },
+    expected: {
+      firedRouteIds: ["T16"],
+      outputBuckets: ["ROUTE_B", "GLOBAL", "OVERLAY_unregistered_valid_nomination"],
+      overlayFlags: ["unregistered_valid_nomination"],
+    },
+  },
 ];

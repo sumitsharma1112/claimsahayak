@@ -114,6 +114,74 @@ export const NV_REGISTER: readonly NvEntry[] = [
   },
 ];
 
+/**
+ * ClaimSahayak Official Rule Book v1.0 integration (Topic 11 §6 mapping
+ * table). These carry the Rule Book's OWN registered gaps and provisional
+ * items — not new ambiguities discovered during this authoring pass. Two
+ * Topic-11 entries are deliberately NOT duplicated here: "NV-RB-2"
+ * (authority for heirs-of-nominee claims, OQ-11/D-06) is the same gap the
+ * pack already tracks as NV-01, and "NV-RB-8" (stamp-paper denominations)
+ * is the same gap already tracked as NV-02.
+ */
+export const RULEBOOK_NV_REGISTER: readonly NvEntry[] = [
+  {
+    id: "NV-RB-1",
+    openQuestion:
+      "No official India Post procedure exists for a co-nominee who is untraceable or unwilling to join a claim and has not signed a Form 14 disclaimer (Rule Book OQ-14, Decision Matrix row D-07X).",
+    interimBehavior:
+      "Tell the claimant there is no published procedure; the Post Office treats it as a doubtful/special case, makes enquiries, records what's known, and refers it to the Divisional Head or Directorate — never invent a resolution.",
+  },
+  {
+    id: "NV-RB-3",
+    openQuestion:
+      "The Rule Book confirms a pledge is released by the pledgee, and a court/tax freeze must be lifted before settlement, but no official step-by-step release PROCEDURE is published (Rule Book OQ-28).",
+    interimBehavior:
+      "Show the pledge-release certificate as a document requirement, and state plainly that the exact release process depends on who imposed the freeze — direct the claimant to the Post Office and the freezing authority rather than inventing steps.",
+  },
+  {
+    id: "NV-RB-4",
+    openQuestion:
+      "The Rule Book states a nominee who has attained majority is paid directly with their own KYC (CS-MIN-010), but does not give an express confirmation procedure for verifying that majority has in fact been attained (Rule Book OQ-17).",
+    interimBehavior:
+      "Ask for proof of date of birth alongside the usual identity proof, and let the Post Office confirm eligibility at the counter — do not invent a separate verification step.",
+  },
+  {
+    id: "NV-RB-5",
+    openQuestion:
+      "NSC and KVP continuation is capped at up to 3 nominees/heirs jointly (Rule Book CS-SCH-007/008), but the current Rule Engine has no list-typed \"how many claimants are continuing together\" fact and no count() operator to enforce this cap — it can only be stated as information, not verified (Rule Book OQ-15 residue).",
+    interimBehavior:
+      "State the ≤3-claimant limit as information in the continuation checklist item; do not claim the wizard has checked or enforced it. Flagged as a required Rule Engine enhancement in the integration report.",
+  },
+  {
+    id: "NV-RB-6",
+    openQuestion:
+      "Whether the ₹50 nomination-change fee has in fact been abolished (G.S.R. 214(E) / SB Order 05/2025) — the Rule Book could not obtain an official copy and marks this 🔶 PROVISIONAL/UNVERIFIED (CS-NOM-024).",
+    interimBehavior:
+      "Do not state the fee is abolished anywhere in the pack; if the existing ₹50 fee is ever mentioned, keep it as-is until an official copy is archived and the Rule Book upgrades this to VERIFIED.",
+  },
+  {
+    id: "NV-RB-7",
+    openQuestion:
+      "Whether Internet-Banking nominee management (SB Order 04/2026) is live and what its exact workflow is — the Rule Book could not obtain an official copy and marks this 🔶 PROVISIONAL/UNVERIFIED (CS-NOM-025).",
+    interimBehavior:
+      "Do not add an internet-banking nomination path to the wizard until an official copy is archived and the Rule Book upgrades this to VERIFIED.",
+  },
+  {
+    id: "NV-RB-9",
+    openQuestion:
+      "The Government Savings Promotion Act 1873 s.4A(4) says the no-nomination discretionary waiting period is THREE months, while GSPR 2018 Rule 15(6) and R60 say SIX months (Rule Book conflict C-1).",
+    interimBehavior:
+      "The Rule Engine's NO_NOMINATION_WAIT_MONTHS constant uses six months (the later, more specific instrument), matching the Rule Book's own resolution — flagged here for legal review, not silently picked without a record.",
+  },
+  {
+    id: "NV-RB-10",
+    openQuestion:
+      "The Recurring Deposit Protected Savings Scheme's condition (vii) — \"no loan in the first 24 months\" — is stated in the Rule Book as printed in the gazette text, with confirmation of its exact current wording still pending (Rule Book OQ-25).",
+    interimBehavior:
+      "State the condition as printed; direct the claimant to the Post Office to confirm the current exact wording before relying on it.",
+  },
+];
+
 export function getNvEntry(id: string): NvEntry | undefined {
-  return NV_REGISTER.find((entry) => entry.id === id);
+  return [...NV_REGISTER, ...RULEBOOK_NV_REGISTER].find((entry) => entry.id === id);
 }

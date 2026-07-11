@@ -204,4 +204,48 @@ export const DOCUMENTS: readonly DocumentDefinition[] = [
     originalRequired: false,
     copiesRequired: 1,
   },
+  {
+    id: "doc_guardianship_certificate",
+    name: { en: "Guardianship certificate or court guardianship order" },
+    detail: {
+      en: "Needed only if you are claiming a minor's share and are NOT the minor's natural guardian (a parent). Court-appointed guardians need the court order.",
+    },
+    category: "exception",
+    originalRequired: true,
+    copiesRequired: 1,
+    sourceRefs: ["CS-MIN-006"],
+  },
+  {
+    id: "doc_pledge_release_certificate",
+    name: { en: "Pledge-release certificate" },
+    detail: {
+      en: "Needed only if the account or certificate was pledged. Confirms the pledge has been released before the claim can be settled. Issued by the pledgee.",
+    },
+    category: "exception",
+    originalRequired: true,
+    copiesRequired: 1,
+    sourceRefs: ["CS-NON-008"],
+  },
+  {
+    id: "doc_rd_pss_declaration",
+    name: { en: "Recurring Deposit \"Protected Savings Scheme\" declaration" },
+    detail: {
+      en: "A declaration that this benefit has not already been used for any other account of the deceased. Needed only for a Protected Savings Scheme claim, within 1 year of death.",
+    },
+    category: "exception",
+    originalRequired: true,
+    copiesRequired: 1,
+    sourceRefs: ["CS-SCH-002"],
+  },
+  {
+    id: "doc_rd_pss_age_proof",
+    name: { en: "Age proof of the deceased (for the Protected Savings Scheme)" },
+    detail: {
+      en: "Needed only if there is no age declaration already on record, to confirm the holder opened the account between ages 18 and 55. A birth certificate, school certificate, PAN, voter ID, passport, or driving licence of the deceased is accepted.",
+    },
+    category: "exception",
+    originalRequired: false,
+    copiesRequired: 1,
+    sourceRefs: ["CS-SCH-002"],
+  },
 ];

@@ -14,6 +14,7 @@ describe("validateAnswers", () => {
     const answers = {
       "q1_schemes.SB": true,
       q2_who_died: "adult",
+      q_armed_forces: false,
       q3_holding: "two_names_survivor",
       q4_death_month: "2024-01",
       q9_payment: "own_posb",

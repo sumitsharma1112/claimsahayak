@@ -93,7 +93,15 @@ function explore(
 }
 
 describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
-  it("never exceeds 10 screens for any reachable SB-scheme path", () => {
+  it("never exceeds 11 screens for any reachable SB-scheme path", () => {
+    // Was <=10 under the original M4 roadmap budget. The ClaimSahayak
+    // Official Rule Book v1.0 integration adds two mandatory questions to
+    // the worst-case path — q_armed_forces (D-14) and q_dispute (D-11) —
+    // both genuine competent-authority/decision forks the Rule Book
+    // requires; not addable via an existing screen without misreporting
+    // the outcome. Budget bumped by exactly the two new questions;
+    // flagged in the integration report as a deliberate, reported
+    // trade-off.
     let maxDepth = 0;
     let maxPath: readonly string[] = [];
     explore({}, 0, [], (depth, path) => {
@@ -103,14 +111,23 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
       }
     });
     expect(maxDepth, `Longest path found (${String(maxDepth)} screens): ${maxPath.join(" -> ")}`).toBeLessThanOrEqual(
-      10,
+      11,
     );
   });
 
-  it("keeps the normal happy path (adult, one name, nominee alive) to 7 screens or fewer", () => {
+  it("keeps the normal happy path (adult, one name, nominee alive) to 8 screens or fewer", () => {
+    // Was <=7 under the original M4 roadmap budget. The ClaimSahayak
+    // Official Rule Book v1.0 integration adds one mandatory question,
+    // q_armed_forces (Decision Matrix D-14, CS-NOM-017) — a genuine
+    // competent-authority fork (CO/Committee of Adjustment overrides
+    // nomination for serving military personnel), not a cosmetic addition,
+    // so it cannot be folded into an existing screen without misreporting
+    // the outcome. Budget bumped by exactly the one new question; flagged
+    // in the integration report as a deliberate, reported trade-off.
     const plannedAnswers: Record<string, AnswerValue> = {
       q1_schemes: { kind: "multi", optionIds: ["SB"] },
       q2_who_died: { kind: "single", optionId: "adult" },
+      q_armed_forces: { kind: "boolean", value: false },
       q3_holding: { kind: "single", optionId: "one_name" },
       q4_death_month: { kind: "monthYear", month: 3, year: 2024 },
       q5_nomination: { kind: "single", optionId: "yes_alive" },
@@ -131,7 +148,7 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
       depth += 1;
     }
 
-    expect(depth).toBeLessThanOrEqual(7);
+    expect(depth).toBeLessThanOrEqual(8);
     expect(getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current)).toBeUndefined();
   });
 });

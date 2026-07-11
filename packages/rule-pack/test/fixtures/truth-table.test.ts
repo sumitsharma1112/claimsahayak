@@ -4,9 +4,9 @@ import { TRUTH_TABLE_FIXTURES } from "../../src/fixtures/index.js";
 import { checkTruthTableFixturesReferentialIntegrity } from "../../src/validate/truth-table.js";
 
 describe("truth-table fixtures", () => {
-  it("cover all 8 schemes", () => {
+  it("cover all 9 schemes (SCSS added under the ClaimSahayak Official Rule Book v1.0 integration)", () => {
     const schemesCovered = new Set(TRUTH_TABLE_FIXTURES.map((f) => f.schemeId));
-    expect(schemesCovered.size).toBe(8);
+    expect(schemesCovered.size).toBe(9);
   });
 
   it("cover every T-rule id at least once (T1-T20 plus T18A)", () => {

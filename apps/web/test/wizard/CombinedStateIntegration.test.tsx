@@ -47,6 +47,10 @@ describe("Combined wizard state — offline throughout", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    // q_armed_forces (D-14, ClaimSahayak Official Rule Book v1.0 integration)
+    // sits right after q2_who_died on the adult branch.
+    await user.click(screen.getByRole("radio", { name: "No" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.selectOptions(screen.getByLabelText("Month"), "3");
@@ -85,6 +89,12 @@ describe("Combined wizard state — offline throughout", () => {
 
     expect(screen.getByRole("heading", { name: questionText("q6_legal_evidence") })).toBeTruthy();
     await user.click(screen.getByRole("radio", { name: optionLabel("q6_legal_evidence", "yes") }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // q_dispute (D-11) is visible whenever q5_nomination === "no", regardless
+    // of the q6_legal_evidence answer.
+    expect(screen.getByRole("heading", { name: questionText("q_dispute") })).toBeTruthy();
+    await user.click(screen.getByRole("radio", { name: "No" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // T16 fires (ROUTE_B, a real route, not a card) — the wizard keeps going.

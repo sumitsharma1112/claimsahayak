@@ -5,12 +5,17 @@ import { issue, type ValidationIssue } from "../schema/issue.js";
  * A citation should contain at least one recognizable marker: a section
  * symbol, "FAQ", "Annexure", "SB Order", "Blueprint", or "NV-" (a
  * Needs-Verification reference standing in for a handbook citation where
- * the handbook itself is silent). Schema validation already guarantees
- * `handbookRef` is non-empty; this check catches a placeholder-shaped
- * string ("TODO", "tbd", a stray word) that technically passes that but
- * clearly isn't a real citation.
+ * the handbook itself is silent) — or, since the ClaimSahayak Official
+ * Rule Book v1.0 integration, an official government-instrument marker
+ * (GSPR, a G.S.R. gazette number, a numbered Rule/section of the Act, or
+ * R60 — the POSB Manual's deceased-claim rule — or a Rule Book CS-ID
+ * itself). Schema validation already guarantees `handbookRef` is
+ * non-empty; this check catches a placeholder-shaped string ("TODO",
+ * "tbd", a stray word) that technically passes that but clearly isn't a
+ * real citation.
  */
-const CITATION_MARKER_PATTERN = /§|FAQ|Annexure|SB Order|Blueprint|NV-|R-\d/;
+const CITATION_MARKER_PATTERN =
+  /§|FAQ|Annexure|SB Order|Blueprint|NV-|R-\d|GSPR|G\.S\.R\.|Rule \d|Act s\.|R60|CS-[A-Z]{3}-\d{3}/;
 
 function checkCarriers<T extends { readonly handbookRef: string }>(
   carriers: readonly T[],

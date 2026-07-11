@@ -12,6 +12,7 @@ import { CARDS } from "./cards.js";
 import { TEMPLATES } from "./templates.js";
 import { CONTENT } from "./content/index.js";
 import { VOCAB } from "./vocab.js";
+import { DECISIONS } from "./decisions.js";
 
 /**
  * `engineMin` is derived from the engine package's own version (never
@@ -34,13 +35,15 @@ function engineMinFromVersion(version: string): string {
  * be reused by the Admin Portal simulator in the browser, Milestone 10).
  */
 const META: RulePackMeta = {
-  version: "2026.07.1",
+  version: "2026.07.2",
   engineMin: engineMinFromVersion(ENGINE_VERSION),
-  publishedAt: "2026-07-09T00:00:00.000Z",
+  publishedAt: "2026-07-11T00:00:00.000Z",
   publishedBy: "publisher",
   changelog:
-    "Milestone 2: full Rule Pack authored — 8 schemes, 14 questions, T1-T20 routes (T21 implemented as a system overlay), outputs for every route family, 9 overlays, 19 documents, 9 forms, 4 templates, 7 cards, and fix/learn/faq/glossary content.",
+    "ClaimSahayak Official Rule Book v1.0 integration: added SCSS (9th scheme); re-cited existing T1-T20 routes/overlays with official CS-ID sourceRefs where the Rule Book confirms them; added routes/overlays/questions for armed-forces override (D-14), dispute-forces-succession-certificate (D-11), untraceable/unwilling co-nominee referral (D-07X), pledge/freeze (M-B), minor-attained-majority (M-E), guardian-succession (M-F), NRI nominee (M-H), unregistered-but-valid nomination (M-G), MIS joint-ceiling excess (D-19), SCSS spouse continuation (D-17), and RD Protected Savings Scheme (D-18); added decisions.ts (DecisionRecord: Decision/Reason/Competent Authority/Official References per outcome bucket); added NV-RB register entries for Rule Book gaps/provisional items. See knowledge-base/official-rule-book/RULE-BOOK-v1.0.md for the source. Known gap: NSC/KVP's ≤3-claimant continuation cap and per-nominee list evaluation generally are not enforceable by the current engine (no list-typed facts/count() operator) — stated as information only, not gated logic.",
   contentHash: "0".repeat(64),
+  rulebookVersion: "1.0",
+  rulebookAsOnDate: "2026-07-10",
 };
 
 export const RULE_PACK: RulePack = {
@@ -57,4 +60,5 @@ export const RULE_PACK: RulePack = {
   templates: TEMPLATES,
   content: CONTENT,
   vocab: VOCAB,
+  decisions: DECISIONS,
 };

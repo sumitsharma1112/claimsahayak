@@ -55,6 +55,7 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
       { id: "SSA", label: { en: "Sukanya Samriddhi Account (SSA)" } },
       { id: "NSC", label: { en: "National Savings Certificate (NSC)" } },
       { id: "KVP", label: { en: "Kisan Vikas Patra (KVP)" } },
+      { id: "SCSS", label: { en: "Senior Citizen Savings Scheme (SCSS)" } },
       {
         id: "OLD_UNSURE",
         label: { en: "An older or discontinued scheme, or I'm not sure" },
@@ -81,6 +82,10 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
       "q10_docs_check",
     ],
     handbookRef: "§1.3 (scope); §5.4-9",
+    sourceRefs: [
+      "CS-SCH-001", "CS-SCH-002", "CS-SCH-003", "CS-SCH-004", "CS-SCH-005",
+      "CS-SCH-006", "CS-SCH-007", "CS-SCH-008", "CS-SCH-009",
+    ],
   },
   {
     id: "q1a_nsc_kvp_format",
@@ -126,10 +131,12 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
       not: { "==": [{ var: "answers.q1_schemes.OLD_UNSURE" }, true] },
     },
     invalidates: [
+      "q_armed_forces",
       "q3_holding",
       "q4_death_month",
       "q5_nomination",
       "q5a_complication",
+      "q_dispute",
       "q6_legal_evidence",
       "q7a_amount",
       "q7b_heirs_together",
@@ -139,6 +146,25 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
       "q10_docs_check",
     ],
     handbookRef: "§7.6; §7.6-SSA",
+  },
+  {
+    id: "q_armed_forces",
+    stepId: "S2",
+    text: {
+      en: "Was the person a serving member of the Army, Air Force, or Navy, with a requisition raised by their Commanding Officer or Committee of Adjustment?",
+    },
+    whyStrip: {
+      en: "This is a specific military procedure that is followed instead of the usual nomination or legal-heir process.",
+    },
+    inputType: "boolean",
+    options: [
+      { id: "true", label: { en: "Yes" } },
+      { id: "false", label: { en: "No" } },
+    ],
+    visibleWhen: { "==": [{ var: "answers.q2_who_died" }, "adult"] },
+    invalidates: [],
+    handbookRef: "GSPR Rule 17; Army & Air Force (Disposal of Private Property) Act 1950; Navy Act 1957",
+    sourceRefs: ["CS-NOM-017"],
   },
   {
     id: "q3_holding",
@@ -169,6 +195,7 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
     invalidates: [
       "q5_nomination",
       "q5a_complication",
+      "q_dispute",
       "q6_legal_evidence",
       "q7a_amount",
       "q7b_heirs_together",
@@ -239,6 +266,7 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
     },
     invalidates: [
       "q5a_complication",
+      "q_dispute",
       "q6_legal_evidence",
       "q7a_amount",
       "q7b_heirs_together",
@@ -280,10 +308,20 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
         id: "cannot_come_together",
         label: { en: "Not all the nominees are able to come together" },
       },
+      {
+        id: "co_nominee_untraceable",
+        label: {
+          en: "One of the nominees is untraceable or unwilling to join the claim, and has not signed a disclaimer",
+        },
+        help: {
+          en: "There is no official procedure for this situation — we'll explain what to expect.",
+        },
+      },
     ],
     visibleWhen: { "==": [{ var: "answers.q5_nomination" }, "yes_complication"] },
     invalidates: [],
     handbookRef: "§2.1; FAQ 22, FAQ 33",
+    sourceRefs: ["CS-PRE-002", "CS-PRE-004", "CS-PRE-005", "CS-MIN-001", "CS-MNM-005", "CS-MNM-006"],
   },
   {
     id: "q6_legal_evidence",
@@ -315,6 +353,25 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
       "q10_docs_check",
     ],
     handbookRef: "§3.1; §3.2",
+  },
+  {
+    id: "q_dispute",
+    stepId: "S6",
+    text: {
+      en: "Has any dispute about this claim been raised with the Post Office before payment — for example, someone objecting to who should receive the money?",
+    },
+    whyStrip: {
+      en: "If a dispute has been raised, the claim can only be paid on a court Succession Certificate, even if the family already has a Probate, Letters of Administration, or a Legal Heir Certificate.",
+    },
+    inputType: "boolean",
+    options: [
+      { id: "true", label: { en: "Yes" } },
+      { id: "false", label: { en: "No" } },
+    ],
+    visibleWhen: { "==": [{ var: "answers.q5_nomination" }, "no"] },
+    invalidates: [],
+    handbookRef: "GSPR 2018, Rule 15(6), provisos to (i) and (ii) (inserted 03.07.2023)",
+    sourceRefs: ["CS-NON-006"],
   },
   {
     id: "q7a_amount",
@@ -490,6 +547,68 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
         help: { en: "This usually means PMSBY, PMJJBY insurance cover, or an Atal Pension Yojana (APY) enrolment." },
       },
       {
+        id: "pledge_or_freeze",
+        label: {
+          en: "The account or certificate is pledged, or has been frozen/attached by a court or tax authority",
+        },
+        help: {
+          en: "A pledged deposit is paid to the pledgee first, or needs a release certificate; a court or tax freeze must be cleared before the claim can be settled.",
+        },
+      },
+      {
+        id: "minor_attained_majority",
+        label: { en: "The nominee was a minor when the claim started, but has since turned 18" },
+        help: { en: "Once the (former) minor turns 18, they can be paid directly, with their own identity proof." },
+      },
+      {
+        id: "guardian_died_after_depositor",
+        label: {
+          en: "The guardian managing a minor nominee's share has since died, or has changed",
+        },
+        help: { en: "The succeeding guardian, in the usual order of priority, can act instead." },
+      },
+      {
+        id: "nri_nominee",
+        label: { en: "The nominee lives outside India (NRI)" },
+        help: {
+          en: "Payment is made on a non-repatriation basis — it cannot be sent to a foreign bank account.",
+        },
+      },
+      {
+        id: "mis_excess_ceiling",
+        label: {
+          en: "This is a Monthly Income Scheme joint account, and the surviving holder's own balance may now be over the single-account ceiling",
+        },
+        help: { en: "Any excess is refunded, and the interest is adjusted." },
+      },
+      {
+        id: "scss_spouse_continuing",
+        label: {
+          en: "This is a Senior Citizen Savings Scheme account, and I am the spouse and want to continue it in my own name",
+        },
+        help: {
+          en: "SCSS can only be continued by a spouse — as a joint holder, or as the sole nominee eligible on the date of death — not by any other nominee or heir.",
+        },
+      },
+      {
+        id: "rd_pss_candidate",
+        label: {
+          en: "This is a Recurring Deposit the holder died before completing, and it may qualify for the \"Protected Savings Scheme\" full maturity payout",
+        },
+        help: {
+          en: "Conditions include: the account is at least 2 years old; the holder opened it between ages 18 and 55; the first 24 deposits were paid on time; no loan was taken in the first 24 months; and the claim is made within 1 year of death.",
+        },
+      },
+      {
+        id: "unregistered_valid_nomination",
+        label: {
+          en: "A nomination form was filled in and signed, but it was never registered by the Post Office",
+        },
+        help: {
+          en: "This can be registered after the fact with the Divisional Superintendent's approval, and then treated as if the nomination were in force.",
+        },
+      },
+      {
         id: "none",
         label: { en: "None of these" },
         exclusive: true,
@@ -497,6 +616,15 @@ export const QUESTIONS: readonly QuestionDefinition[] = [
     ],
     visibleWhen: ALWAYS,
     invalidates: [],
-    handbookRef: "§5.4-1; §5.4-2; §7.2; §7.3; §7.10; §7.1",
+    handbookRef: "§5.4-1; §5.4-2; §7.2; §7.3; §7.10; §7.1; GSPR Rules 10(4), 14(9); R60(2)(viii)(d), (4)(D)(vi); CS-NOM-011; CS-MIN-009/010; CS-NOM-020(12); CS-JNT-010; CS-SCH-002/005",
+    sourceRefs: [
+      "CS-NOM-011",
+      "CS-MIN-009",
+      "CS-MIN-010",
+      "CS-NOM-020",
+      "CS-JNT-010",
+      "CS-SCH-002",
+      "CS-SCH-005",
+    ],
   },
 ];

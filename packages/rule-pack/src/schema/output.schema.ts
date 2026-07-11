@@ -12,6 +12,7 @@ import {
   expectOneOf,
   expectOptional,
   expectRecord,
+  parseOptionalStringArray,
 } from "./primitives.js";
 import { parseLocalizedText } from "./locale.schema.js";
 
@@ -125,6 +126,10 @@ export function parseOutputRule(
     expectOptional(record["nvRef"], `${path}.nvRef`, expectNonEmptyString),
     undefined,
   );
+  const sourceRefs = collector.field(
+    parseOptionalStringArray(record["sourceRefs"], `${path}.sourceRefs`),
+    undefined,
+  );
 
   if ((itemType === "form" || itemType === "document") && refId === undefined) {
     collector.push({
@@ -148,6 +153,7 @@ export function parseOutputRule(
     sortOrder,
     handbookRef,
     ...(nvRef !== undefined ? { nvRef } : {}),
+    ...(sourceRefs !== undefined ? { sourceRefs } : {}),
   };
   return ok(rule);
 }

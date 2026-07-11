@@ -18,7 +18,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "passbook_lost",
     fixSlug: "lost-passbook",
-    handbookRef: "§5.4-5; Annexure 9",
+    handbookRef: "§5.4-5; Annexure 9; R60(2)(xii), (6)(iv)",
+    sourceRefs: ["CS-NOM-020"],
     items: [
       {
         id: "OVERLAY_passbook_lost_closure",
@@ -94,7 +95,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "name_mismatch_depositor",
     fixSlug: "reconciliation-depositor",
-    handbookRef: "§5.4-1; Annexure 7; FAQ 12",
+    handbookRef: "§5.4-1; Annexure 7; FAQ 12; R60(15)",
+    sourceRefs: ["CS-NOM-022"],
     items: [
       {
         id: "OVERLAY_name_mismatch_depositor_certificate",
@@ -139,7 +141,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "name_mismatch_own",
     fixSlug: "reconciliation-claimant",
-    handbookRef: "§5.4-2; Annexure 7; FAQ 13, FAQ 14",
+    handbookRef: "§5.4-2; Annexure 7; FAQ 13, FAQ 14; R60(15)",
+    sourceRefs: ["CS-NOM-022"],
     items: [
       {
         id: "OVERLAY_name_mismatch_own_certificate",
@@ -209,7 +212,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "death_cert_not_standard",
     fixSlug: "death-certificate",
-    handbookRef: "§7.2",
+    handbookRef: "§7.2; R60(5); GSPR 2018, Rule 15(2)",
+    sourceRefs: ["CS-NOM-021"],
     items: [
       {
         id: "OVERLAY_death_cert_alternates",
@@ -233,7 +237,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "someone_abroad",
     fixSlug: "abroad-authentication",
-    handbookRef: "§7.10",
+    handbookRef: "§7.10; R60(9)",
+    sourceRefs: ["CS-NOM-023"],
     items: [
       {
         id: "OVERLAY_abroad_authentication",
@@ -275,7 +280,8 @@ export const OVERLAYS: readonly OverlayRule[] = [
   {
     flagId: "missing_person",
     fixSlug: "missing-person",
-    handbookRef: "§7.3",
+    handbookRef: "§7.3; R60(8)",
+    sourceRefs: ["CS-NOM-023"],
     items: [
       {
         id: "OVERLAY_missing_person_fir",
@@ -400,6 +406,294 @@ export const OVERLAYS: readonly OverlayRule[] = [
         section: "documents",
         sortOrder: 3,
         handbookRef: "§7.1",
+      },
+    ],
+  },
+  // -------------------------------------------------------------------
+  // ClaimSahayak Official Rule Book v1.0 integration — new overlays for
+  // Decision Matrix M-row modifiers (and D-19/D-17-SCSS/D-18-RD-PSS,
+  // which layer onto whichever route/card wins rather than competing for
+  // it — see routes.ts's header comment on why these are overlays, not
+  // routes: `resolveOverlays` (Milestone 3, frozen) applies regardless of
+  // which route/card is terminal, exactly the "add extra items on top of
+  // any outcome" semantics these Decision Matrix rows need).
+  // -------------------------------------------------------------------
+  {
+    flagId: "pledge_or_freeze",
+    fixSlug: "other",
+    handbookRef: "R60(2)(viii)(d), (4)(D)(vi)",
+    sourceRefs: ["CS-NON-008"],
+    items: [
+      {
+        id: "OVERLAY_pledge_or_freeze_release",
+        routeId: "OVERLAY_pledge_or_freeze",
+        itemType: "document",
+        refId: "doc_pledge_release_certificate",
+        label: { en: "Pledge-release certificate (if the account or certificate was pledged)" },
+        attrs: {
+          why: { en: "A pledged deposit is paid to the pledgee first, or needs proof the pledge has been released, before your claim can be settled." },
+          originalOrCopy: { en: "Bring the original to show; a photocopy is submitted." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The pledgee, then the Post Office" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "R60(2)(viii)(d)",
+        sourceRefs: ["CS-NON-008"],
+      },
+      {
+        id: "OVERLAY_pledge_or_freeze_court_tax_note",
+        routeId: "OVERLAY_pledge_or_freeze",
+        itemType: "warning",
+        label: {
+          en: "If the account is frozen or attached by a court or tax authority, the claim cannot be settled until that freeze is released. There is no fixed official procedure published for this release — the Post Office and the freezing authority will guide you on the exact steps for your case.",
+        },
+        attrs: {
+          why: { en: "So you know a freeze must be lifted first, and that the exact process depends on who imposed it." },
+          originalOrCopy: { en: "Not applicable." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office, together with the freezing court/tax authority" },
+        },
+        section: "documents",
+        sortOrder: 2,
+        handbookRef: "R60(4)(D)(vi)",
+        nvRef: "NV-RB-3",
+        sourceRefs: ["CS-NON-008"],
+      },
+    ],
+  },
+  {
+    flagId: "minor_attained_majority",
+    fixSlug: "other",
+    handbookRef: "CS-MIN-010",
+    sourceRefs: ["CS-MIN-010"],
+    items: [
+      {
+        id: "OVERLAY_minor_attained_majority_direct_payment",
+        routeId: "OVERLAY_minor_attained_majority",
+        itemType: "instruction",
+        label: {
+          en: "Since the nominee has now turned 18, the share is paid directly to them, with their own identity proof — an appointee or guardian is no longer needed for this share.",
+        },
+        attrs: {
+          why: { en: "A nominee who has attained majority claims in their own right." },
+          originalOrCopy: { en: "Bring proof of date of birth along with your usual identity proof." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "CS-MIN-010",
+        nvRef: "NV-RB-4",
+        sourceRefs: ["CS-MIN-010"],
+      },
+    ],
+  },
+  {
+    flagId: "guardian_died_after_depositor",
+    fixSlug: "other",
+    handbookRef: "GSPR 2018, Rule 10(4)",
+    sourceRefs: ["CS-MIN-009"],
+    items: [
+      {
+        id: "OVERLAY_guardian_died_after_depositor_succession",
+        routeId: "OVERLAY_guardian_died_after_depositor",
+        itemType: "instruction",
+        label: {
+          en: "The succeeding guardian — following the usual order of priority (another parent, then a person entitled to act, then a court-appointed guardian) — can act for the minor's share instead.",
+        },
+        attrs: {
+          why: { en: "A change of guardian does not stop the minor's claim; it simply changes who receives the money on the minor's behalf." },
+          originalOrCopy: { en: "Bring proof of the earlier guardian's death, and your own proof of guardianship if you are not a natural guardian." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "GSPR 2018, Rule 10(4)",
+        sourceRefs: ["CS-MIN-009"],
+      },
+    ],
+  },
+  {
+    flagId: "nri_nominee",
+    fixSlug: "other",
+    handbookRef: "GSPR 2018, Rule 14(9)",
+    sourceRefs: ["CS-NOM-011"],
+    items: [
+      {
+        id: "OVERLAY_nri_nominee_non_repatriation",
+        routeId: "OVERLAY_nri_nominee",
+        itemType: "goodToKnow",
+        label: {
+          en: "A nominee living outside India is paid on a non-repatriation basis — the money can be credited to an account in India, but cannot be sent directly to a foreign bank account.",
+        },
+        attrs: {
+          why: { en: "This is how payment works for a nominee who is a non-resident Indian (NRI)." },
+          originalOrCopy: { en: "Not applicable." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "Not applicable." },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "GSPR 2018, Rule 14(9)",
+        sourceRefs: ["CS-NOM-011"],
+      },
+    ],
+  },
+  {
+    flagId: "mis_excess_ceiling",
+    fixSlug: "other",
+    handbookRef: "SB Order 29/2021",
+    sourceRefs: ["CS-JNT-010"],
+    items: [
+      {
+        id: "OVERLAY_mis_excess_ceiling_refund",
+        routeId: "OVERLAY_mis_excess_ceiling",
+        itemType: "goodToKnow",
+        label: {
+          en: "If your own combined Monthly Income Scheme balance now exceeds the single-account ceiling because of this account, the excess is refunded and the interest is adjusted (Monthly Income Scheme rate switches to Savings Account rate on the excess) — this is worked out by the Post Office, not something you need to calculate.",
+        },
+        attrs: {
+          why: { en: "The joint-holder ceiling is re-tested once you become the sole holder, and any excess is corrected automatically." },
+          originalOrCopy: { en: "Not applicable." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office's computer records" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "SB Order 29/2021",
+        sourceRefs: ["CS-JNT-010"],
+      },
+    ],
+  },
+  {
+    flagId: "scss_spouse_continuing",
+    fixSlug: "other",
+    handbookRef: "SCSS Scheme Rules 2019, para 8 (CS-SCH-005)",
+    sourceRefs: ["CS-SCH-005", "CS-JNT-011"],
+    items: [
+      {
+        id: "OVERLAY_scss_spouse_continuing_form4",
+        routeId: "OVERLAY_scss_spouse_continuing",
+        itemType: "form",
+        refId: "form_scss_form4",
+        label: { en: "SCSS Form-4 — extension for the continuing spouse" },
+        attrs: {
+          why: { en: "Senior Citizen Savings Scheme can only be continued by a spouse — as a joint holder, or as the sole nominee who was eligible on the date of death — not by any other nominee or heir." },
+          originalOrCopy: { en: "Fill in and sign at the Post Office." },
+          selfAttest: { en: "Yes, where the form asks for it." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "forms",
+        sortOrder: 1,
+        handbookRef: "SCSS Scheme Rules 2019, para 8",
+        sourceRefs: ["CS-SCH-005", "CS-JNT-011"],
+      },
+      {
+        id: "OVERLAY_scss_spouse_continuing_eligibility_note",
+        routeId: "OVERLAY_scss_spouse_continuing",
+        itemType: "warning",
+        label: {
+          en: "If you are not the deceased's spouse, or were not eligible as joint holder/sole nominee on the date of death, the account cannot be continued — only closed.",
+        },
+        attrs: {
+          why: { en: "So there's no surprise if continuation is not available for your situation." },
+          originalOrCopy: { en: "Not applicable." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "forms",
+        sortOrder: 2,
+        handbookRef: "SCSS Scheme Rules 2019, para 8",
+        sourceRefs: ["CS-SCH-005", "CS-JNT-011"],
+      },
+    ],
+  },
+  {
+    flagId: "rd_pss_candidate",
+    fixSlug: "other",
+    handbookRef: "RD Scheme Rules 2019, para 13 (CS-SCH-002)",
+    sourceRefs: ["CS-SCH-002"],
+    items: [
+      {
+        id: "OVERLAY_rd_pss_candidate_declaration",
+        routeId: "OVERLAY_rd_pss_candidate",
+        itemType: "document",
+        refId: "doc_rd_pss_declaration",
+        label: { en: "\"Protected Savings Scheme\" declaration" },
+        attrs: {
+          why: { en: "Confirms this benefit has not already been claimed for any other account of the deceased." },
+          originalOrCopy: { en: "Original, signed by the claiming nominee/legal heir." },
+          selfAttest: { en: "Yes." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "RD Scheme Rules 2019, para 13(3)",
+        sourceRefs: ["CS-SCH-002"],
+      },
+      {
+        id: "OVERLAY_rd_pss_candidate_age_proof",
+        routeId: "OVERLAY_rd_pss_candidate",
+        itemType: "document",
+        refId: "doc_rd_pss_age_proof",
+        label: { en: "Age proof of the deceased (if no age declaration is already on record)" },
+        attrs: {
+          why: { en: "Confirms the holder opened the account between ages 18 and 55, one of the eligibility conditions." },
+          originalOrCopy: { en: "A certified copy is enough." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "documents",
+        sortOrder: 2,
+        handbookRef: "RD Scheme Rules 2019, para 13(1)(iv) proviso",
+        sourceRefs: ["CS-SCH-002"],
+      },
+      {
+        id: "OVERLAY_rd_pss_candidate_deadline_warning",
+        routeId: "OVERLAY_rd_pss_candidate",
+        itemType: "warning",
+        label: {
+          en: "The full-maturity-value benefit must be claimed within 1 YEAR of the date of death, or the ordinary (lower) death-value table applies instead. Other conditions also apply — the account must be at least 2 years old, the first 24 deposits must have been paid on time, and no loan can have been taken in the first 24 months.",
+        },
+        attrs: {
+          why: { en: "Missing the 1-year window, or not meeting one of the other conditions, means only the ordinary death-value amount is paid, not the full maturity value." },
+          originalOrCopy: { en: "Not applicable." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Post Office" },
+        },
+        section: "documents",
+        sortOrder: 3,
+        handbookRef: "RD Scheme Rules 2019, para 13",
+        nvRef: "NV-RB-10",
+        sourceRefs: ["CS-SCH-002"],
+      },
+    ],
+  },
+  {
+    flagId: "unregistered_valid_nomination",
+    fixSlug: "other",
+    handbookRef: "R60(2) Note 5",
+    sourceRefs: ["CS-NOM-020"],
+    items: [
+      {
+        id: "OVERLAY_unregistered_valid_nomination_posthumous",
+        routeId: "OVERLAY_unregistered_valid_nomination",
+        itemType: "instruction",
+        label: {
+          en: "Bring the filled-in, signed nomination form. The Post Office can apply to the Divisional Superintendent for approval to register it after the fact — once approved, the claim is treated as if the nomination were in force.",
+        },
+        attrs: {
+          why: { en: "A nomination that was validly made but never formally registered can still be honoured, with Divisional approval." },
+          originalOrCopy: { en: "Bring the original filled-in nomination form." },
+          selfAttest: { en: "Not applicable." },
+          verifiedBy: { en: "The Divisional Superintendent" },
+        },
+        section: "documents",
+        sortOrder: 1,
+        handbookRef: "R60(2) Note 5",
+        sourceRefs: ["CS-NOM-020"],
       },
     ],
   },

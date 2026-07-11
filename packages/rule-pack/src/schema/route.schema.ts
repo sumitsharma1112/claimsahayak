@@ -8,6 +8,7 @@ import {
   expectOneOf,
   expectOptional,
   expectRecord,
+  parseOptionalStringArray,
 } from "./primitives.js";
 import { parseLocalizedText } from "./locale.schema.js";
 import { parseCondition } from "./condition.schema.js";
@@ -54,6 +55,10 @@ export function parseRouteRule(
     expectOptional(record["nvRef"], `${path}.nvRef`, expectNonEmptyString),
     undefined,
   );
+  const sourceRefs = collector.field(
+    parseOptionalStringArray(record["sourceRefs"], `${path}.sourceRefs`),
+    undefined,
+  );
 
   if (kind === "reroute" && banner === undefined) {
     collector.push({
@@ -76,6 +81,7 @@ export function parseRouteRule(
     ...(banner !== undefined ? { banner } : {}),
     handbookRef,
     ...(nvRef !== undefined ? { nvRef } : {}),
+    ...(sourceRefs !== undefined ? { sourceRefs } : {}),
   };
   return ok(route);
 }

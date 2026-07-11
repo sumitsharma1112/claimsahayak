@@ -65,6 +65,25 @@ export const T13_EXTRA_OUTPUTS: readonly OutputRule[] = [
     sortOrder: 6,
     handbookRef: "§7.5",
   },
+  {
+    id: "T13_guardianship_certificate",
+    routeId: "T13",
+    itemType: "document",
+    refId: "doc_guardianship_certificate",
+    label: { en: "Guardianship certificate or court guardianship order (if you are not a natural guardian)" },
+    attrs: {
+      why: {
+        en: "A parent needs no certificate; anyone else collecting the minor's share (a court-appointed guardian, for instance) must prove their guardianship.",
+      },
+      originalOrCopy: { en: "Bring the original to show; hand in a photocopy." },
+      selfAttest: { en: "Not applicable." },
+      verifiedBy: { en: "The Post Office" },
+    },
+    section: "documents",
+    sortOrder: 7,
+    handbookRef: "R60(4)(A) Note 2(iii); R60(6)(iii); Act 1873 s.3(h)(iii)",
+    sourceRefs: ["CS-MIN-006"],
+  },
 ];
 
 /**

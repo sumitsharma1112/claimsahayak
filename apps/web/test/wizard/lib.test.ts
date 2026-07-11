@@ -80,13 +80,14 @@ describe("getCurrentQuestion — determinism", () => {
     const flat = toAnswerMap(answers);
     const results = Array.from({ length: 5 }, () => getCurrentQuestion(RULE_PACK, sb, flat, answers)?.id);
     expect(new Set(results).size).toBe(1);
-    expect(results[0]).toBe("q3_holding");
+    expect(results[0]).toBe("q_armed_forces");
   });
 
   it("resolves monthYear questions as answered from the rich state alone (no flat-map entry needed)", () => {
     const answers = {
       q1_schemes: { kind: "multi" as const, optionIds: ["SB"] },
       q2_who_died: { kind: "single" as const, optionId: "adult" },
+      q_armed_forces: { kind: "boolean" as const, value: false },
       q3_holding: { kind: "single" as const, optionId: "one_name" },
       q4_death_month: { kind: "monthYear" as const, month: 3, year: 2024 },
     };

@@ -4,10 +4,10 @@ import { CONSTANTS } from "../../src/data/constants.js";
 import { NV_REGISTER, getNvEntry } from "../../src/data/nv-register.js";
 
 describe("SCHEMES", () => {
-  it("covers exactly the 8 in-scope schemes", () => {
-    expect(SCHEMES).toHaveLength(8);
+  it("covers exactly the 9 in-scope schemes (SCSS added under the ClaimSahayak Official Rule Book v1.0 integration)", () => {
+    expect(SCHEMES).toHaveLength(9);
     expect(SCHEMES.map((s) => s.id).sort()).toEqual(
-      ["KVP", "MIS", "NSC", "PPF", "RD", "SB", "SSA", "TD"].sort(),
+      ["KVP", "MIS", "NSC", "PPF", "RD", "SB", "SCSS", "SSA", "TD"].sort(),
     );
   });
 

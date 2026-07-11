@@ -2,7 +2,12 @@ import type { Result } from "@claimsahayak/shared-utils";
 import { err, ok } from "@claimsahayak/shared-utils";
 import type { RulePack } from "@claimsahayak/shared-types";
 import { IssueCollector, type ValidationIssue } from "./issue.js";
-import { checkNoDuplicateIds, expectRecord, parseArrayOf } from "./primitives.js";
+import {
+  checkNoDuplicateIds,
+  expectOptional,
+  expectRecord,
+  parseArrayOf,
+} from "./primitives.js";
 import { parseRulePackMeta } from "./meta.schema.js";
 import { parseRulePackConstants } from "./constants.schema.js";
 import { parseSchemeDefinition } from "./scheme.schema.js";
@@ -15,6 +20,7 @@ import { parseFormDefinition } from "./form.schema.js";
 import { parseCardDefinition } from "./card.schema.js";
 import { parseTemplateDefinition } from "./template.schema.js";
 import { parseContentPage, parseVocabEntry } from "./content.schema.js";
+import { parseDecisionRecord } from "./decision.schema.js";
 
 /**
  * Parses and structurally validates a full Rule Pack from unknown JSON.
@@ -100,6 +106,12 @@ export function parseRulePack(
     parseArrayOf(record["vocab"], `${path}.vocab`, parseVocabEntry),
     [],
   );
+  const decisions = collector.field(
+    expectOptional(record["decisions"], `${path}.decisions`, (v, p) =>
+      parseArrayOf(v, p, parseDecisionRecord),
+    ),
+    undefined,
+  );
 
   collector.push(...checkNoDuplicateIds(schemes, (s) => s.id, `${path}.schemes`));
   collector.push(...checkNoDuplicateIds(questions, (q) => q.id, `${path}.questions`));
@@ -111,11 +123,14 @@ export function parseRulePack(
   collector.push(...checkNoDuplicateIds(cards, (c) => c.id, `${path}.cards`));
   collector.push(...checkNoDuplicateIds(templates, (t) => t.id, `${path}.templates`));
   collector.push(...checkNoDuplicateIds(content, (c) => c.id, `${path}.content`));
+  if (decisions !== undefined) {
+    collector.push(...checkNoDuplicateIds(decisions, (d) => d.id, `${path}.decisions`));
+  }
 
-  if (schemes.length !== 8) {
+  if (schemes.length !== 9) {
     collector.push({
       path: `${path}.schemes`,
-      message: `expected exactly the 8 in-scope schemes (SRS v1 §1.3), received ${String(schemes.length)}`,
+      message: `expected exactly the 9 in-scope schemes (SRS v1 §1.3 + SCSS added under the ClaimSahayak Official Rule Book v1.0 integration), received ${String(schemes.length)}`,
       severity: "error",
     });
   }
@@ -138,6 +153,7 @@ export function parseRulePack(
     templates,
     content,
     vocab,
+    ...(decisions !== undefined ? { decisions } : {}),
   };
   return ok(pack);
 }

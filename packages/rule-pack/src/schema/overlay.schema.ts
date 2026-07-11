@@ -2,7 +2,12 @@ import type { Result } from "@claimsahayak/shared-utils";
 import { err, ok } from "@claimsahayak/shared-utils";
 import type { OverlayRule } from "@claimsahayak/shared-types";
 import { IssueCollector, type ValidationIssue } from "./issue.js";
-import { expectNonEmptyString, expectRecord, parseArrayOf } from "./primitives.js";
+import {
+  expectNonEmptyString,
+  expectRecord,
+  parseArrayOf,
+  parseOptionalStringArray,
+} from "./primitives.js";
 import { parseOutputRule } from "./output.schema.js";
 
 /** Slugs are used as URL path segments under /fix — keep them URL-safe. */
@@ -42,6 +47,10 @@ export function parseOverlayRule(
     expectNonEmptyString(record["handbookRef"], `${path}.handbookRef`),
     "",
   );
+  const sourceRefs = collector.field(
+    parseOptionalStringArray(record["sourceRefs"], `${path}.sourceRefs`),
+    undefined,
+  );
 
   if (items.length === 0) {
     collector.push({
@@ -54,6 +63,12 @@ export function parseOverlayRule(
   if (collector.hasIssues) {
     return err(collector.all());
   }
-  const overlay: OverlayRule = { flagId, items, fixSlug, handbookRef };
+  const overlay: OverlayRule = {
+    flagId,
+    items,
+    fixSlug,
+    handbookRef,
+    ...(sourceRefs !== undefined ? { sourceRefs } : {}),
+  };
   return ok(overlay);
 }

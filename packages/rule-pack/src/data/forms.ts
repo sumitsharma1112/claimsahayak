@@ -100,11 +100,23 @@ export const FORMS: readonly FormDefinition[] = [
     id: "form_sb7b",
     name: { en: "Form SB-7B — premature closure form" },
     purpose: {
-      en: "Used specifically to close a Sukanya Samriddhi Account after the death of the child or the guardian.",
+      en: "Used specifically to close a Sukanya Samriddhi Account after the death of the child or the guardian. The Sukanya Samriddhi Account Scheme 2019 rules (SSA para 7(1)/(3)) refer to the same closure application as \"Form-2\" — the Post Office will confirm which form name is current for your branch.",
     },
     signatories: { en: "The guardian (or, in some cases, the legal heirs)." },
     executedBefore: { en: "No notary needed — signed and handed in at the Post Office." },
     copies: 1,
+    sourceRefs: ["CS-SCH-009"],
+  },
+  {
+    id: "form_scss_form4",
+    name: { en: "SCSS Form-4 — extension for continuing spouse" },
+    purpose: {
+      en: "Used only when the surviving spouse is continuing a Senior Citizen Savings Scheme account — as a joint holder, or as the sole nominee eligible on the date of death — instead of closing it.",
+    },
+    signatories: { en: "The continuing spouse." },
+    executedBefore: { en: "No notary needed — signed and handed in at the Post Office." },
+    copies: 1,
+    sourceRefs: ["CS-SCH-005"],
   },
   {
     id: "form_nc54a",

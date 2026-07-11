@@ -8,6 +8,7 @@ import {
   expectNumber,
   expectOneOf,
   expectRecord,
+  parseOptionalStringArray,
 } from "./primitives.js";
 import { parseLocalizedText } from "./locale.schema.js";
 
@@ -58,6 +59,10 @@ export function parseDocumentDefinition(
       severity: "error",
     });
   }
+  const sourceRefs = collector.field(
+    parseOptionalStringArray(record["sourceRefs"], `${path}.sourceRefs`),
+    undefined,
+  );
 
   if (collector.hasIssues) {
     return err(collector.all());
@@ -69,6 +74,7 @@ export function parseDocumentDefinition(
     category,
     originalRequired,
     copiesRequired,
+    ...(sourceRefs !== undefined ? { sourceRefs } : {}),
   };
   return ok(doc);
 }

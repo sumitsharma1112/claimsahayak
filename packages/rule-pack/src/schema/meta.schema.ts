@@ -3,7 +3,7 @@ import { err, ok } from "@claimsahayak/shared-utils";
 import { RULE_PACK_VERSION_PATTERN } from "@claimsahayak/shared-config";
 import type { RulePackMeta } from "@claimsahayak/shared-types";
 import { issue, IssueCollector, type ValidationIssue } from "./issue.js";
-import { expectNonEmptyString, expectRecord } from "./primitives.js";
+import { expectNonEmptyString, expectOptional, expectRecord } from "./primitives.js";
 
 const ENGINE_MIN_PATTERN = /^\d+\.\d+$/;
 /** Matches a lower-case hex SHA-256 digest (64 characters). */
@@ -80,6 +80,18 @@ export function parseRulePackMeta(
     );
   }
 
+  const rulebookVersion = collector.field(
+    expectOptional(record["rulebookVersion"], `${path}.rulebookVersion`, expectNonEmptyString),
+    undefined,
+  );
+  const rulebookAsOnDate = collector.field(
+    expectOptional(record["rulebookAsOnDate"], `${path}.rulebookAsOnDate`, expectNonEmptyString),
+    undefined,
+  );
+  if (rulebookAsOnDate !== undefined && Number.isNaN(Date.parse(rulebookAsOnDate))) {
+    collector.push(issue(`${path}.rulebookAsOnDate`, "must be a parseable ISO date"));
+  }
+
   if (collector.hasIssues) {
     return err(collector.all());
   }
@@ -90,6 +102,8 @@ export function parseRulePackMeta(
     publishedBy,
     changelog,
     contentHash,
+    ...(rulebookVersion !== undefined ? { rulebookVersion } : {}),
+    ...(rulebookAsOnDate !== undefined ? { rulebookAsOnDate } : {}),
   };
   return ok(meta);
 }

@@ -1,9 +1,11 @@
 import type { LocalizedText } from "./locale.js";
 
 /**
- * The eight in-scope schemes (SRS v1 §1.3). SCSS, PLI/RPLI and discontinued
- * schemes are out of scope; discontinued schemes are handled by the T1
- * info-end card, not by a scheme entry.
+ * The nine in-scope schemes. Originally eight per SRS v1 §1.3 (SCSS out of
+ * scope); SCSS was added under the ClaimSahayak Official Rule Book v1.0
+ * integration (CS-SCH-005) since it has verified settlement rules of its
+ * own. PLI/RPLI and discontinued schemes remain out of scope; discontinued
+ * schemes are handled by the T1 info-end card, not by a scheme entry.
  */
 export type SchemeId =
   | "SB"
@@ -13,7 +15,8 @@ export type SchemeId =
   | "PPF"
   | "SSA"
   | "NSC"
-  | "KVP";
+  | "KVP"
+  | "SCSS";
 
 export const SCHEME_IDS: readonly SchemeId[] = [
   "SB",
@@ -24,6 +27,7 @@ export const SCHEME_IDS: readonly SchemeId[] = [
   "SSA",
   "NSC",
   "KVP",
+  "SCSS",
 ];
 
 /**

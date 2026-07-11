@@ -14,6 +14,7 @@ import {
   expectOptional,
   expectRecord,
   parseArrayOf,
+  parseOptionalStringArray,
 } from "./primitives.js";
 import { parseLocalizedText } from "./locale.schema.js";
 import { ALWAYS, type Condition } from "@claimsahayak/shared-types";
@@ -110,6 +111,10 @@ export function parseQuestionDefinition(
     expectNonEmptyString(record["handbookRef"], `${path}.handbookRef`),
     "",
   );
+  const sourceRefs = collector.field(
+    parseOptionalStringArray(record["sourceRefs"], `${path}.sourceRefs`),
+    undefined,
+  );
 
   if (inputType !== "monthYear" && options.length === 0) {
     collector.push(
@@ -151,6 +156,7 @@ export function parseQuestionDefinition(
     visibleWhen,
     invalidates,
     handbookRef,
+    ...(sourceRefs !== undefined ? { sourceRefs } : {}),
   };
   return ok(question);
 }

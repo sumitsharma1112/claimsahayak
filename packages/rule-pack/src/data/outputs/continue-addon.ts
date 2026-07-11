@@ -72,4 +72,30 @@ export const CONTINUE_ADDON_OUTPUTS: readonly OutputRule[] = [
     sortOrder: 4,
     handbookRef: "§5.4-4",
   },
+  {
+    // D-17: who may actually continue differs by scheme, but this bucket
+    // (like every other CONTINUE_ADDON item) is not scheme-filtered by the
+    // engine — informing every continuing claimant of the limit for THEIR
+    // scheme is the most honest thing this static item can do without a
+    // scheme-conditional output mechanism (a gap noted in the integration
+    // report). NSC/KVP's "up to 3" cap is stated but not enforced — the
+    // engine has no way to count how many claimants are actually joining.
+    id: "CONTINUE_ADDON_scheme_limits_note",
+    routeId: "CONTINUE_ADDON",
+    itemType: "goodToKnow",
+    label: {
+      en: "Who may continue the account depends on the scheme: for Recurring Deposit and Time Deposit, any single claimant may continue it. For NSC and KVP, up to 3 nominees/heirs together may continue it. For SCSS, only the surviving spouse may continue it — as a joint holder, or as the sole nominee eligible on the date of death.",
+    },
+    attrs: {
+      why: { en: "So you know upfront whether continuation is available to you for this particular scheme." },
+      originalOrCopy: { en: "Not applicable." },
+      selfAttest: { en: "Not applicable." },
+      verifiedBy: { en: "The Post Office" },
+    },
+    section: "forms",
+    sortOrder: 5,
+    handbookRef: "R60(10)-(11); RD para 12(2); NSC/KVP scheme rules; SCSS para 8",
+    nvRef: "NV-RB-5",
+    sourceRefs: ["CS-SCH-002", "CS-SCH-003", "CS-SCH-005", "CS-SCH-007", "CS-SCH-008"],
+  },
 ];

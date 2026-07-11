@@ -7,7 +7,12 @@ import {
   checkOverlayFlagsAreReal,
   checkSatisfiability,
   checkVarReferencesExist,
+  reachableRouteIdentifiers,
 } from "./reachability.js";
+import {
+  checkDecisionsReferenceReachableRoutes,
+  checkRuleBookCsIdsResolve,
+} from "./rulebook-provenance.js";
 import {
   checkFixSlugsResolve,
   checkNoOrphanCards,
@@ -107,6 +112,14 @@ export function runValidationPipeline(
 
   stages.push({ stage: "copy-lint", issues: checkCopyLint(pack) });
   stages.push({ stage: "provenance", issues: checkProvenance(pack) });
+  stages.push({
+    stage: "rulebook-provenance:cs-ids-resolve",
+    issues: checkRuleBookCsIdsResolve(pack),
+  });
+  stages.push({
+    stage: "rulebook-provenance:decisions-reference-routes",
+    issues: checkDecisionsReferenceReachableRoutes(pack, reachableRouteIdentifiers(pack)),
+  });
 
   if (fixtures.length > 0) {
     stages.push({

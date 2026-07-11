@@ -89,7 +89,7 @@ describe("Session resume flow", () => {
     await user.click(screen.getByRole("button", { name: "Resume" }));
 
     expect(screen.queryByText("Resume previous claim?")).toBeNull();
-    expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: questionText("q_armed_forces") })).toBeTruthy();
   });
 
   it("Start New dismisses the prompt without touching storage", async () => {
@@ -155,7 +155,7 @@ describe("Start Over", () => {
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: questionText("q_armed_forces") })).toBeTruthy();
 
     await waitFor(() => {
       expect(loadSession()?.answers.q2_who_died).toBeTruthy();

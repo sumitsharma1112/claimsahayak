@@ -110,4 +110,23 @@ export const SCHEMES: readonly SchemeDefinition[] = [
     illustrationId: "illustration-kvp-certificate",
     sortOrder: 8,
   },
+  {
+    id: "SCSS",
+    displayName: { en: "Senior Citizen Savings Scheme (SCSS)" },
+    description: {
+      en: "A fixed-term deposit for senior citizens that pays quarterly interest.",
+    },
+    // CS-JNT-011: SCSS is joint only with a spouse (never any other co-holder).
+    canBeJoint: true,
+    canBeMinorAccount: false,
+    // CS-SCH-005/CS-JNT-011: continuation is spouse-only (joint holder, or
+    // sole nominee, eligible at the date of death) — not open to any
+    // claimant the way RD/TD/NSC/KVP are; see the CONTINUE_ADDON
+    // scheme-specific goodToKnow item and the "scss_spouse_continuing"
+    // Q10 flag for how this narrower rule is surfaced without the engine
+    // being able to verify the spouse relationship itself.
+    continuableByClaimant: true,
+    bankTransferEligible: true,
+    sortOrder: 9,
+  },
 ];

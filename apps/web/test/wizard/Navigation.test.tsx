@@ -44,6 +44,18 @@ async function tickSchemeAndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Continue" }));
 }
 
+/**
+ * q_armed_forces (ClaimSahayak Official Rule Book v1.0 integration, D-14)
+ * is visible immediately after q2_who_died whenever the adult branch is
+ * taken — every test walking the adult path must answer it before
+ * reaching q3_holding.
+ */
+async function answerArmedForcesNoAndContinue(user: ReturnType<typeof userEvent.setup>) {
+  expect(screen.getByRole("heading", { name: questionText("q_armed_forces") })).toBeTruthy();
+  await user.click(screen.getByRole("radio", { name: "No" }));
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+}
+
 describe("Wizard navigation — forward, branch-aware, hidden-question skipping", () => {
   it("skips q3_holding/q4_death_month/q5_nomination entirely when the guardian branch fires", async () => {
     const user = userEvent.setup();
@@ -86,6 +98,7 @@ describe("Wizard navigation — forward, branch-aware, hidden-question skipping"
 
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerArmedForcesNoAndContinue(user);
     expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
 
     await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
@@ -136,13 +149,18 @@ describe("Wizard navigation — progress (Step X of Y, no hardcoded totals)", ()
 });
 
 describe("Wizard navigation — Previous restores the exact prior question and answer", () => {
-  it("Back re-shows q2_who_died with the prior answer pre-selected, then q1_schemes with its tick intact", async () => {
+  it("Back re-shows q_armed_forces then q2_who_died with prior answers pre-selected, then q1_schemes with its tick intact", async () => {
     const user = userEvent.setup();
     render(<Wizard rulePack={RULE_PACK} />);
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerArmedForcesNoAndContinue(user);
     expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(screen.getByRole("heading", { name: questionText("q_armed_forces") })).toBeTruthy();
+    expect(screen.getByRole<HTMLInputElement>("radio", { name: "No" }).checked).toBe(true);
 
     await user.click(screen.getByRole("button", { name: "Previous" }));
     expect(screen.getByRole("heading", { name: questionText("q2_who_died") })).toBeTruthy();
@@ -168,11 +186,13 @@ describe("Wizard navigation — Previous restores the exact prior question and a
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerArmedForcesNoAndContinue(user);
+    expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Previous" }));
-    expect(screen.getByRole("heading", { name: questionText("q2_who_died") })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: questionText("q_armed_forces") })).toBeTruthy();
     // Re-confirm the SAME answer (no real change) and continue.
-    await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
+    await user.click(screen.getByRole("radio", { name: "No" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(screen.getByRole("heading", { name: questionText("q3_holding") })).toBeTruthy();
@@ -186,6 +206,7 @@ describe("Wizard navigation — answer invalidation cascade", () => {
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerArmedForcesNoAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     // Now on q4_death_month, with q3_holding answered.
@@ -196,6 +217,7 @@ describe("Wizard navigation — answer invalidation cascade", () => {
     // Go back to q2_who_died and switch to "guardian" — its invalidates[]
     // names q3_holding (among others) per the frozen rule-engine's own test
     // suite (packages/rule-engine/test/invalidation.test.ts).
+    await user.click(screen.getByRole("button", { name: "Previous" }));
     await user.click(screen.getByRole("button", { name: "Previous" }));
     await user.click(screen.getByRole("button", { name: "Previous" }));
     expect(screen.getByRole("heading", { name: questionText("q2_who_died") })).toBeTruthy();
@@ -216,6 +238,7 @@ describe("Wizard navigation — reroute banner", () => {
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerArmedForcesNoAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.selectOptions(screen.getByLabelText("Month"), "3");

@@ -39,10 +39,22 @@ async function tickSchemeAndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Continue" }));
 }
 
+/**
+ * q_armed_forces (D-14) sits right after q2_who_died on the adult branch;
+ * q_dispute (D-11) sits right after q6_legal_evidence whenever there's no
+ * nomination — both are ClaimSahayak Official Rule Book v1.0 additions
+ * every adult/no-nomination path must now answer.
+ */
+async function answerBooleanNoAndContinue(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("radio", { name: "No" }));
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+}
+
 async function reachQ6(user: ReturnType<typeof userEvent.setup>) {
   await tickSchemeAndContinue(user);
   await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
+  await answerBooleanNoAndContinue(user); // q_armed_forces
   await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.selectOptions(screen.getByLabelText("Month"), "3");
@@ -52,6 +64,7 @@ async function reachQ6(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.click(screen.getByRole("radio", { name: optionLabel("q6_legal_evidence", "no") }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
+  await answerBooleanNoAndContinue(user); // q_dispute
 }
 
 describe("Wizard Cards — info", () => {
@@ -75,6 +88,7 @@ describe("Wizard Cards — pause, with printable letter", () => {
     await tickSchemeAndContinue(user);
     await user.click(screen.getByRole("radio", { name: optionLabel("q2_who_died", "adult") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await answerBooleanNoAndContinue(user); // q_armed_forces
     await user.click(screen.getByRole("radio", { name: optionLabel("q3_holding", "one_name") }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.selectOptions(screen.getByLabelText("Month"), "3");
@@ -87,7 +101,12 @@ describe("Wizard Cards — pause, with printable letter", () => {
     expect(screen.getByRole("heading", { name: c.title.en })).toBeTruthy();
     expect(screen.getByText("Pause")).toBeTruthy();
 
-    const printButton = screen.getByRole("button", { name: "Print Letter" });
+    // PrintableTemplate is next/dynamic-loaded (Milestone 4.3) — its chunk
+    // resolves asynchronously, so this must wait rather than assert
+    // synchronously (a pre-existing fragility this test's extra screen,
+    // added by the ClaimSahayak Official Rule Book v1.0 integration, was
+    // enough to expose under full-suite load).
+    const printButton = await screen.findByRole("button", { name: "Print Letter" });
     expect(printButton).toBeTruthy();
     // The template's own fields render (from Rule Pack data, not hardcoded copy).
     expect(screen.getByText("Ask the Post Office about a registered nominee")).toBeTruthy();

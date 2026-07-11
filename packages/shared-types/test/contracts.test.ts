@@ -144,7 +144,7 @@ describe("session contract (device-only, V2 FR-8 / V3 I-2)", () => {
     expect(s.schemaVersion).toBe(1);
   });
 
-  it("covers exactly the eight in-scope schemes", () => {
+  it("covers exactly the nine in-scope schemes (SCSS added under the ClaimSahayak Official Rule Book v1.0 integration)", () => {
     expect(SCHEME_IDS).toEqual([
       "SB",
       "RD",
@@ -154,6 +154,7 @@ describe("session contract (device-only, V2 FR-8 / V3 I-2)", () => {
       "SSA",
       "NSC",
       "KVP",
+      "SCSS",
     ]);
   });
 });

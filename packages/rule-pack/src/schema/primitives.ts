@@ -154,6 +154,20 @@ export function parseArrayOf<T>(
   return ok(out);
 }
 
+/**
+ * Parses an optional array of non-empty strings — the shape of every
+ * `sourceRefs?: readonly string[]` field added for the ClaimSahayak
+ * Official Rule Book v1.0 integration (CS-IDs). Absent ⇒ undefined, never
+ * an empty array, so downstream code can treat "no sourceRefs" and "opted
+ * out of Rule Book provenance" identically.
+ */
+export function parseOptionalStringArray(
+  value: unknown,
+  path: string,
+): Result<readonly string[] | undefined, readonly ValidationIssue[]> {
+  return expectOptional(value, path, (v, p) => parseArrayOf(v, p, expectNonEmptyString));
+}
+
 /** Fails if an array (by id-extractor) contains duplicate ids. */
 export function checkNoDuplicateIds<T>(
   items: readonly T[],

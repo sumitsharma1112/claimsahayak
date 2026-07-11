@@ -99,12 +99,78 @@ export const CARDS: readonly CardDefinition[] = [
       {
         kind: "warningChip",
         text: {
-          en: "A Legal Heirship Certificate from a Tahsildar or other revenue authority is NOT accepted as a substitute — it will not be enough on its own.",
+          en: "A Legal Heirship Certificate from a Tahsildar or other revenue authority IS accepted for claims above the affidavit limit, alongside a Succession Certificate, Probate, or Letter of Administration — but once a dispute has been raised, only a court Succession Certificate is accepted.",
+        },
+      },
+      {
+        kind: "paragraph",
+        text: {
+          en: "If you need to apply for one of these court documents, the Post Office can give you, on request, a balance certificate for this account so its value doesn't have to be included when working out the court fee.",
         },
       },
     ],
     nextPhysicalStep: {
-      en: "Consult a lawyer or your local civil court about obtaining a Succession Certificate (or a Probate of Will / Letter of Administration, if there is a will). Once you have it, come back here and answer \"Yes\" to the court-document question.",
+      en: "Consult a lawyer or your local civil court about obtaining a Succession Certificate, a Legal Heir Certificate from the Tahsildar, or a Probate of Will / Letter of Administration if there is a will. Once you have it, come back here and answer \"Yes\" to the court-document question.",
+    },
+  },
+  {
+    id: "card_referral_armed_forces",
+    kind: "info",
+    title: { en: "This is handled through the Armed Forces requisition process" },
+    body: [
+      {
+        kind: "paragraph",
+        text: {
+          en: "When a serving member of the Army, Air Force, or Navy dies (or deserts) and their Commanding Officer or Committee of Adjustment raises a requisition, the Post Office is required to pay the eligible amount to that Committee — this overrides any nomination and is not settled through the usual claim process described here.",
+        },
+      },
+    ],
+    nextPhysicalStep: {
+      en: "The family's point of contact for this is the Commanding Officer or Committee of Adjustment, who deals directly with the Post Office's Accounts Office.",
+    },
+  },
+  {
+    id: "card_referral_untraceable_nominee",
+    kind: "stop",
+    title: { en: "There's no official procedure for this yet" },
+    body: [
+      {
+        kind: "paragraph",
+        text: {
+          en: "When a co-nominee cannot be found, or is unwilling to join the claim, and has not signed a Form 14 disclaimer, there is currently no published official procedure covering this situation.",
+        },
+      },
+      {
+        kind: "paragraph",
+        text: {
+          en: "The usual approach is for the Post Office to treat it as a doubtful or special case: they make enquiries, record what's known, and refer it to the Divisional Head or the Directorate for a decision.",
+        },
+      },
+    ],
+    nextPhysicalStep: {
+      en: "Take your claim to the Post Office and explain the situation — ask them to record it and refer it to the Divisional Head, since there is no standard published procedure for this specific case.",
+    },
+  },
+  {
+    id: "card_stop_dispute_succession_certificate",
+    kind: "stop",
+    title: { en: "A dispute means only a court Succession Certificate will do" },
+    body: [
+      {
+        kind: "paragraph",
+        text: {
+          en: "Because a dispute about this claim has been raised with the Post Office before payment, the claim can only be paid on a Succession Certificate granted by a court under the Indian Succession Act, 1925.",
+        },
+      },
+      {
+        kind: "warningChip",
+        text: {
+          en: "A Probate of Will, Letter of Administration, or a Legal Heir Certificate from a Tahsildar — which would normally be enough — do NOT suffice once a dispute has been raised.",
+        },
+      },
+    ],
+    nextPhysicalStep: {
+      en: "Consult a lawyer or your local civil court about obtaining a Succession Certificate. Once you have it, come back here and continue the claim.",
     },
   },
   {

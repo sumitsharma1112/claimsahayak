@@ -24,6 +24,15 @@ export interface RulePack {
   readonly templates: readonly TemplateDefinition[];
   readonly content: readonly ContentPage[];
   readonly vocab: readonly VocabEntry[];
+  /**
+   * Decision-level records (ClaimSahayak Official Rule Book v1.0
+   * integration): one per outcome bucket (joins on the same id-space as
+   * OutputRule.routeId), carrying the four attributes not otherwise
+   * structured anywhere else in the pack — decision summary, reason,
+   * competent authority (with limits/timeline), and official references.
+   * Optional so packs authored before this integration remain valid.
+   */
+  readonly decisions?: readonly DecisionRecord[];
 }
 
 export interface RulePackMeta {
@@ -37,6 +46,10 @@ export interface RulePackMeta {
   readonly changelog: string;
   /** SHA-256 of the canonical (stable-stringified) pack body, verified before use. */
   readonly contentHash: string;
+  /** Version of the ClaimSahayak Official Rule Book this pack was authored from, e.g. "1.0". */
+  readonly rulebookVersion?: string;
+  /** As-on-date of law the referenced Rule Book was compiled against (ISO date). */
+  readonly rulebookAsOnDate?: string;
 }
 
 /**
@@ -64,6 +77,8 @@ export interface QuestionDefinition {
   /** Answer ids removed when this answer changes (V2 amber-banner behavior, data-declared). */
   readonly invalidates: readonly string[];
   readonly handbookRef: string;
+  /** Official Rule Book CS-IDs (e.g. "CS-NOM-005") this question is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export interface QuestionOption {
@@ -87,6 +102,8 @@ export interface RouteRule {
   readonly banner?: LocalizedText;
   readonly handbookRef: string;
   readonly nvRef?: string;
+  /** Official Rule Book CS-IDs (e.g. "CS-NON-006") this route is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export type OutputItemType =
@@ -117,6 +134,8 @@ export interface OutputRule {
   readonly sortOrder: number;
   readonly handbookRef: string;
   readonly nvRef?: string;
+  /** Official Rule Book CS-IDs (e.g. "CS-NON-003") this output item is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export interface OverlayRule {
@@ -126,6 +145,8 @@ export interface OverlayRule {
   /** Deep link into the /fix module. */
   readonly fixSlug: string;
   readonly handbookRef: string;
+  /** Official Rule Book CS-IDs (e.g. "CS-NOM-022") this overlay is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export interface DocumentDefinition {
@@ -135,6 +156,8 @@ export interface DocumentDefinition {
   readonly category: 'core' | 'identity' | 'legal' | 'witness' | 'exception';
   readonly originalRequired: boolean;
   readonly copiesRequired: number;
+  /** Official Rule Book CS-IDs (e.g. "CS-NON-005") this document requirement is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export interface StampPaperSpec {
@@ -154,6 +177,8 @@ export interface FormDefinition {
   readonly executedBefore: LocalizedText;
   readonly copies: number;
   readonly officialSourceUrl?: string;
+  /** Official Rule Book CS-IDs (e.g. "CS-NOM-012") this form requirement is derived from. */
+  readonly sourceRefs?: readonly string[];
 }
 
 export type CardKind = 'pause' | 'stop' | 'wait' | 'dual' | 'info';
@@ -197,4 +222,49 @@ export interface ContentPage {
 export interface VocabEntry {
   readonly forbidden: string;
   readonly preferred: LocalizedText;
+}
+
+/**
+ * ClaimSahayak Official Rule Book v1.0 integration (Topic 11 mapping).
+ * A single official citation, joining a Rule Book CS-ID to the human-
+ * readable instrument text a claimant/officer would recognize.
+ */
+export interface OfficialReference {
+  /** Rule Book CS-ID, e.g. "CS-NON-003". */
+  readonly csId: string;
+  /** e.g. "GSPR 2018, Rule 15(6)(i); SB Order 36/2020". */
+  readonly citation: LocalizedText;
+}
+
+/** One rung of the Decision Matrix's authority-resolution function (§3). */
+export interface CompetentAuthority {
+  readonly authorityLabel: LocalizedText;
+  /** Sanction limit in INR for this rung; undefined = no monetary limit. */
+  readonly monetaryLimitInr?: number;
+  readonly timelineWorkingDays?: number;
+  /** Where a claim beyond this rung's limit escalates to. */
+  readonly escalatesTo?: LocalizedText;
+}
+
+/**
+ * Decision-level record (Rule Book Decision Matrix D-row/M-row →
+ * DecisionRecord). One per outcome BUCKET — the same id-space
+ * OutputRule.routeId already uses — not per individual RouteRule, since
+ * several RouteRules commonly share one outcome bucket (e.g. T9/T11/T13/T14
+ * all resolve to ROUTE_A). Required documents/forms are already expressed
+ * per-bucket via OutputRule[]; this record carries only the four
+ * objective-5 attributes not otherwise structured anywhere in the pack:
+ * decision summary, reason, competent authority (with limits/timeline),
+ * and official references.
+ */
+export interface DecisionRecord {
+  readonly id: string;
+  /** Joins OutputRule.routeId / RouteRule.target for this outcome bucket. */
+  readonly routeId: string;
+  readonly decision: LocalizedText;
+  readonly reason: LocalizedText;
+  readonly competentAuthority: readonly CompetentAuthority[];
+  readonly officialReferences: readonly OfficialReference[];
+  /** Rule Book Decision Matrix row ids, e.g. ["D-09"] or ["D-02","D-03"]. */
+  readonly rulebookRefs: readonly string[];
 }
