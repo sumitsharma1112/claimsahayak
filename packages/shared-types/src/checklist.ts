@@ -1,5 +1,13 @@
 import type { LocaleCode, LocalizedText } from './locale.js';
-import type { CardKind, OutputItemAttributes, OutputItemType } from './rule-pack.js';
+import type {
+  CardKind,
+  CompetentAuthority,
+  CourtOrderRequired,
+  DecisionStatus,
+  OfficialReference,
+  OutputItemAttributes,
+  OutputItemType,
+} from './rule-pack.js';
 
 /**
  * Checklist JSON — the single contract between the Decision Engine and every
@@ -18,6 +26,8 @@ export interface ChecklistDocument {
   readonly verificationPanel: readonly LocalizedText[];
   readonly goodToKnow: readonly LocalizedText[];
   readonly disclaimers: readonly LocalizedText[];
+  /** Only populated on the account-independent (no real scheme ticked) terminal-card path. */
+  readonly decision?: ClaimDecision;
 }
 
 export interface AccountChecklist {
@@ -31,6 +41,32 @@ export interface AccountChecklist {
   /** Overlay-driven extras, each deep-linking to a /fix guide. */
   readonly extras: readonly ExtraItem[];
   readonly paymentNote?: LocalizedText;
+  /** The Rule Book decision resolved for this account's routeId, if the pack has one authored. */
+  readonly decision?: ClaimDecision;
+}
+
+/**
+ * The Complete Claim Decision (Milestone 5 Part 3) — the Rule Engine's
+ * resolved, ready-to-render decision for one account/terminal. Assembled
+ * by `resolveClaimDecision` (packages/rule-engine) purely from the
+ * matching `DecisionRecord` in `RulePack.decisions`; the two derived
+ * fields (`applicableRuleIds`, `monetaryLimitInr`) are structural
+ * aggregation over pack data, not invented business logic.
+ */
+export interface ClaimDecision {
+  readonly decisionRecordId: string;
+  readonly decisionStatus: DecisionStatus;
+  readonly decision: LocalizedText;
+  readonly reason: LocalizedText;
+  /** officialReferences[].csId ∪ rulebookRefs, deduped. */
+  readonly applicableRuleIds: readonly string[];
+  readonly competentAuthority: readonly CompetentAuthority[];
+  /** Max of competentAuthority[].monetaryLimitInr, only if every rung declares one; undefined = no fixed limit stated. */
+  readonly monetaryLimitInr?: number;
+  readonly courtOrderRequired: CourtOrderRequired;
+  readonly officialReferences: readonly OfficialReference[];
+  readonly processingNotes?: LocalizedText;
+  readonly nextActionForPostmaster: LocalizedText;
 }
 
 export interface ChecklistSection {

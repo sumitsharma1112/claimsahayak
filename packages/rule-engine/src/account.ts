@@ -14,6 +14,7 @@ import { collectOutputBucketIds, collectOutputItems } from "./outputs.js";
 import { resolveOverlays } from "./overlay.js";
 import { buildSections } from "./sections.js";
 import { engineIssue, type EngineIssue } from "./errors.js";
+import { resolveClaimDecision } from "./decision.js";
 
 export interface AccountEvaluation {
   readonly account: AccountChecklist;
@@ -145,6 +146,11 @@ export function evaluateAccount(
     routeName = humanizeBucketId(resolution.terminal.target);
   }
 
+  const { decision, issue: decisionIssue } = resolveClaimDecision(rulePack, routeId);
+  if (decisionIssue) {
+    issues.push(decisionIssue);
+  }
+
   if (isOutOfScope) {
     const account: AccountChecklist = {
       accountIndex,
@@ -155,6 +161,7 @@ export function evaluateAccount(
       timelineNote: { en: "" },
       sections: [],
       extras: [],
+      ...(decision === undefined ? {} : { decision }),
     };
     return {
       account,
@@ -194,6 +201,7 @@ export function evaluateAccount(
     sections,
     extras: overlays.extras,
     ...(paymentNote === undefined ? {} : { paymentNote }),
+    ...(decision === undefined ? {} : { decision }),
   };
 
   return {

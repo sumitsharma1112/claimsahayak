@@ -114,6 +114,7 @@ export function evaluateChecklist(
     verificationPanel,
     goodToKnow,
     disclaimers: [STANDARD_DISCLAIMER],
+    ...(probe.account.decision === undefined ? {} : { decision: probe.account.decision }),
   };
   return { document, issues };
 }

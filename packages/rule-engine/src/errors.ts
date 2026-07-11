@@ -21,7 +21,8 @@ export type EngineIssueCode =
   | "unanswered_question"
   | "unresolved_route"
   | "unknown_card"
-  | "unknown_scheme";
+  | "unknown_scheme"
+  | "missing_decision";
 
 export interface EngineIssue {
   readonly code: EngineIssueCode;

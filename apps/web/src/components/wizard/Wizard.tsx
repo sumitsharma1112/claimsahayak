@@ -7,6 +7,7 @@ import {
   ENGINE_VERSION,
   applyAnswerChange,
   buildVarAssignment,
+  evaluateAccount,
   resolveRoute,
   resolveVisibleQuestions,
 } from "@claimsahayak/rule-engine";
@@ -15,6 +16,7 @@ import { QuestionRenderer } from "./QuestionRenderer";
 import { ResumeBanner } from "./ResumeBanner";
 import { RerouteBanner } from "./RerouteBanner";
 import { WizardCard } from "./WizardCard";
+import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DebugPanel } from "./DebugPanel";
 import {
@@ -111,6 +113,19 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
   // revisiting a past answer (editIndex !== null) always shows that
   // question, regardless of what the not-yet-committed draft would resolve to.
   const showingCard = editIndex === null && terminalCard !== undefined;
+
+  // Milestone 5 Part 6: a "route"-kind terminal (a real, payable-or-not
+  // decision, as opposed to a pause/stop/info card) resolves the Complete
+  // Claim Decision + its processing checklist here, single-account (the
+  // same `scheme.schemes[0]` scope every other computation in this file
+  // already uses — see the file's own header comment on multi-account
+  // being out of scope).
+  const accountEvaluation = useMemo(() => {
+    if (routeResolution.terminal?.kind !== "route") {
+      return undefined;
+    }
+    return evaluateAccount(rulePack, scheme.id, flatAnswers, undefined, 0);
+  }, [rulePack, scheme, flatAnswers, routeResolution]);
 
   const total = visibleQuestions.length;
   const current =
@@ -268,6 +283,14 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
           answer={draft}
           onAnswer={setDraft}
           onContinue={handleContinue}
+          onBack={handleBack}
+          canGoBack={canGoBack}
+        />
+      ) : accountEvaluation?.account.decision ? (
+        <ClaimDecisionSummary
+          account={accountEvaluation.account}
+          decision={accountEvaluation.account.decision}
+          locale={locale}
           onBack={handleBack}
           canGoBack={canGoBack}
         />

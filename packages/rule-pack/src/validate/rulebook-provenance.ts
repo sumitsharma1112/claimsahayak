@@ -33,6 +33,24 @@ function checkCarrierSourceRefs<T extends { readonly sourceRefs?: readonly strin
   return issues;
 }
 
+/** DecisionRecord.officialReferences[].csId is a MANDATORY citation (schema-enforced non-empty), always checked — not an opt-in `sourceRefs` field. */
+function checkDecisionOfficialReferences(pack: RulePack): readonly ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  (pack.decisions ?? []).forEach((d, i) => {
+    d.officialReferences.forEach((ref, j) => {
+      if (!KNOWN_CS_IDS.has(ref.csId)) {
+        issues.push(
+          issue(
+            `decisions[${String(i)}](${d.id}).officialReferences[${String(j)}].csId`,
+            `"${ref.csId}" is not a verified Rule Book CS-ID (see master-rule-matrix.md — provisional/UNVERIFIED items like CS-NOM-024/025 must not be cited)`,
+          ),
+        );
+      }
+    });
+  });
+  return issues;
+}
+
 export function checkRuleBookCsIdsResolve(pack: RulePack): readonly ValidationIssue[] {
   return [
     ...checkCarrierSourceRefs(pack.questions, "questions", (c) => c.id),
@@ -41,6 +59,7 @@ export function checkRuleBookCsIdsResolve(pack: RulePack): readonly ValidationIs
     ...checkCarrierSourceRefs(pack.overlays, "overlays", (c) => c.flagId),
     ...checkCarrierSourceRefs(pack.forms, "forms", (c) => c.id),
     ...checkCarrierSourceRefs(pack.documents, "documents", (c) => c.id),
+    ...checkDecisionOfficialReferences(pack),
   ];
 }
 
@@ -65,6 +84,79 @@ export function checkDecisionsReferenceReachableRoutes(
         ),
       );
     }
+  });
+  return issues;
+}
+
+/**
+ * The inverse of `checkDecisionsReferenceReachableRoutes`: every terminal a
+ * live account can actually land on (a `kind:"route"` rule's own `target`,
+ * or a `kind:"card"` rule's target card id — SYS_ output buckets and
+ * `reroute` targets are never a terminal `routeId`, so they're excluded)
+ * must have a matching `DecisionRecord`, or objective 5's "every decision
+ * must include..." guarantee has a silent gap.
+ */
+export function checkEveryReachableRouteHasDecision(pack: RulePack): readonly ValidationIssue[] {
+  const decisionRouteIds = new Set((pack.decisions ?? []).map((d) => d.routeId));
+  const terminalIds = new Set<string>();
+  for (const route of pack.routes) {
+    if (route.id.startsWith("SYS_")) {
+      continue;
+    }
+    if (route.kind === "route" || route.kind === "card") {
+      terminalIds.add(route.target);
+    }
+  }
+  const issues: ValidationIssue[] = [];
+  for (const routeId of terminalIds) {
+    if (!decisionRouteIds.has(routeId)) {
+      issues.push(
+        issue(
+          `decisions[].routeId`,
+          `terminal "${routeId}" is reachable but has no matching DecisionRecord`,
+        ),
+      );
+    }
+  }
+  return issues;
+}
+
+/** Duplicate DecisionRecord.id, duplicate routeId across decisions, or a repeated CS-ID within one record's own officialReferences. */
+export function checkNoDuplicateDecisions(pack: RulePack): readonly ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const seenIds = new Map<string, number>();
+  const seenRouteIds = new Map<string, number>();
+  (pack.decisions ?? []).forEach((d, i) => {
+    const firstId = seenIds.get(d.id);
+    if (firstId !== undefined) {
+      issues.push(issue(`decisions[${String(i)}].id`, `duplicate decision id "${d.id}" (first at decisions[${String(firstId)}])`));
+    } else {
+      seenIds.set(d.id, i);
+    }
+    const firstRoute = seenRouteIds.get(d.routeId);
+    if (firstRoute !== undefined) {
+      issues.push(
+        issue(
+          `decisions[${String(i)}].routeId`,
+          `duplicate routeId "${d.routeId}" — decisions[${String(firstRoute)}] already targets it`,
+        ),
+      );
+    } else {
+      seenRouteIds.set(d.routeId, i);
+    }
+    const seenCsIds = new Set<string>();
+    d.officialReferences.forEach((ref, j) => {
+      if (seenCsIds.has(ref.csId)) {
+        issues.push(
+          issue(
+            `decisions[${String(i)}].officialReferences[${String(j)}].csId`,
+            `"${ref.csId}" is cited more than once in the same decision's officialReferences`,
+          ),
+        );
+      } else {
+        seenCsIds.add(ref.csId);
+      }
+    });
   });
   return issues;
 }

@@ -1,4 +1,4 @@
-import { type CardKind, type LocaleCode } from "@claimsahayak/shared-types";
+import { type CardKind, type CourtOrderRequired, type DecisionStatus, type LocaleCode } from "@claimsahayak/shared-types";
 
 /**
  * Wizard-SHELL strings only — UI chrome around the Rule-Pack-driven
@@ -42,6 +42,19 @@ export interface WizardDictionary {
   readonly debugVisibleQuestions: string;
   readonly foundationCompleteTitle: string;
   readonly foundationCompleteBody: string;
+  readonly decisionStatusLabels: Readonly<Record<DecisionStatus, string>>;
+  readonly decisionReasonLabel: string;
+  readonly decisionSchemeLabel: string;
+  readonly decisionChecklistHeading: string;
+  readonly decisionCompetentAuthorityLabel: string;
+  readonly decisionMonetaryLimitLabel: string;
+  readonly decisionNoFixedLimitLabel: string;
+  readonly decisionCourtOrderRequiredLabel: string;
+  readonly decisionCourtOrderRequiredValues: Readonly<Record<CourtOrderRequired, string>>;
+  readonly decisionOfficialReferencesLabel: string;
+  readonly decisionProcessingNotesLabel: string;
+  readonly decisionNextActionLabel: string;
+  readonly decisionTimelineLabel: string;
 }
 
 const en: WizardDictionary = {
@@ -87,6 +100,28 @@ const en: WizardDictionary = {
   foundationCompleteTitle: "Foundation preview complete",
   foundationCompleteBody:
     "Every currently-visible question has an answer. The full wizard flow (navigation, resume, and the result checklist) ships in its own scheduled milestone.",
+  decisionStatusLabels: {
+    payable: "Payable",
+    not_payable: "Not payable yet",
+    not_applicable: "No claim needed",
+    pending_information: "More information needed",
+  },
+  decisionReasonLabel: "Why",
+  decisionSchemeLabel: "Scheme",
+  decisionChecklistHeading: "What you'll need",
+  decisionCompetentAuthorityLabel: "Who approves this",
+  decisionMonetaryLimitLabel: "Monetary limit",
+  decisionNoFixedLimitLabel: "No fixed limit",
+  decisionCourtOrderRequiredLabel: "Court order required",
+  decisionCourtOrderRequiredValues: {
+    yes: "Yes",
+    no: "No",
+    conditional: "Depends on the evidence provided",
+  },
+  decisionOfficialReferencesLabel: "Official references",
+  decisionProcessingNotesLabel: "Processing notes",
+  decisionNextActionLabel: "Next action for the Post Office",
+  decisionTimelineLabel: "Timeline",
 };
 
 const hi: WizardDictionary = {
@@ -132,6 +167,28 @@ const hi: WizardDictionary = {
   foundationCompleteTitle: "फ़ाउंडेशन पूर्वावलोकन पूर्ण",
   foundationCompleteBody:
     "अभी दिखने वाले हर प्रश्न का उत्तर दिया जा चुका है। पूरा विज़ार्ड प्रवाह (नेविगेशन, फिर से शुरू करना, और अंतिम चेकलिस्ट) अपने निर्धारित माइलस्टोन में आएगा।",
+  decisionStatusLabels: {
+    payable: "भुगतान योग्य",
+    not_payable: "अभी भुगतान योग्य नहीं",
+    not_applicable: "कोई दावा आवश्यक नहीं",
+    pending_information: "अधिक जानकारी आवश्यक",
+  },
+  decisionReasonLabel: "कारण",
+  decisionSchemeLabel: "योजना",
+  decisionChecklistHeading: "आपको क्या चाहिए होगा",
+  decisionCompetentAuthorityLabel: "इसे कौन स्वीकृत करता है",
+  decisionMonetaryLimitLabel: "राशि सीमा",
+  decisionNoFixedLimitLabel: "कोई निश्चित सीमा नहीं",
+  decisionCourtOrderRequiredLabel: "न्यायालय आदेश आवश्यक",
+  decisionCourtOrderRequiredValues: {
+    yes: "हाँ",
+    no: "नहीं",
+    conditional: "दिए गए प्रमाण पर निर्भर",
+  },
+  decisionOfficialReferencesLabel: "आधिकारिक संदर्भ",
+  decisionProcessingNotesLabel: "प्रक्रिया संबंधी टिप्पणियाँ",
+  decisionNextActionLabel: "डाकघर के लिए अगला कदम",
+  decisionTimelineLabel: "समय-सीमा",
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };

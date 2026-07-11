@@ -60,6 +60,8 @@ export { resolveOverlays, type OverlayExtra, type OverlayResolution } from "./ov
 
 export { buildSections, type BuiltSections } from "./sections.js";
 
+export { resolveClaimDecision } from "./decision.js";
+
 export { evaluateAccount, type AccountEvaluation } from "./account.js";
 
 export { evaluateChecklist, type ChecklistEvaluation } from "./checklist.js";
@@ -93,4 +95,10 @@ export type {
   AnswerValue,
   SchemeDefinition,
   Condition,
+  ClaimDecision,
+  DecisionRecord,
+  DecisionStatus,
+  CourtOrderRequired,
+  CompetentAuthority,
+  OfficialReference,
 } from "@claimsahayak/shared-types";

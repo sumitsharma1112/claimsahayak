@@ -247,15 +247,37 @@ export interface CompetentAuthority {
 }
 
 /**
+ * Whether money is determined payable through this decision bucket.
+ * `payable` — money moves to a determined party (nominee/heir/guardian, or
+ * the CO/Committee of Adjustment for armed-forces cases). `not_payable` —
+ * a real claim exists but is blocked pending court/revenue evidence or an
+ * administrative referral. `not_applicable` — no claim decision is needed
+ * at all (survivorship; a guardian-change with the minor still alive).
+ * `pending_information` — the claimant must supply more information
+ * before any of the above can be reached.
+ */
+export type DecisionStatus = 'payable' | 'not_payable' | 'not_applicable' | 'pending_information';
+
+/**
+ * Whether a court-issued order/certificate is required, sourced from the
+ * Decision Matrix's own "Court" column per D-row. `conditional` covers
+ * rows where a court document is one of several accepted evidence types
+ * (e.g. Probate/LoA/Succession-Certificate/Tahsildar-LHC), not always
+ * specifically a court order.
+ */
+export type CourtOrderRequired = 'yes' | 'no' | 'conditional';
+
+/**
  * Decision-level record (Rule Book Decision Matrix D-row/M-row →
  * DecisionRecord). One per outcome BUCKET — the same id-space
  * OutputRule.routeId already uses — not per individual RouteRule, since
  * several RouteRules commonly share one outcome bucket (e.g. T9/T11/T13/T14
  * all resolve to ROUTE_A). Required documents/forms are already expressed
- * per-bucket via OutputRule[]; this record carries only the four
- * objective-5 attributes not otherwise structured anywhere in the pack:
- * decision summary, reason, competent authority (with limits/timeline),
- * and official references.
+ * per-bucket via OutputRule[]; this record carries the attributes not
+ * otherwise structured anywhere in the pack: decision summary, reason,
+ * payable/not-payable status, competent authority (with limits/timeline),
+ * whether a court order is required, official references, and the
+ * postmaster-facing (not claimant-facing) next processing action.
  */
 export interface DecisionRecord {
   readonly id: string;
@@ -263,8 +285,14 @@ export interface DecisionRecord {
   readonly routeId: string;
   readonly decision: LocalizedText;
   readonly reason: LocalizedText;
+  readonly decisionStatus: DecisionStatus;
   readonly competentAuthority: readonly CompetentAuthority[];
+  readonly courtOrderRequired: CourtOrderRequired;
   readonly officialReferences: readonly OfficialReference[];
+  /** Officer-facing next processing step — distinct from CardDefinition.nextPhysicalStep (claimant-facing). */
+  readonly nextActionForPostmaster: LocalizedText;
+  /** Internal process reminders beyond the authority ladder (e.g. register-entry duties); only where genuinely sourced. */
+  readonly processingNotes?: LocalizedText;
   /** Rule Book Decision Matrix row ids, e.g. ["D-09"] or ["D-02","D-03"]. */
   readonly rulebookRefs: readonly string[];
 }

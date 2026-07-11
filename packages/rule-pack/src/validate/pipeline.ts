@@ -11,6 +11,8 @@ import {
 } from "./reachability.js";
 import {
   checkDecisionsReferenceReachableRoutes,
+  checkEveryReachableRouteHasDecision,
+  checkNoDuplicateDecisions,
   checkRuleBookCsIdsResolve,
 } from "./rulebook-provenance.js";
 import {
@@ -119,6 +121,14 @@ export function runValidationPipeline(
   stages.push({
     stage: "rulebook-provenance:decisions-reference-routes",
     issues: checkDecisionsReferenceReachableRoutes(pack, reachableRouteIdentifiers(pack)),
+  });
+  stages.push({
+    stage: "rulebook-provenance:every-route-has-decision",
+    issues: checkEveryReachableRouteHasDecision(pack),
+  });
+  stages.push({
+    stage: "rulebook-provenance:no-duplicate-decisions",
+    issues: checkNoDuplicateDecisions(pack),
   });
 
   if (fixtures.length > 0) {

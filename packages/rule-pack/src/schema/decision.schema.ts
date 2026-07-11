@@ -2,18 +2,30 @@ import type { Result } from "@claimsahayak/shared-utils";
 import { err, ok } from "@claimsahayak/shared-utils";
 import type {
   CompetentAuthority,
+  CourtOrderRequired,
   DecisionRecord,
+  DecisionStatus,
   OfficialReference,
 } from "@claimsahayak/shared-types";
 import { IssueCollector, type ValidationIssue } from "./issue.js";
 import {
   expectNonEmptyString,
   expectNumber,
+  expectOneOf,
   expectOptional,
   expectRecord,
   parseArrayOf,
 } from "./primitives.js";
 import { parseLocalizedText } from "./locale.schema.js";
+
+const DECISION_STATUSES: readonly DecisionStatus[] = [
+  "payable",
+  "not_payable",
+  "not_applicable",
+  "pending_information",
+];
+
+const COURT_ORDER_REQUIRED_VALUES: readonly CourtOrderRequired[] = ["yes", "no", "conditional"];
 
 /** CS-ID shape, e.g. "CS-NON-003" or "CS-SCH-005". */
 const CS_ID_PATTERN = /^CS-[A-Z]{3}-\d{3}$/;
@@ -120,6 +132,10 @@ export function parseDecisionRecord(
     parseLocalizedText(record["reason"], `${path}.reason`),
     { en: "" },
   );
+  const decisionStatus = collector.field(
+    expectOneOf(record["decisionStatus"], DECISION_STATUSES, `${path}.decisionStatus`),
+    "pending_information" as DecisionStatus,
+  );
   const competentAuthority = collector.field(
     parseArrayOf(
       record["competentAuthority"],
@@ -128,6 +144,10 @@ export function parseDecisionRecord(
     ),
     [],
   );
+  const courtOrderRequired = collector.field(
+    expectOneOf(record["courtOrderRequired"], COURT_ORDER_REQUIRED_VALUES, `${path}.courtOrderRequired`),
+    "no" as CourtOrderRequired,
+  );
   const officialReferences = collector.field(
     parseArrayOf(
       record["officialReferences"],
@@ -135,6 +155,14 @@ export function parseDecisionRecord(
       parseOfficialReference,
     ),
     [],
+  );
+  const nextActionForPostmaster = collector.field(
+    parseLocalizedText(record["nextActionForPostmaster"], `${path}.nextActionForPostmaster`),
+    { en: "" },
+  );
+  const processingNotes = collector.field(
+    expectOptional(record["processingNotes"], `${path}.processingNotes`, parseLocalizedText),
+    undefined,
   );
   const rulebookRefs = collector.field(
     parseArrayOf(record["rulebookRefs"], `${path}.rulebookRefs`, expectNonEmptyString),
@@ -164,8 +192,12 @@ export function parseDecisionRecord(
     routeId,
     decision,
     reason,
+    decisionStatus,
     competentAuthority,
+    courtOrderRequired,
     officialReferences,
+    nextActionForPostmaster,
+    ...(processingNotes !== undefined ? { processingNotes } : {}),
     rulebookRefs,
   };
   return ok(record_);

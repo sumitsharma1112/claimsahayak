@@ -15,14 +15,16 @@
   "bin": {
     "validate-pack": "./src/cli/validate-pack.ts",
     "build-pack": "./src/cli/build-pack.ts",
-    "lint-pack": "./src/cli/lint-pack.ts"
+    "lint-pack": "./src/cli/lint-pack.ts",
+    "coverage-report": "./src/cli/coverage-report.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "validate-pack": "tsx src/cli/validate-pack.ts",
     "build-pack": "tsx src/cli/build-pack.ts",
-    "lint-pack": "tsx src/cli/lint-pack.ts"
+    "lint-pack": "tsx src/cli/lint-pack.ts",
+    "coverage-report": "tsx src/cli/coverage-report.ts"
   },
   "dependencies": {
     "@claimsahayak/shared-types": "workspace:*",

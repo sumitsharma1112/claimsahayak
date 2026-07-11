@@ -19,6 +19,9 @@ const SECTION_TITLES: Readonly<Record<string, LocalizedText>> = {
   documents: { en: "Documents" },
   forms: { en: "Forms" },
   people: { en: "People" },
+  affidavits: { en: "Affidavits" },
+  indemnityBonds: { en: "Indemnity Bonds" },
+  declarations: { en: "Declarations" },
 };
 
 function titleFor(sectionId: string): LocalizedText {

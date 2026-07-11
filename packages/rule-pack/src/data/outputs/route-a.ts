@@ -61,7 +61,7 @@ export const T13_EXTRA_OUTPUTS: readonly OutputRule[] = [
       selfAttest: { en: "Yes." },
       verifiedBy: { en: "The Post Office" },
     },
-    section: "documents",
+    section: "declarations",
     sortOrder: 6,
     handbookRef: "§7.5",
   },
