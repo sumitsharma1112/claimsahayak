@@ -42,19 +42,27 @@ export function WizardCard({
   locale,
   onBack,
   canGoBack,
+  focusOnMount = true,
+  showPrevious = true,
 }: {
   readonly card: CardDefinition;
   readonly template: TemplateDefinition | undefined;
   readonly locale: LocaleCode;
   readonly onBack: () => void;
   readonly canGoBack: boolean;
+  /** False when a parent view (e.g. the multi-account results list) owns focus instead. */
+  readonly focusOnMount?: boolean;
+  /** False when a parent view renders one shared Previous control for several outcomes. */
+  readonly showPrevious?: boolean;
 }) {
   const t = getWizardDictionary(locale);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    headingRef.current?.focus({ preventScroll: false });
-  }, [card.id]);
+    if (focusOnMount) {
+      headingRef.current?.focus({ preventScroll: false });
+    }
+  }, [card.id, focusOnMount]);
 
   const headingId = `card-${card.id}-heading`;
 
@@ -83,9 +91,11 @@ export function WizardCard({
         <p className="mb-0 mt-s1 text-ink">{pickText(card.nextPhysicalStep, locale)}</p>
       </div>
       {card.kind === "pause" && template ? <PrintableTemplate template={template} locale={locale} /> : null}
-      <div className="flex gap-s3">
-        <PreviousButton locale={locale} disabled={!canGoBack} onClick={onBack} />
-      </div>
+      {showPrevious ? (
+        <div className="flex gap-s3">
+          <PreviousButton locale={locale} disabled={!canGoBack} onClick={onBack} />
+        </div>
+      ) : null}
     </section>
   );
 }

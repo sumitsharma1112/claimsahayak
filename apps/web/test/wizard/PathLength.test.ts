@@ -5,17 +5,19 @@
  * `resolveRoute`), rather than hand-counting questions — the project's
  * established convention for anything claimed about the authored pack.
  *
- * Scoped to the SB scheme, because that's the only scheme the current
- * single-account Wizard ever evaluates (`rulePack.schemes[0]` — multi-account
- * looping across every ticked Q1 scheme is a documented limitation carried
- * over from Milestone 4.1, not yet implemented). See docs/m4-acceptance.md
- * for the corresponding note about other schemes' theoretical path lengths.
+ * Originally scoped to the SB scheme (the only one the pre-M6 single-
+ * account Wizard ever evaluated). Milestone 6 Part 2 made every scheme
+ * genuinely reachable — a non-SB scheme ticked alone is now evaluated as
+ * itself, so the previously-dead continuable-scheme questions
+ * (q8_maturity/q8_close_or_continue, gated on scheme.continuableByClaimant)
+ * are live — and the exploration below now walks EVERY scheme, ticked
+ * alone, exactly as docs/m4-acceptance.md's scope note asked a future
+ * multi-account milestone to re-verify.
  */
 import { describe, expect, it } from "vitest";
 import { RULE_PACK } from "@claimsahayak/rule-pack";
 import { buildVarAssignment, resolveRoute } from "@claimsahayak/rule-engine";
-import type { AnswerValue, QuestionDefinition } from "@claimsahayak/shared-types";
-import type { SchemeDefinition } from "@claimsahayak/shared-types";
+import type { AnswerValue, QuestionDefinition, SchemeDefinition } from "@claimsahayak/shared-types";
 import { toAnswerMap, type AnswersState } from "@/lib/wizardAnswers";
 import { getCurrentQuestion } from "@/lib/wizardCurrentQuestion";
 import { computeSessionDerived } from "@/lib/wizardDerived";
@@ -26,15 +28,11 @@ import { computeSessionDerived } from "@/lib/wizardDerived";
 // relative to THIS date, not to "today".
 const AS_OF_ISO = "2026-07-01T00:00:00.000Z";
 
-// An explicitly-typed binding (not `SchemeDefinition | undefined` narrowed by
-// a guard) so `scheme` stays non-undefined inside `explore()` below — a
-// `function` declaration doesn't retain a module-scope narrowing across its
-// own closure the way an arrow function would.
-const scheme: SchemeDefinition = (() => {
-  const found = RULE_PACK.schemes.find((s) => s.id === "SB");
-  if (!found) throw new Error("Fixture assumption broken: SB scheme missing.");
+function schemeById(id: string): SchemeDefinition {
+  const found = RULE_PACK.schemes.find((s) => s.id === id);
+  if (!found) throw new Error(`Fixture assumption broken: scheme "${id}" missing.`);
   return found;
-})();
+}
 
 /** A representative spread of answers to try for one question, not an exhaustive combinatorial explosion. */
 function candidateAnswers(q: QuestionDefinition): readonly AnswerValue[] {
@@ -67,9 +65,10 @@ function candidateAnswers(q: QuestionDefinition): readonly AnswerValue[] {
 // invalidation gap that keeps re-asking the same question) — the roadmap's
 // own limit is 10; this is just a backstop so a real bug fails loudly
 // instead of hanging.
-const SAFETY_DEPTH = 16;
+const SAFETY_DEPTH = 18;
 
 function explore(
+  scheme: SchemeDefinition,
   answers: AnswersState,
   depth: number,
   path: readonly string[],
@@ -96,12 +95,31 @@ function explore(
   }
   for (const candidate of candidateAnswers(current)) {
     explore(
+      scheme,
       { ...answers, [current.id]: candidate },
       depth + 1,
       [...path, `${current.id}=${JSON.stringify(candidate)}`],
       onLeaf,
     );
   }
+}
+
+/**
+ * Walks every reachable path for ONE scheme ticked alone (the Q1 answer is
+ * seeded and counted as screen 1, so depths are comparable with the
+ * original whole-tree exploration) and returns the longest.
+ */
+function longestPathForScheme(scheme: SchemeDefinition): { depth: number; path: readonly string[] } {
+  let maxDepth = 0;
+  let maxPath: readonly string[] = [];
+  const seed: AnswersState = { q1_schemes: { kind: "multi", optionIds: [scheme.id] } };
+  explore(scheme, seed, 1, [`q1_schemes=[${scheme.id}]`], (depth, path) => {
+    if (depth > maxDepth) {
+      maxDepth = depth;
+      maxPath = path;
+    }
+  });
+  return { depth: maxDepth, path: maxPath };
 }
 
 describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
@@ -117,17 +135,25 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
     // `derived: undefined` (the pre-M6 correctness gap this milestone
     // fixed). No new question was added; the budget now measures the path
     // the engine's truth-table fixtures always intended.
-    let maxDepth = 0;
-    let maxPath: readonly string[] = [];
-    explore({}, 0, [], (depth, path) => {
-      if (depth > maxDepth) {
-        maxDepth = depth;
-        maxPath = path;
-      }
-    });
-    expect(maxDepth, `Longest path found (${String(maxDepth)} screens): ${maxPath.join(" -> ")}`).toBeLessThanOrEqual(
-      13,
-    );
+    const { depth, path } = longestPathForScheme(schemeById("SB"));
+    expect(depth, `Longest path found (${String(depth)} screens): ${path.join(" -> ")}`).toBeLessThanOrEqual(13);
+  });
+
+  it("never exceeds 15 screens for any reachable path of ANY scheme ticked alone", () => {
+    // New in Milestone 6 Part 2, closing docs/m4-acceptance.md's own
+    // "re-verify path length once multi-account support lands" note: every
+    // scheme is now genuinely evaluated when ticked, so the continuable
+    // schemes (RD/TD/NSC/KVP) add their previously-dead q8_maturity and
+    // q8_close_or_continue screens (+ q1a_nsc_kvp_format for NSC/KVP) on
+    // top of the 13-screen SB worst case. All are real Rule-Pack forks —
+    // no question was added by the Wizard change itself.
+    for (const scheme of RULE_PACK.schemes) {
+      const { depth, path } = longestPathForScheme(scheme);
+      expect(
+        depth,
+        `Longest ${scheme.id} path (${String(depth)} screens): ${path.join(" -> ")}`,
+      ).toBeLessThanOrEqual(15);
+    }
   });
 
   it("keeps the normal happy path (adult, one name, nominee alive) to 8 screens or fewer", () => {
@@ -150,11 +176,12 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
       q10_docs_check: { kind: "multi", optionIds: ["none"] },
     };
 
+    const sb = schemeById("SB");
     let current: AnswersState = {};
     let depth = 0;
     for (;;) {
       const derived = computeSessionDerived(current, AS_OF_ISO, RULE_PACK.constants);
-      const q = getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current, derived);
+      const q = getCurrentQuestion(RULE_PACK, sb, toAnswerMap(current), current, derived);
       if (!q) break;
       const planned = plannedAnswers[q.id];
       if (!planned) {
@@ -166,6 +193,6 @@ describe("Wizard path-length acceptance (Milestone 4 roadmap)", () => {
 
     expect(depth).toBeLessThanOrEqual(8);
     const finalDerived = computeSessionDerived(current, AS_OF_ISO, RULE_PACK.constants);
-    expect(getCurrentQuestion(RULE_PACK, scheme, toAnswerMap(current), current, finalDerived)).toBeUndefined();
+    expect(getCurrentQuestion(RULE_PACK, sb, toAnswerMap(current), current, finalDerived)).toBeUndefined();
   });
 });

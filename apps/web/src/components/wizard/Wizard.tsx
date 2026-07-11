@@ -6,10 +6,8 @@ import { DEFAULT_LOCALE } from "@claimsahayak/shared-config";
 import {
   ENGINE_VERSION,
   applyAnswerChange,
-  buildVarAssignment,
   evaluateAccount,
-  resolveRoute,
-  resolveVisibleQuestions,
+  evaluateChecklist,
 } from "@claimsahayak/rule-engine";
 import { ProgressBar } from "@/components/ProgressBar";
 import { QuestionRenderer } from "./QuestionRenderer";
@@ -17,6 +15,7 @@ import { ResumeBanner } from "./ResumeBanner";
 import { RerouteBanner } from "./RerouteBanner";
 import { WizardCard } from "./WizardCard";
 import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
+import { ChecklistResults } from "./ChecklistResults";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DebugPanel } from "./DebugPanel";
 import {
@@ -25,34 +24,42 @@ import {
   withoutQuestionKeys,
   type AnswersState,
 } from "@/lib/wizardAnswers";
-import { getCurrentQuestion } from "@/lib/wizardCurrentQuestion";
 import { computeSessionDerived } from "@/lib/wizardDerived";
+import {
+  getCurrentQuestionUnion,
+  resolveActiveSchemes,
+  resolveSchemeRoutes,
+  resolveUnionVisibleQuestions,
+} from "@/lib/wizardSchemes";
 import { detectRerouteBanner } from "@/lib/wizardReroute";
 import { clearSession, loadSession, saveSession } from "@/lib/wizardSession";
 import { getWizardDictionary } from "@/i18n/wizard";
 import type { SessionState } from "@claimsahayak/shared-types";
 
 /**
- * Wizard shell (M4.1 foundation + M4.2 navigation + M4.3 sessions/cards).
- * Owns the four allowed pieces of UI state — `answers`, `currentQuestion`
- * (derived), `locale`, and now `session` (a pending resume decision plus
- * the local-storage read/write around it) — alongside purely-structural
- * navigation bookkeeping (`visited`, `editIndex`) with no business meaning.
+ * Wizard shell (M4.1 foundation + M4.2 navigation + M4.3 sessions/cards +
+ * M6.2 multi-account). Owns the four allowed pieces of UI state —
+ * `answers`, `currentQuestion` (derived), `locale`, and `session` (a
+ * pending resume decision plus the local-storage read/write around it) —
+ * alongside purely-structural navigation bookkeeping (`visited`,
+ * `editIndex`) with no business meaning.
  *
  * Every decision about which question is current, which are visible, what
- * gets cleared on an edit, whether the route changed, and whether the
- * account has reached a terminal Card outcome comes from the frozen Rule
- * Engine (`resolveVisibleQuestions`, `validateAnswers` via
- * `getCurrentQuestion`, `applyAnswerChange`, `resolveRoute` via
- * `detectRerouteBanner` and the card check below). This file only
- * sequences those calls, holds the resulting state, and persists/restores
- * it — it never itself evaluates a scheme, route, threshold, or overlay
- * condition.
+ * gets cleared on an edit, whether the route changed, and what each
+ * account's terminal outcome is comes from the frozen Rule Engine
+ * (`isQuestionVisible`/`resolveRoute` via wizardSchemes.ts,
+ * `applyAnswerChange`, `evaluateAccount`/`evaluateChecklist`). This file
+ * only sequences those calls, holds the resulting state, and
+ * persists/restores it — it never itself evaluates a scheme, route,
+ * threshold, or overlay condition.
  *
- * Multi-account looping (one wizard pass per ticked Q1 scheme) is still
- * out of scope: this evaluates against the pack's first scheme only, since
- * `q1_schemes` — the only question guaranteed visible before any scheme is
- * chosen — never conditions on it.
+ * Multi-account (Milestone 6 Part 2): every scheme ticked in Q1 is
+ * evaluated against the one shared answer set. Questions follow UNION
+ * visibility (asked if any live — non-carded — scheme needs them); the
+ * session is terminal only when every ticked scheme has reached a card or
+ * a route-kind decision, at which point a single account renders exactly
+ * as it did in M4/M5 (card or decision summary) and two-plus accounts
+ * render the engine's whole `ChecklistDocument` via `ChecklistResults`.
  */
 export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
   const [locale] = useState(DEFAULT_LOCALE);
@@ -73,8 +80,7 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     setPendingSession(loadSession() ?? null);
   }, []);
 
-  const scheme = rulePack.schemes[0];
-  if (!scheme) {
+  if (rulePack.schemes.length === 0) {
     throw new Error("Rule Pack declares no schemes.");
   }
 
@@ -92,27 +98,41 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
     () => computeSessionDerived(answers, startedAtIso, rulePack.constants),
     [answers, startedAtIso, rulePack],
   );
+  // Milestone 6 Part 2: every scheme ticked in Q1 (or the neutral first
+  // scheme before Q1 / for the no-real-scheme case) — see wizardSchemes.ts.
+  const activeSchemes = useMemo(
+    () => resolveActiveSchemes(rulePack, flatAnswers),
+    [rulePack, flatAnswers],
+  );
+  const schemeRoutes = useMemo(
+    () => resolveSchemeRoutes(rulePack, activeSchemes, flatAnswers, derived),
+    [rulePack, activeSchemes, flatAnswers, derived],
+  );
+  // Progress denominator: union over every ACTIVE scheme (not just live
+  // ones), so the total never shrinks when one scheme cards out early.
   const visibleQuestions = useMemo(
-    () => resolveVisibleQuestions(rulePack, scheme, flatAnswers, derived),
-    [rulePack, scheme, flatAnswers, derived],
+    () => resolveUnionVisibleQuestions(rulePack, activeSchemes, flatAnswers, derived),
+    [rulePack, activeSchemes, flatAnswers, derived],
   );
   const frontierQuestion = useMemo(
-    () => getCurrentQuestion(rulePack, scheme, flatAnswers, answers, derived),
-    [rulePack, scheme, flatAnswers, answers, derived],
+    () => getCurrentQuestionUnion(rulePack, activeSchemes, flatAnswers, answers, derived),
+    [rulePack, activeSchemes, flatAnswers, answers, derived],
   );
   const currentQuestion =
     editIndex !== null ? questionsById.get(visited[editIndex] ?? "") : frontierQuestion;
 
-  const routeResolution = useMemo(() => {
-    const vars = buildVarAssignment(rulePack, scheme, flatAnswers, derived);
-    return resolveRoute(rulePack, vars);
-  }, [rulePack, scheme, flatAnswers, derived]);
+  // Single-account terminals render exactly as they did in M4/M5: the
+  // card, or the account's decision summary. (`frontierQuestion` is
+  // already undefined whenever the only scheme has carded — a card
+  // short-circuits its scheme's remaining questions.)
+  const onlyScheme = activeSchemes.length === 1 ? activeSchemes[0] : undefined;
+  const onlyResolution = onlyScheme ? schemeRoutes.get(onlyScheme.id) : undefined;
   const terminalCard = useMemo(() => {
-    if (routeResolution.terminal?.kind !== "card") {
+    if (onlyResolution?.terminal?.kind !== "card") {
       return undefined;
     }
-    return rulePack.cards.find((c) => c.id === routeResolution.terminal?.target);
-  }, [rulePack, routeResolution]);
+    return rulePack.cards.find((c) => c.id === onlyResolution.terminal?.target);
+  }, [rulePack, onlyResolution]);
   const terminalTemplate = useMemo(() => {
     if (!terminalCard?.templateId) {
       return undefined;
@@ -124,18 +144,23 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
   // question, regardless of what the not-yet-committed draft would resolve to.
   const showingCard = editIndex === null && terminalCard !== undefined;
 
-  // Milestone 5 Part 6: a "route"-kind terminal (a real, payable-or-not
-  // decision, as opposed to a pause/stop/info card) resolves the Complete
-  // Claim Decision + its processing checklist here, single-account (the
-  // same `scheme.schemes[0]` scope every other computation in this file
-  // already uses — see the file's own header comment on multi-account
-  // being out of scope).
+  // Milestone 5 Part 6: the single-account "route"-kind terminal (a real,
+  // payable-or-not decision, as opposed to a pause/stop/info card).
   const accountEvaluation = useMemo(() => {
-    if (routeResolution.terminal?.kind !== "route") {
+    if (!onlyScheme || onlyResolution?.terminal?.kind !== "route") {
       return undefined;
     }
-    return evaluateAccount(rulePack, scheme.id, flatAnswers, derived, 0);
-  }, [rulePack, scheme, flatAnswers, derived, routeResolution]);
+    return evaluateAccount(rulePack, onlyScheme.id, flatAnswers, derived, 0);
+  }, [rulePack, onlyScheme, onlyResolution, flatAnswers, derived]);
+
+  // Milestone 6 Part 2: with two-plus accounts, the whole-document
+  // evaluation (one account per ticked scheme) once no question remains.
+  const checklistEvaluation = useMemo(() => {
+    if (activeSchemes.length < 2 || frontierQuestion !== undefined) {
+      return undefined;
+    }
+    return evaluateChecklist(rulePack, flatAnswers, derived);
+  }, [rulePack, activeSchemes, frontierQuestion, flatAnswers, derived]);
 
   const total = visibleQuestions.length;
   const current =
@@ -187,9 +212,16 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
         // Derived values are re-computed for the post-edit answer state
         // (after invalidation) — a month-of-death edit changes no flat
         // key, only `derived`, so passing before/after bags is the only
-        // way a date-driven route change is detectable at all.
+        // way a date-driven route change is detectable at all. With
+        // several accounts in play, the first scheme whose terminal
+        // changed with a banner-declaring reroute rule provides the text.
         const nextDerived = computeSessionDerived(nextAnswers, startedAtIso, rulePack.constants);
-        banner = detectRerouteBanner(rulePack, scheme, flatAnswers, result.answers, derived, nextDerived);
+        for (const s of activeSchemes) {
+          banner = detectRerouteBanner(rulePack, s, flatAnswers, result.answers, derived, nextDerived);
+          if (banner) {
+            break;
+          }
+        }
       }
     }
 
@@ -298,6 +330,14 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
           answer={draft}
           onAnswer={setDraft}
           onContinue={handleContinue}
+          onBack={handleBack}
+          canGoBack={canGoBack}
+        />
+      ) : checklistEvaluation ? (
+        <ChecklistResults
+          document={checklistEvaluation.document}
+          rulePack={rulePack}
+          locale={locale}
           onBack={handleBack}
           canGoBack={canGoBack}
         />

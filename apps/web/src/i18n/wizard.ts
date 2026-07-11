@@ -56,6 +56,11 @@ export interface WizardDictionary {
   readonly decisionProcessingNotesLabel: string;
   readonly decisionNextActionLabel: string;
   readonly decisionTimelineLabel: string;
+  readonly resultsHeading: string;
+  readonly resultsIntro: string;
+  readonly resultsGoodToKnowHeading: string;
+  readonly resultsVerificationHeading: string;
+  readonly resultsDisclaimersHeading: string;
 }
 
 const en: WizardDictionary = {
@@ -124,6 +129,11 @@ const en: WizardDictionary = {
   decisionProcessingNotesLabel: "Processing notes",
   decisionNextActionLabel: "Next action for the Post Office",
   decisionTimelineLabel: "Timeline",
+  resultsHeading: "Your claim outcomes",
+  resultsIntro: "One outcome for each savings type you selected — each account is claimed separately.",
+  resultsGoodToKnowHeading: "Good to know",
+  resultsVerificationHeading: "The Post Office will verify",
+  resultsDisclaimersHeading: "Please note",
 };
 
 const hi: WizardDictionary = {
@@ -192,6 +202,11 @@ const hi: WizardDictionary = {
   decisionProcessingNotesLabel: "प्रक्रिया संबंधी टिप्पणियाँ",
   decisionNextActionLabel: "डाकघर के लिए अगला कदम",
   decisionTimelineLabel: "समय-सीमा",
+  resultsHeading: "आपके दावे के परिणाम",
+  resultsIntro: "आपने जो भी बचत प्रकार चुने, हर एक का अलग परिणाम — हर खाते का दावा अलग से होता है।",
+  resultsGoodToKnowHeading: "जानने योग्य बातें",
+  resultsVerificationHeading: "डाकघर यह सत्यापित करेगा",
+  resultsDisclaimersHeading: "कृपया ध्यान दें",
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };
