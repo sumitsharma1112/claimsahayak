@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { ChecklistDocument, LocaleCode, LocalizedText, RulePack } from "@claimsahayak/shared-types";
+import type { ChecklistDocument, LocaleCode, RulePack } from "@claimsahayak/shared-types";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 import { WizardCard } from "./WizardCard";
 import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
+import { DocumentNotes } from "./DocumentNotes";
 import { PreviousButton } from "./PreviousButton";
 
 /**
@@ -24,26 +25,6 @@ import { PreviousButton } from "./PreviousButton";
  * `evaluateAccount` set from the card id the route resolved to), never
  * because of any specific scheme/route id value.
  */
-function LabeledList({ heading, items, locale }: {
-  readonly heading: string;
-  readonly items: readonly LocalizedText[];
-  readonly locale: LocaleCode;
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-  return (
-    <div className="rounded-control border border-ink-soft/20 bg-paper p-s3">
-      <p className="m-0 font-semibold text-ink-soft">{heading}</p>
-      <ul className="m-0 mt-s1 flex list-disc flex-col gap-s1 pl-s5 text-ink">
-        {items.map((item, i) => (
-          <li key={`${heading}-${String(i)}`}>{pickText(item, locale)}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 export function ChecklistResults({
   document: checklistDocument,
   rulePack,
@@ -116,13 +97,7 @@ export function ChecklistResults({
         );
       })}
 
-      <LabeledList heading={t.resultsGoodToKnowHeading} items={checklistDocument.goodToKnow} locale={locale} />
-      <LabeledList
-        heading={t.resultsVerificationHeading}
-        items={checklistDocument.verificationPanel}
-        locale={locale}
-      />
-      <LabeledList heading={t.resultsDisclaimersHeading} items={checklistDocument.disclaimers} locale={locale} />
+      <DocumentNotes document={checklistDocument} locale={locale} />
 
       <div className="flex gap-s3">
         <PreviousButton locale={locale} disabled={!canGoBack} onClick={onBack} />

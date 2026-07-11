@@ -61,6 +61,7 @@ export interface WizardDictionary {
   readonly resultsGoodToKnowHeading: string;
   readonly resultsVerificationHeading: string;
   readonly resultsDisclaimersHeading: string;
+  readonly printChecklistLabel: string;
 }
 
 const en: WizardDictionary = {
@@ -134,6 +135,7 @@ const en: WizardDictionary = {
   resultsGoodToKnowHeading: "Good to know",
   resultsVerificationHeading: "The Post Office will verify",
   resultsDisclaimersHeading: "Please note",
+  printChecklistLabel: "Print checklist (save as PDF)",
 };
 
 const hi: WizardDictionary = {
@@ -207,6 +209,7 @@ const hi: WizardDictionary = {
   resultsGoodToKnowHeading: "जानने योग्य बातें",
   resultsVerificationHeading: "डाकघर यह सत्यापित करेगा",
   resultsDisclaimersHeading: "कृपया ध्यान दें",
+  printChecklistLabel: "चेकलिस्ट प्रिंट करें (PDF के रूप में सहेजें)",
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };

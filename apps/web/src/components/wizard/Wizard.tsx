@@ -6,7 +6,6 @@ import { DEFAULT_LOCALE } from "@claimsahayak/shared-config";
 import {
   ENGINE_VERSION,
   applyAnswerChange,
-  evaluateAccount,
   evaluateChecklist,
 } from "@claimsahayak/rule-engine";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -16,6 +15,8 @@ import { RerouteBanner } from "./RerouteBanner";
 import { WizardCard } from "./WizardCard";
 import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
 import { ChecklistResults } from "./ChecklistResults";
+import { DocumentNotes } from "./DocumentNotes";
+import { PrintChecklistButton } from "./PrintChecklistButton";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DebugPanel } from "./DebugPanel";
 import {
@@ -144,23 +145,24 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
   // question, regardless of what the not-yet-committed draft would resolve to.
   const showingCard = editIndex === null && terminalCard !== undefined;
 
-  // Milestone 5 Part 6: the single-account "route"-kind terminal (a real,
-  // payable-or-not decision, as opposed to a pause/stop/info card).
-  const accountEvaluation = useMemo(() => {
-    if (!onlyScheme || onlyResolution?.terminal?.kind !== "route") {
-      return undefined;
-    }
-    return evaluateAccount(rulePack, onlyScheme.id, flatAnswers, derived, 0);
-  }, [rulePack, onlyScheme, onlyResolution, flatAnswers, derived]);
-
-  // Milestone 6 Part 2: with two-plus accounts, the whole-document
-  // evaluation (one account per ticked scheme) once no question remains.
+  // Milestone 6: the whole-document evaluation (one account per ticked
+  // scheme) once no question remains — the multi-account results view
+  // renders it directly; the single-account decision view (M5's
+  // ClaimDecisionSummary, unchanged) reads its one account from it; and
+  // the print/PDF output (Part 3) always covers the full document either
+  // way.
   const checklistEvaluation = useMemo(() => {
-    if (activeSchemes.length < 2 || frontierQuestion !== undefined) {
+    if (frontierQuestion !== undefined) {
       return undefined;
     }
     return evaluateChecklist(rulePack, flatAnswers, derived);
-  }, [rulePack, activeSchemes, frontierQuestion, flatAnswers, derived]);
+  }, [rulePack, frontierQuestion, flatAnswers, derived]);
+  // Milestone 5 Part 6: the single-account "route"-kind terminal (a real,
+  // payable-or-not decision, as opposed to a pause/stop/info card).
+  const singleAccount =
+    onlyResolution?.terminal?.kind === "route"
+      ? checklistEvaluation?.document.accounts[0]
+      : undefined;
 
   const total = visibleQuestions.length;
   const current =
@@ -333,22 +335,33 @@ export function Wizard({ rulePack }: { readonly rulePack: RulePack }) {
           onBack={handleBack}
           canGoBack={canGoBack}
         />
-      ) : checklistEvaluation ? (
-        <ChecklistResults
-          document={checklistEvaluation.document}
-          rulePack={rulePack}
-          locale={locale}
-          onBack={handleBack}
-          canGoBack={canGoBack}
-        />
-      ) : accountEvaluation?.account.decision ? (
-        <ClaimDecisionSummary
-          account={accountEvaluation.account}
-          decision={accountEvaluation.account.decision}
-          locale={locale}
-          onBack={handleBack}
-          canGoBack={canGoBack}
-        />
+      ) : activeSchemes.length >= 2 && checklistEvaluation ? (
+        <div className="flex flex-col gap-s4">
+          <div className="cs-print-area flex flex-col gap-s4">
+            <ChecklistResults
+              document={checklistEvaluation.document}
+              rulePack={rulePack}
+              locale={locale}
+              onBack={handleBack}
+              canGoBack={canGoBack}
+            />
+          </div>
+          <PrintChecklistButton locale={locale} />
+        </div>
+      ) : singleAccount?.decision && checklistEvaluation ? (
+        <div className="flex flex-col gap-s4">
+          <div className="cs-print-area flex flex-col gap-s4">
+            <ClaimDecisionSummary
+              account={singleAccount}
+              decision={singleAccount.decision}
+              locale={locale}
+              onBack={handleBack}
+              canGoBack={canGoBack}
+            />
+            <DocumentNotes document={checklistEvaluation.document} locale={locale} />
+          </div>
+          <PrintChecklistButton locale={locale} />
+        </div>
       ) : (
         <div role="status" className="rounded-control border border-ok/30 bg-ok-bg p-s4">
           <p className="m-0 font-semibold text-ok">{t.foundationCompleteTitle}</p>
