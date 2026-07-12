@@ -1,4 +1,4 @@
-import type { ClaimDataModel, Party } from "@claimsahayak/shared-types";
+import type { Party } from "@claimsahayak/shared-types";
 
 /**
  * Milestone 7 — pure, generic helpers for editing the bounded Party arrays

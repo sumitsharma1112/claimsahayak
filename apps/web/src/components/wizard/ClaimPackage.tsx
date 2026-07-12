@@ -286,13 +286,17 @@ function buildAccountEntries(
     if (!entry.form) {
       continue;
     }
+    const layout = layoutsById.get(entry.form.id);
+    if (!layout) {
+      continue;
+    }
     entries.push({
       id: `${String(account.accountIndex)}-form-${entry.form.id}`,
       title: `${schemeName} — ${pickText(entry.form.name, locale)}`,
       node: (
         <OfficialFormView
           form={entry.form}
-          layout={layoutsById.get(entry.form.id) as OfficialFormLayout}
+          layout={layout}
           claimData={claimData}
           accountIndex={account.accountIndex}
           locale={locale}
