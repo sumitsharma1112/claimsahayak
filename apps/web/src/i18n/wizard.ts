@@ -78,6 +78,14 @@ export interface WizardDictionary {
   readonly claimDetailsRemoveLabel: string;
   readonly claimDetailsAddLabel: string;
   readonly officialFormBlankFieldLabel: string;
+  readonly officialFormEyebrow: string;
+  readonly officialFormSignatoriesLabel: string;
+  readonly officialFormExecutedBeforeLabel: string;
+  readonly officialFormStampPaperLabel: string;
+  readonly officialFormValidForLabel: string;
+  readonly officialFormMonthsLabel: string;
+  readonly officialFormCopiesLabel: string;
+  readonly officialFormSourceLabel: string;
   readonly claimPackageHeading: string;
   readonly claimPackageMissingInfoHeading: string;
   readonly claimPackageAutoFilledHeading: string;
@@ -187,6 +195,14 @@ const en: WizardDictionary = {
   claimDetailsRemoveLabel: "Remove",
   claimDetailsAddLabel: "Add",
   officialFormBlankFieldLabel: "(fill in by hand)",
+  officialFormEyebrow: "Official India Post Form",
+  officialFormSignatoriesLabel: "Who signs this",
+  officialFormExecutedBeforeLabel: "To be executed before",
+  officialFormStampPaperLabel: "Stamp paper",
+  officialFormValidForLabel: "valid for",
+  officialFormMonthsLabel: "months",
+  officialFormCopiesLabel: "Copies required",
+  officialFormSourceLabel: "Official source",
   claimPackageHeading: "Complete Claim Package",
   claimPackageMissingInfoHeading: "Still missing — you can fill these in by hand instead",
   claimPackageAutoFilledHeading: "Auto-filled forms and letters",
@@ -296,6 +312,14 @@ const hi: WizardDictionary = {
   claimDetailsRemoveLabel: "हटाएँ",
   claimDetailsAddLabel: "जोड़ें",
   officialFormBlankFieldLabel: "(हाथ से भरें)",
+  officialFormEyebrow: "आधिकारिक डाकघर फ़ॉर्म",
+  officialFormSignatoriesLabel: "इस पर हस्ताक्षर कौन करेगा",
+  officialFormExecutedBeforeLabel: "किसके समक्ष निष्पादित करना है",
+  officialFormStampPaperLabel: "स्टाम्प पेपर",
+  officialFormValidForLabel: "वैधता",
+  officialFormMonthsLabel: "महीने",
+  officialFormCopiesLabel: "आवश्यक प्रतियाँ",
+  officialFormSourceLabel: "आधिकारिक स्रोत",
   claimPackageHeading: "पूरा क्लेम पैकेज",
   claimPackageMissingInfoHeading: "अभी भी शेष — इन्हें आप हाथ से भर सकते हैं",
   claimPackageAutoFilledHeading: "अपने आप भरे गए फ़ॉर्म और पत्र",
