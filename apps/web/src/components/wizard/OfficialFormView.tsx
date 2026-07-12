@@ -1,6 +1,6 @@
 import type { ClaimDataModel, FormDefinition, LocaleCode, OfficialFormLayout } from "@claimsahayak/shared-types";
 import { formatInr } from "@claimsahayak/shared-utils";
-import { resolveAccountNumber, resolveClaimDataValue } from "@claimsahayak/rule-engine";
+import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 
@@ -48,12 +48,9 @@ export function OfficialFormView({
 
       <ol className="m-0 mt-s4 flex list-none flex-col gap-s2 pl-0">
         {layout.fields.map((field, i) => {
-          const value =
-            field.claimDataField === "account.number"
-              ? resolveAccountNumber(claimData, accountIndex)
-              : field.claimDataField
-                ? resolveClaimDataValue(claimData, field.claimDataField)
-                : undefined;
+          const value = field.claimDataField
+            ? resolveFieldValue(claimData, accountIndex, field.claimDataField)
+            : undefined;
           return (
             <li
               key={field.id}

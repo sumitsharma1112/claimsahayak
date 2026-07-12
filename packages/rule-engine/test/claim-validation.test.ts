@@ -53,10 +53,9 @@ describe("validateClaimPackage", () => {
   it("returns no issues once every mandatory field across forms and office documents is filled", () => {
     const account = routeAAccount(EMPTY_CLAIM_DATA);
     const fullyFilled: ClaimDataModel = {
+      ...EMPTY_CLAIM_DATA,
       claimant: { name: "Asha Devi", address: "12 MG Road", relationship: "Daughter" },
       depositor: { name: "Ram Prasad" },
-      nominees: [],
-      legalHeirs: [],
       witnesses: [{ name: "Witness One" }, { name: "Witness Two" }],
       accountNumbers: { 0: "SB-12345" },
       officeName: "Connaught Place HO",

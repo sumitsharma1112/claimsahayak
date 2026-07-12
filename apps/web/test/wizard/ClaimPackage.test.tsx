@@ -380,6 +380,93 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     expect(screen.getByRole("heading", { name: "Witness sheet" })).toBeTruthy();
   });
 
+  it("collects details conditionally — plain nomination claim shows POSB payment but no bank/disclaimant/legal-heir/guardian/name-difference fields (Milestone 11)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user); // pays into own POSB, ticks "none of these"
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    // Always-relevant sections are present…
+    expect(screen.getByLabelText("Office address")).toBeTruthy();
+    expect(screen.getByLabelText("Prepared by — name of official")).toBeTruthy();
+    expect(screen.getByLabelText("Date of death (as on the death certificate)")).toBeTruthy();
+    expect(screen.getByLabelText("Mobile number")).toBeTruthy();
+    expect(screen.getByLabelText(/Amount claimed/)).toBeTruthy();
+    // …the chosen payment mode's field is asked…
+    expect(screen.getByLabelText("Post Office savings account number (for payment)")).toBeTruthy();
+    // …and everything this claim does NOT need is never asked.
+    expect(screen.queryByLabelText("Bank name")).toBeNull();
+    expect(screen.queryByLabelText("IFSC code")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Add Disclaiming/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add Legal heir" })).toBeNull();
+    expect(screen.queryByLabelText(/Guardian's name/)).toBeNull();
+    expect(screen.queryByLabelText(/name as on the death certificate \(the differing version\)/)).toBeNull();
+    expect(screen.queryByLabelText(/name as per their ID/)).toBeNull();
+  });
+
+  it("asks for both name versions only when the matching name-difference flag was ticked (Milestone 11)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q9_payment", "own_posb") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q10_docs_check", "name_mismatch_depositor") }));
+    await continueBtn(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByLabelText("Depositor's name as on the death certificate (the differing version)")).toBeTruthy();
+    // The claimant-side variant was NOT flagged, so it is not asked.
+    expect(screen.queryByLabelText("Claimant's name as per their ID (the differing version)")).toBeNull();
+  });
+
+  it("asks for disclaimants only when the claim actually selects the Form 14 disclaimer (Milestone 11)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_complication") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q5a_complication", "cannot_come_together") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByRole("button", { name: /Add Disclaiming/ })).toBeTruthy();
+  });
+
+  it("asks for bank details only when payment is by bank transfer (Milestone 11)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    // Bank transfer is only available for RD/TD/MIS/NSC/KVP claims — use RD.
+    await tickSchemeAndContinue(user, "RD");
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q8_maturity", "matured_within_10_years") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q9_payment", "bank_transfer") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q10_docs_check", "none") }));
+    await continueBtn(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByLabelText("Bank name")).toBeTruthy();
+    expect(screen.getByLabelText("IFSC code")).toBeTruthy();
+    expect(screen.getByLabelText("Bank account number")).toBeTruthy();
+    expect(screen.queryByLabelText("Post Office savings account number (for payment)")).toBeNull();
+  });
+
   it("shows the entered claimant name on the cover page", async () => {
     const user = userEvent.setup();
     render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);

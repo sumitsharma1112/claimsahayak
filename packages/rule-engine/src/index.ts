@@ -68,7 +68,12 @@ export { evaluateChecklist, type ChecklistEvaluation } from "./checklist.js";
 
 // Milestone 7 — document generation, auto-fill, claim-package validation.
 export { resolveDocumentSelection, type DocumentSelectionEntry } from "./documents.js";
-export { resolveClaimDataValue, resolveAccountNumber } from "./autofill.js";
+export {
+  resolveClaimDataValue,
+  resolveAccountNumber,
+  resolveAccountValue,
+  resolveFieldValue,
+} from "./autofill.js";
 export { validateClaimPackage, type ClaimValidationIssue } from "./claim-validation.js";
 
 export { validateAnswers } from "./validate-answers.js";

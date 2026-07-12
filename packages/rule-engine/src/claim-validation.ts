@@ -6,7 +6,7 @@ import type {
   TemplateDefinition,
 } from "@claimsahayak/shared-types";
 import { resolveDocumentSelection } from "./documents.js";
-import { resolveAccountNumber, resolveClaimDataValue } from "./autofill.js";
+import { resolveFieldValue } from "./autofill.js";
 
 /**
  * Milestone 7 Part 7 — validates a live claim's generated documents, not
@@ -53,10 +53,7 @@ export function validateClaimPackage(
         if (field.manual || !field.claimDataField) {
           continue;
         }
-        const value =
-          field.claimDataField === "account.number"
-            ? resolveAccountNumber(claimData, account.accountIndex)
-            : resolveClaimDataValue(claimData, field.claimDataField);
+        const value = resolveFieldValue(claimData, account.accountIndex, field.claimDataField);
         if (value === undefined) {
           issues.push({
             accountIndex: account.accountIndex,
@@ -75,10 +72,7 @@ export function validateClaimPackage(
         if (!field.claimDataField) {
           continue;
         }
-        const value =
-          field.claimDataField === "account.number"
-            ? resolveAccountNumber(claimData, account.accountIndex)
-            : resolveClaimDataValue(claimData, field.claimDataField);
+        const value = resolveFieldValue(claimData, account.accountIndex, field.claimDataField);
         if (value === undefined) {
           issues.push({
             accountIndex: account.accountIndex,

@@ -1,5 +1,5 @@
 import type { ClaimDataModel, LocaleCode, TemplateDefinition } from "@claimsahayak/shared-types";
-import { resolveAccountNumber, resolveClaimDataValue } from "@claimsahayak/rule-engine";
+import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 
@@ -45,11 +45,7 @@ export function PrintableTemplate({
         {template.fields.map((field) => {
           const autoFilledValue =
             claimData && field.kind === "blankLine" && field.claimDataField
-              ? field.claimDataField === "account.number"
-                ? accountIndex !== undefined
-                  ? resolveAccountNumber(claimData, accountIndex)
-                  : undefined
-                : resolveClaimDataValue(claimData, field.claimDataField)
+              ? resolveFieldValue(claimData, accountIndex ?? -1, field.claimDataField)
               : undefined;
           return (
             <div key={field.id}>

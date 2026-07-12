@@ -70,13 +70,44 @@ export interface WizardDictionary {
   readonly claimDetailsDepositorLabel: string;
   readonly claimDetailsGuardianLabel: string;
   readonly claimDetailsAccountNumberLabel: string;
-  readonly claimDetailsNomineeLabel: string;
   readonly claimDetailsLegalHeirLabel: string;
   readonly claimDetailsWitnessLabel: string;
   readonly claimDetailsRelationshipLabel: string;
   readonly claimDetailsAddressLabel: string;
   readonly claimDetailsRemoveLabel: string;
   readonly claimDetailsAddLabel: string;
+  readonly claimDetailsOfficeSectionHeading: string;
+  readonly claimDetailsOfficeAddressLabel: string;
+  readonly claimDetailsOfficePinLabel: string;
+  readonly claimDetailsOfficeCodeLabel: string;
+  readonly claimDetailsOfficePhoneLabel: string;
+  readonly claimDetailsHeadOfficeLabel: string;
+  readonly claimDetailsPreparerNameLabel: string;
+  readonly claimDetailsPreparerDesignationLabel: string;
+  readonly claimDetailsDepositorSectionHeading: string;
+  readonly claimDetailsDateOfDeathLabel: string;
+  readonly claimDetailsPlaceOfDeathLabel: string;
+  readonly claimDetailsDeathCertNumberLabel: string;
+  readonly claimDetailsDeathCertIssuedByLabel: string;
+  readonly claimDetailsDepositorNameOnDeathCertLabel: string;
+  readonly claimDetailsClaimantSectionHeading: string;
+  readonly claimDetailsMobileLabel: string;
+  readonly claimDetailsIdTypeLabel: string;
+  readonly claimDetailsIdNumberLabel: string;
+  readonly claimDetailsClaimantNameAsPerIdLabel: string;
+  readonly claimDetailsShareLabel: string;
+  readonly claimDetailsCoClaimantLabel: string;
+  readonly claimDetailsDisclaimantLabel: string;
+  readonly claimDetailsAccountSectionHeading: string;
+  readonly claimDetailsAmountClaimedLabel: string;
+  readonly claimDetailsNominationRegNumberLabel: string;
+  readonly claimDetailsNominationDateLabel: string;
+  readonly claimDetailsPaymentSectionHeading: string;
+  readonly claimDetailsBankNameLabel: string;
+  readonly claimDetailsBankBranchLabel: string;
+  readonly claimDetailsBankAccountLabel: string;
+  readonly claimDetailsIfscLabel: string;
+  readonly claimDetailsPosbAccountLabel: string;
   readonly officialFormBlankFieldLabel: string;
   readonly officialFormEyebrow: string;
   readonly officialFormSignatoriesLabel: string;
@@ -187,13 +218,44 @@ const en: WizardDictionary = {
   claimDetailsDepositorLabel: "Depositor's name (the account holder who passed away)",
   claimDetailsGuardianLabel: "Guardian's name (if applicable)",
   claimDetailsAccountNumberLabel: "Account / certificate number",
-  claimDetailsNomineeLabel: "Nominee",
   claimDetailsLegalHeirLabel: "Legal heir",
   claimDetailsWitnessLabel: "Witness",
   claimDetailsRelationshipLabel: "Relationship to the depositor",
   claimDetailsAddressLabel: "Address",
   claimDetailsRemoveLabel: "Remove",
   claimDetailsAddLabel: "Add",
+  claimDetailsOfficeSectionHeading: "Post Office details",
+  claimDetailsOfficeAddressLabel: "Office address",
+  claimDetailsOfficePinLabel: "Office PIN code",
+  claimDetailsOfficeCodeLabel: "Office code (facility / SOL ID)",
+  claimDetailsOfficePhoneLabel: "Office phone number",
+  claimDetailsHeadOfficeLabel: "Head Post Office (papers forwarded to)",
+  claimDetailsPreparerNameLabel: "Prepared by — name of official",
+  claimDetailsPreparerDesignationLabel: "Prepared by — designation",
+  claimDetailsDepositorSectionHeading: "Depositor and death certificate",
+  claimDetailsDateOfDeathLabel: "Date of death (as on the death certificate)",
+  claimDetailsPlaceOfDeathLabel: "Place of death",
+  claimDetailsDeathCertNumberLabel: "Death certificate number",
+  claimDetailsDeathCertIssuedByLabel: "Death certificate issued by",
+  claimDetailsDepositorNameOnDeathCertLabel: "Depositor's name as on the death certificate (the differing version)",
+  claimDetailsClaimantSectionHeading: "Claimant details",
+  claimDetailsMobileLabel: "Mobile number",
+  claimDetailsIdTypeLabel: "ID document type (e.g. Aadhaar)",
+  claimDetailsIdNumberLabel: "ID document number",
+  claimDetailsClaimantNameAsPerIdLabel: "Claimant's name as per their ID (the differing version)",
+  claimDetailsShareLabel: "Share of the claim (e.g. 50%)",
+  claimDetailsCoClaimantLabel: "Co-claimant",
+  claimDetailsDisclaimantLabel: "Disclaiming nominee / heir (signs Form 14)",
+  claimDetailsAccountSectionHeading: "Account details",
+  claimDetailsAmountClaimedLabel: "Amount claimed (₹)",
+  claimDetailsNominationRegNumberLabel: "Nomination registration number (from the nomination register)",
+  claimDetailsNominationDateLabel: "Nomination date",
+  claimDetailsPaymentSectionHeading: "Payment details",
+  claimDetailsBankNameLabel: "Bank name",
+  claimDetailsBankBranchLabel: "Bank branch",
+  claimDetailsBankAccountLabel: "Bank account number",
+  claimDetailsIfscLabel: "IFSC code",
+  claimDetailsPosbAccountLabel: "Post Office savings account number (for payment)",
   officialFormBlankFieldLabel: "(fill in by hand)",
   officialFormEyebrow: "Official India Post Form",
   officialFormSignatoriesLabel: "Who signs this",
@@ -304,11 +366,42 @@ const hi: WizardDictionary = {
   claimDetailsDepositorLabel: "जमाकर्ता का नाम (जिस खाताधारक का निधन हुआ)",
   claimDetailsGuardianLabel: "अभिभावक का नाम (यदि लागू हो)",
   claimDetailsAccountNumberLabel: "खाता / प्रमाणपत्र संख्या",
-  claimDetailsNomineeLabel: "नामांकित व्यक्ति",
   claimDetailsLegalHeirLabel: "कानूनी उत्तराधिकारी",
   claimDetailsWitnessLabel: "गवाह",
   claimDetailsRelationshipLabel: "जमाकर्ता से संबंध",
   claimDetailsAddressLabel: "पता",
+  claimDetailsOfficeSectionHeading: "डाकघर का विवरण",
+  claimDetailsOfficeAddressLabel: "डाकघर का पता",
+  claimDetailsOfficePinLabel: "डाकघर का पिन कोड",
+  claimDetailsOfficeCodeLabel: "डाकघर कोड (फ़ैसिलिटी / SOL ID)",
+  claimDetailsOfficePhoneLabel: "डाकघर का फ़ोन नंबर",
+  claimDetailsHeadOfficeLabel: "प्रधान डाकघर (जहाँ कागज़ भेजे जाएँगे)",
+  claimDetailsPreparerNameLabel: "तैयारकर्ता — अधिकारी का नाम",
+  claimDetailsPreparerDesignationLabel: "तैयारकर्ता — पदनाम",
+  claimDetailsDepositorSectionHeading: "जमाकर्ता और मृत्यु प्रमाणपत्र",
+  claimDetailsDateOfDeathLabel: "मृत्यु की तारीख़ (मृत्यु प्रमाणपत्र के अनुसार)",
+  claimDetailsPlaceOfDeathLabel: "मृत्यु का स्थान",
+  claimDetailsDeathCertNumberLabel: "मृत्यु प्रमाणपत्र संख्या",
+  claimDetailsDeathCertIssuedByLabel: "मृत्यु प्रमाणपत्र जारीकर्ता",
+  claimDetailsDepositorNameOnDeathCertLabel: "मृत्यु प्रमाणपत्र पर जमाकर्ता का नाम (भिन्न रूप)",
+  claimDetailsClaimantSectionHeading: "दावेदार का विवरण",
+  claimDetailsMobileLabel: "मोबाइल नंबर",
+  claimDetailsIdTypeLabel: "पहचान दस्तावेज़ का प्रकार (जैसे आधार)",
+  claimDetailsIdNumberLabel: "पहचान दस्तावेज़ संख्या",
+  claimDetailsClaimantNameAsPerIdLabel: "पहचान दस्तावेज़ के अनुसार दावेदार का नाम (भिन्न रूप)",
+  claimDetailsShareLabel: "दावे में हिस्सा (जैसे 50%)",
+  claimDetailsCoClaimantLabel: "सह-दावेदार",
+  claimDetailsDisclaimantLabel: "दावा-त्यागकर्ता नामांकित / उत्तराधिकारी (फ़ॉर्म 14 पर हस्ताक्षर)",
+  claimDetailsAccountSectionHeading: "खाते का विवरण",
+  claimDetailsAmountClaimedLabel: "दावा की गई राशि (₹)",
+  claimDetailsNominationRegNumberLabel: "नामांकन पंजीकरण संख्या (नामांकन रजिस्टर से)",
+  claimDetailsNominationDateLabel: "नामांकन की तारीख़",
+  claimDetailsPaymentSectionHeading: "भुगतान का विवरण",
+  claimDetailsBankNameLabel: "बैंक का नाम",
+  claimDetailsBankBranchLabel: "बैंक शाखा",
+  claimDetailsBankAccountLabel: "बैंक खाता संख्या",
+  claimDetailsIfscLabel: "IFSC कोड",
+  claimDetailsPosbAccountLabel: "डाकघर बचत खाता संख्या (भुगतान के लिए)",
   claimDetailsRemoveLabel: "हटाएँ",
   claimDetailsAddLabel: "जोड़ें",
   officialFormBlankFieldLabel: "(हाथ से भरें)",
