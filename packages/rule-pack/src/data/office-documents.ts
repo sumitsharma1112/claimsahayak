@@ -67,4 +67,47 @@ export const OFFICE_DOCUMENT_TEMPLATES: readonly TemplateDefinition[] = [
       { id: "signature", kind: "blankLine", label: { en: "Signature of approving officer" } },
     ],
   },
+  {
+    // Milestone 8 — distinct from template_approval_note: this is the
+    // general internal noting on the file (why the decision was reached,
+    // what was reviewed), not the formal approval-authority/amount record.
+    id: "template_office_note",
+    title: { en: "Internal office note — case noting" },
+    handbookRef: "Blueprint v2 §3.4 (printable templates); Milestone 8 (office note)",
+    fields: [
+      { id: "office_name", kind: "blankLine", label: { en: "Name of Post Office" }, claimDataField: "office.name" },
+      { id: "depositor_name", kind: "blankLine", label: { en: "Name of the deceased depositor" }, claimDataField: "depositor.name" },
+      { id: "account_number", kind: "blankLine", label: { en: "Account / certificate number" }, claimDataField: "account.number" },
+      { id: "claimant_name", kind: "blankLine", label: { en: "Name of claimant" }, claimDataField: "claimant.name" },
+      {
+        id: "review_note",
+        kind: "staticText",
+        label: { en: "Note" },
+        text: {
+          en: "The claim papers have been reviewed against the attached checklist and Decision Summary. Record any additional remarks below before forwarding for approval.",
+        },
+      },
+      { id: "remarks", kind: "blankLine", label: { en: "Remarks" } },
+      { id: "date_place", kind: "blankLine", label: { en: "Date and place" } },
+      { id: "signature", kind: "blankLine", label: { en: "Signature" } },
+    ],
+  },
+  {
+    // Milestone 8 — a standalone witness page: previously witness names
+    // only ever appeared as two fields embedded inside Form 11 itself.
+    id: "template_witness_sheet",
+    title: { en: "Witness sheet" },
+    handbookRef: "Blueprint v2 §3.4 (printable templates); Milestone 8 (witness sheet)",
+    fields: [
+      { id: "depositor_name", kind: "blankLine", label: { en: "Name of the deceased depositor" }, claimDataField: "depositor.name" },
+      { id: "account_number", kind: "blankLine", label: { en: "Account / certificate number" }, claimDataField: "account.number" },
+      { id: "claimant_name", kind: "blankLine", label: { en: "Name of claimant" }, claimDataField: "claimant.name" },
+      { id: "witness_1_name", kind: "blankLine", label: { en: "Witness 1 — name" }, claimDataField: "witness.0.name" },
+      { id: "witness_1_address", kind: "blankLine", label: { en: "Witness 1 — address" } },
+      { id: "witness_1_signature", kind: "blankLine", label: { en: "Witness 1 — signature" } },
+      { id: "witness_2_name", kind: "blankLine", label: { en: "Witness 2 — name" }, claimDataField: "witness.1.name" },
+      { id: "witness_2_address", kind: "blankLine", label: { en: "Witness 2 — address" } },
+      { id: "witness_2_signature", kind: "blankLine", label: { en: "Witness 2 — signature" } },
+    ],
+  },
 ];

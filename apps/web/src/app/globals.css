@@ -140,3 +140,25 @@
     width: 100%;
   }
 }
+
+/*
+ * Milestone 8 — Claim File pagination. Every top-level document in the
+ * assembled Claim File (cover page, index, decision summary, each
+ * auto-filled form/letter, each sheet/report) gets this class so it
+ * starts on its own printed page, matching how a Postmaster physically
+ * assembles a claim file. `break-before`/`page-break-before` are declared
+ * together for browser support breadth; the `:first-child` override stops
+ * the very first page (the cover page) from leaving a leading blank page.
+ * Screen rendering is completely unaffected — these rules only apply
+ * inside `@media print`.
+ */
+@media print {
+  .cs-print-page {
+    break-before: page;
+    page-break-before: always;
+  }
+  .cs-print-page:first-child {
+    break-before: auto;
+    page-break-before: auto;
+  }
+}

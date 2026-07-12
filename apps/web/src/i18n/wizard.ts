@@ -85,6 +85,17 @@ export interface WizardDictionary {
   readonly claimPackageOfficeChecklistItemColumn: string;
   readonly claimPackageOfficeChecklistSectionColumn: string;
   readonly claimPackageOfficeChecklistVerifiedByColumn: string;
+  readonly claimFileCoverEyebrow: string;
+  readonly claimFileCoverTitle: string;
+  readonly claimFileCoverPreparedOnLabel: string;
+  readonly claimFileIndexHeading: string;
+  readonly claimFileDecisionSummaryTitle: string;
+  readonly claimFileAuthoritySheetHeading: string;
+  readonly claimFileLimitSheetHeading: string;
+  readonly claimFileReferencesSheetHeading: string;
+  readonly claimFileEscalatesToLabel: string;
+  readonly claimFileApplicableRuleIdsLabel: string;
+  readonly claimFileMissingReportNoneLabel: string;
 }
 
 const en: WizardDictionary = {
@@ -183,6 +194,17 @@ const en: WizardDictionary = {
   claimPackageOfficeChecklistItemColumn: "Item",
   claimPackageOfficeChecklistSectionColumn: "Category",
   claimPackageOfficeChecklistVerifiedByColumn: "Verified by",
+  claimFileCoverEyebrow: "Complete Claim File",
+  claimFileCoverTitle: "Deceased Claim — Claim File",
+  claimFileCoverPreparedOnLabel: "Prepared on",
+  claimFileIndexHeading: "Index",
+  claimFileDecisionSummaryTitle: "Decision Summary",
+  claimFileAuthoritySheetHeading: "Competent Authority Sheet",
+  claimFileLimitSheetHeading: "Monetary Limit Sheet",
+  claimFileReferencesSheetHeading: "Rule References",
+  claimFileEscalatesToLabel: "escalates to",
+  claimFileApplicableRuleIdsLabel: "Applicable rule IDs",
+  claimFileMissingReportNoneLabel: "Nothing missing — every auto-fillable field has been entered.",
 };
 
 const hi: WizardDictionary = {
@@ -281,6 +303,17 @@ const hi: WizardDictionary = {
   claimPackageOfficeChecklistItemColumn: "वस्तु",
   claimPackageOfficeChecklistSectionColumn: "श्रेणी",
   claimPackageOfficeChecklistVerifiedByColumn: "किसके द्वारा सत्यापित",
+  claimFileCoverEyebrow: "पूरा क्लेम फ़ाइल",
+  claimFileCoverTitle: "मृतक दावा — क्लेम फ़ाइल",
+  claimFileCoverPreparedOnLabel: "तैयार करने की तारीख",
+  claimFileIndexHeading: "अनुक्रमणिका",
+  claimFileDecisionSummaryTitle: "निर्णय सारांश",
+  claimFileAuthoritySheetHeading: "सक्षम प्राधिकारी पत्रक",
+  claimFileLimitSheetHeading: "राशि सीमा पत्रक",
+  claimFileReferencesSheetHeading: "नियम संदर्भ",
+  claimFileEscalatesToLabel: "आगे भेजा जाता है",
+  claimFileApplicableRuleIdsLabel: "लागू नियम आईडी",
+  claimFileMissingReportNoneLabel: "कुछ भी शेष नहीं — हर स्वतः-भरने योग्य फ़ील्ड भर दी गई है।",
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import type {
   AccountChecklist,
   ClaimDataModel,
+  ClaimDecision,
   LocaleCode,
   OfficialFormLayout,
   RulePack,
 } from "@claimsahayak/shared-types";
+import { formatInr } from "@claimsahayak/shared-utils";
 import { resolveDocumentSelection, validateClaimPackage } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
@@ -16,20 +18,139 @@ import { OfficialFormView } from "./OfficialFormView";
 import { PrintableTemplate } from "./PrintableTemplate";
 import { PreviousButton } from "./PreviousButton";
 
-const OFFICE_DOCUMENT_TEMPLATE_IDS = ["template_forwarding_letter", "template_approval_note"];
+const OFFICE_DOCUMENT_TEMPLATE_IDS = [
+  "template_forwarding_letter",
+  "template_approval_note",
+  "template_office_note",
+  "template_witness_sheet",
+];
 
 /**
- * Milestone 7 Part 5 — the complete, printable Claim Package for one or
- * more decision-bearing accounts: decision summary + Rule Engine
- * explanation + checklist (reusing `ClaimDecisionSummary`, unchanged, for
- * all of that — Parts 1/2/3/11-15), plus what's new this milestone —
- * auto-filled official forms/affidavits/indemnity bonds (Tier A,
- * `OfficialFormView`), an auto-filled forwarding letter and approval note
- * (Tier B, the extended `PrintableTemplate`), and a compact office
- * checklist table. A non-blocking "missing information" prompt
- * (`validateClaimPackage`) sits above everything — printing is never
- * blocked, since gaps can legitimately be filled by hand at the counter.
+ * Milestone 8 — the Claim Package (M7) becomes a full, paginated Claim
+ * File: a cover page, a print index, and every document assembled in the
+ * order a Postmaster actually files a physical claim (decision → authority
+ * sheets → auto-filled forms/letters → office checklist), each starting
+ * on its own printed page (`.cs-print-page`, `globals.css`), plus a
+ * Missing Document Report at the end covering every account together.
+ *
+ * All of this is a PRESENTATION layer over data that already existed
+ * before this milestone (`ClaimDecision` since M5, `resolveDocumentSelection`/
+ * `validateClaimPackage` since M7) — no new engine computation, no new
+ * legal content. `ClaimDecisionSummary` itself is reused completely
+ * unmodified for the decision+checklist unit (Parts 1-3, 11-15 of the
+ * original brief); everything below is new page-level packaging around
+ * data that component already had access to.
  */
+
+interface FileEntry {
+  readonly id: string;
+  readonly title: string;
+  readonly node: ReactNode;
+}
+
+function CoverPage({
+  accounts,
+  claimData,
+  locale,
+}: {
+  readonly accounts: readonly AccountChecklist[];
+  readonly claimData: ClaimDataModel;
+  readonly locale: LocaleCode;
+}) {
+  const t = getWizardDictionary(locale);
+  // Display-only, computed once at render time — never fed back into the
+  // engine or persisted; a claim file needs a "prepared on" date the same
+  // way any printed cover sheet does.
+  const preparedOn = useMemo(() => new Date().toLocaleDateString(locale === "hi" ? "hi-IN" : "en-IN"), [locale]);
+  const schemeNames = accounts.map((a) => pickText(a.schemeName, locale)).join(", ");
+
+  return (
+    <div className="flex flex-col items-center gap-s4 rounded-card border border-ink-soft/20 bg-paper p-s6 text-center">
+      <p className="m-0 text-[16px] uppercase tracking-wide text-ink-soft">{t.claimFileCoverEyebrow}</p>
+      <h3 className="m-0 font-display text-question font-semibold text-ink">{t.claimFileCoverTitle}</h3>
+      <dl className="m-0 grid w-full max-w-md grid-cols-[max-content_1fr] gap-x-s4 gap-y-s2 text-left text-[16px]">
+        <dt className="text-ink-soft">{t.claimDetailsClaimantLabel}</dt>
+        <dd className="m-0 text-ink">{claimData.claimant.name || t.officialFormBlankFieldLabel}</dd>
+        <dt className="text-ink-soft">{t.claimDetailsDepositorLabel}</dt>
+        <dd className="m-0 text-ink">{claimData.depositor.name || t.officialFormBlankFieldLabel}</dd>
+        <dt className="text-ink-soft">{t.decisionSchemeLabel}</dt>
+        <dd className="m-0 text-ink">{schemeNames}</dd>
+        <dt className="text-ink-soft">{t.claimDetailsOfficeLabel}</dt>
+        <dd className="m-0 text-ink">{claimData.officeName || t.officialFormBlankFieldLabel}</dd>
+        <dt className="text-ink-soft">{t.claimFileCoverPreparedOnLabel}</dt>
+        <dd className="m-0 text-ink">{preparedOn}</dd>
+      </dl>
+    </div>
+  );
+}
+
+function FileIndex({ entries, locale }: { readonly entries: readonly FileEntry[]; readonly locale: LocaleCode }) {
+  const t = getWizardDictionary(locale);
+  return (
+    <div className="rounded-control border border-ink-soft/20 bg-paper p-s4">
+      <h3 className="m-0 mb-s3 font-display font-semibold text-ink">{t.claimFileIndexHeading}</h3>
+      <ol className="m-0 flex list-decimal flex-col gap-s1 pl-s5 text-ink">
+        {entries.map((entry) => (
+          <li key={entry.id}>{entry.title}</li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function CompetentAuthoritySheet({ decision, locale }: { readonly decision: ClaimDecision; readonly locale: LocaleCode }) {
+  const t = getWizardDictionary(locale);
+  return (
+    <div className="rounded-control border border-ink-soft/20 bg-paper p-s4">
+      <h3 className="m-0 mb-s3 font-display font-semibold text-ink">{t.claimFileAuthoritySheetHeading}</h3>
+      <ul className="m-0 flex list-disc flex-col gap-s2 pl-s5 text-ink">
+        {decision.competentAuthority.map((rung, i) => (
+          <li key={`${rung.authorityLabel.en}-${String(i)}`}>
+            {pickText(rung.authorityLabel, locale)}
+            {rung.monetaryLimitInr !== undefined ? ` — ${formatInr(rung.monetaryLimitInr)}` : ""}
+            {rung.timelineWorkingDays !== undefined ? ` (${String(rung.timelineWorkingDays)} working days)` : ""}
+            {rung.escalatesTo ? ` — ${t.claimFileEscalatesToLabel}: ${pickText(rung.escalatesTo, locale)}` : ""}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MonetaryLimitSheet({ decision, locale }: { readonly decision: ClaimDecision; readonly locale: LocaleCode }) {
+  const t = getWizardDictionary(locale);
+  return (
+    <div className="rounded-control border border-ink-soft/20 bg-paper p-s4">
+      <h3 className="m-0 mb-s3 font-display font-semibold text-ink">{t.claimFileLimitSheetHeading}</h3>
+      <p className="m-0 text-ink">
+        {decision.monetaryLimitInr !== undefined ? formatInr(decision.monetaryLimitInr) : t.decisionNoFixedLimitLabel}
+      </p>
+      <p className="m-0 mt-s2 text-[16px] text-ink-soft">
+        {t.decisionCourtOrderRequiredLabel}: {t.decisionCourtOrderRequiredValues[decision.courtOrderRequired]}
+      </p>
+    </div>
+  );
+}
+
+function RuleReferencesSheet({ decision, locale }: { readonly decision: ClaimDecision; readonly locale: LocaleCode }) {
+  const t = getWizardDictionary(locale);
+  return (
+    <div className="rounded-control border border-ink-soft/20 bg-paper p-s4">
+      <h3 className="m-0 mb-s3 font-display font-semibold text-ink">{t.claimFileReferencesSheetHeading}</h3>
+      <ul className="m-0 flex list-disc flex-col gap-s1 pl-s5 text-ink">
+        {decision.officialReferences.map((ref) => (
+          <li key={ref.csId}>{pickText(ref.citation, locale)}</li>
+        ))}
+      </ul>
+      {decision.applicableRuleIds.length > 0 ? (
+        <p className="m-0 mt-s3 text-[16px] text-ink-soft">
+          {t.claimFileApplicableRuleIdsLabel}: {decision.applicableRuleIds.join(", ")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function OfficeChecklistTable({ account, locale }: { readonly account: AccountChecklist; readonly locale: LocaleCode }) {
   const t = getWizardDictionary(locale);
   const rows = account.sections.flatMap((section) => section.items.map((item) => ({ section, item })));
@@ -61,56 +182,117 @@ function OfficeChecklistTable({ account, locale }: { readonly account: AccountCh
   );
 }
 
-function AutoFilledDocuments({
-  account,
-  rulePack,
-  officialFormLayouts,
-  claimData,
+function MissingDocumentReport({
+  missingInfo,
   locale,
 }: {
-  readonly account: AccountChecklist;
-  readonly rulePack: RulePack;
-  readonly officialFormLayouts: readonly OfficialFormLayout[];
-  readonly claimData: ClaimDataModel;
+  readonly missingInfo: ReturnType<typeof validateClaimPackage>;
   readonly locale: LocaleCode;
 }) {
   const t = getWizardDictionary(locale);
+  return (
+    <div role="status" className="rounded-control border border-notice/40 bg-notice-bg p-s4">
+      <h3 className="m-0 mb-s2 font-display font-semibold text-notice">{t.claimPackageMissingInfoHeading}</h3>
+      {missingInfo.length === 0 ? (
+        <p className="m-0 text-ink">{t.claimFileMissingReportNoneLabel}</p>
+      ) : (
+        <ul className="m-0 mt-s2 flex list-disc flex-col gap-s1 pl-s5 text-ink">
+          {missingInfo.map((i) => (
+            <li key={`${String(i.accountIndex)}-${i.documentId}-${i.fieldId}`}>{i.message}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Builds the ordered file entries for one account — decision through office checklist. Returns [] if the account has no decision (shouldn't happen: callers only pass payable accounts). */
+function buildAccountEntries(
+  account: AccountChecklist,
+  rulePack: RulePack,
+  officialFormLayouts: readonly OfficialFormLayout[],
+  claimData: ClaimDataModel,
+  locale: LocaleCode,
+  onBack: () => void,
+): readonly FileEntry[] {
+  const decision = account.decision;
+  if (!decision) {
+    return [];
+  }
+  const t = getWizardDictionary(locale);
+  const schemeName = pickText(account.schemeName, locale);
   const layoutsById = new Map(officialFormLayouts.map((l) => [l.formId, l]));
   const selection = resolveDocumentSelection(rulePack, account);
   const officialEntries = selection.filter((e) => e.form && layoutsById.has(e.form.id));
-
   const officeTemplates = rulePack.templates.filter((tpl) => OFFICE_DOCUMENT_TEMPLATE_IDS.includes(tpl.id));
 
-  if (officialEntries.length === 0 && officeTemplates.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-col gap-s3">
-      <p className="m-0 font-semibold text-ink-soft">{t.claimPackageAutoFilledHeading}</p>
-      {officialEntries.map((entry) =>
-        entry.form ? (
-          <OfficialFormView
-            key={entry.checklistItemId}
-            form={entry.form}
-            layout={layoutsById.get(entry.form.id) as OfficialFormLayout}
-            claimData={claimData}
-            accountIndex={account.accountIndex}
-            locale={locale}
-          />
-        ) : null,
-      )}
-      {officeTemplates.map((tpl) => (
-        <PrintableTemplate
-          key={tpl.id}
-          template={tpl}
+  const entries: FileEntry[] = [
+    {
+      id: `${String(account.accountIndex)}-decision`,
+      title: `${schemeName} — ${t.claimFileDecisionSummaryTitle}`,
+      node: (
+        <ClaimDecisionSummary
+          account={account}
+          decision={decision}
           locale={locale}
+          onBack={onBack}
+          canGoBack={false}
+          focusOnMount={false}
+          showPrevious={false}
+        />
+      ),
+    },
+    {
+      id: `${String(account.accountIndex)}-authority`,
+      title: `${schemeName} — ${t.claimFileAuthoritySheetHeading}`,
+      node: <CompetentAuthoritySheet decision={decision} locale={locale} />,
+    },
+    {
+      id: `${String(account.accountIndex)}-limit`,
+      title: `${schemeName} — ${t.claimFileLimitSheetHeading}`,
+      node: <MonetaryLimitSheet decision={decision} locale={locale} />,
+    },
+    {
+      id: `${String(account.accountIndex)}-references`,
+      title: `${schemeName} — ${t.claimFileReferencesSheetHeading}`,
+      node: <RuleReferencesSheet decision={decision} locale={locale} />,
+    },
+  ];
+
+  for (const entry of officialEntries) {
+    if (!entry.form) {
+      continue;
+    }
+    entries.push({
+      id: `${String(account.accountIndex)}-form-${entry.form.id}`,
+      title: `${schemeName} — ${pickText(entry.form.name, locale)}`,
+      node: (
+        <OfficialFormView
+          form={entry.form}
+          layout={layoutsById.get(entry.form.id) as OfficialFormLayout}
           claimData={claimData}
           accountIndex={account.accountIndex}
+          locale={locale}
         />
-      ))}
-    </div>
-  );
+      ),
+    });
+  }
+
+  for (const tpl of officeTemplates) {
+    entries.push({
+      id: `${String(account.accountIndex)}-doc-${tpl.id}`,
+      title: `${schemeName} — ${pickText(tpl.title, locale)}`,
+      node: <PrintableTemplate template={tpl} locale={locale} claimData={claimData} accountIndex={account.accountIndex} />,
+    });
+  }
+
+  entries.push({
+    id: `${String(account.accountIndex)}-checklist`,
+    title: `${schemeName} — ${t.claimPackageOfficeChecklistHeading}`,
+    node: <OfficeChecklistTable account={account} locale={locale} />,
+  });
+
+  return entries;
 }
 
 export function ClaimPackage({
@@ -140,6 +322,17 @@ export function ClaimPackage({
   const officeTemplates = rulePack.templates.filter((tpl) => OFFICE_DOCUMENT_TEMPLATE_IDS.includes(tpl.id));
   const missingInfo = validateClaimPackage(rulePack, accounts, claimData, officialFormLayouts, officeTemplates);
 
+  const accountEntries = useMemo(
+    () => accounts.flatMap((account) => buildAccountEntries(account, rulePack, officialFormLayouts, claimData, locale, onBack)),
+    [accounts, rulePack, officialFormLayouts, claimData, locale, onBack],
+  );
+  const missingReportEntry: FileEntry = {
+    id: "missing-report",
+    title: t.claimPackageMissingInfoHeading,
+    node: <MissingDocumentReport missingInfo={missingInfo} locale={locale} />,
+  };
+  const bodyEntries: readonly FileEntry[] = [...accountEntries, missingReportEntry];
+
   return (
     <section aria-labelledby="claim-package-heading" className="flex flex-col gap-s4">
       <h2
@@ -151,39 +344,15 @@ export function ClaimPackage({
         {t.claimPackageHeading}
       </h2>
 
-      {missingInfo.length > 0 ? (
-        <div role="status" className="rounded-control border border-notice/40 bg-notice-bg p-s3">
-          <p className="m-0 font-semibold text-notice">{t.claimPackageMissingInfoHeading}</p>
-          <ul className="m-0 mt-s2 flex list-disc flex-col gap-s1 pl-s5 text-ink">
-            {missingInfo.map((i) => (
-              <li key={`${String(i.accountIndex)}-${i.documentId}-${i.fieldId}`}>{i.message}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {accounts.map((account) => (
-        <div key={account.accountIndex} className="flex flex-col gap-s3">
-          <p className="m-0 font-semibold text-ink-soft">{pickText(account.schemeName, locale)}</p>
-          {account.decision ? (
-            <ClaimDecisionSummary
-              account={account}
-              decision={account.decision}
-              locale={locale}
-              onBack={onBack}
-              canGoBack={canGoBack}
-              focusOnMount={false}
-              showPrevious={false}
-            />
-          ) : null}
-          <OfficeChecklistTable account={account} locale={locale} />
-          <AutoFilledDocuments
-            account={account}
-            rulePack={rulePack}
-            officialFormLayouts={officialFormLayouts}
-            claimData={claimData}
-            locale={locale}
-          />
+      <div className="cs-print-page">
+        <CoverPage accounts={accounts} claimData={claimData} locale={locale} />
+      </div>
+      <div className="cs-print-page">
+        <FileIndex entries={bodyEntries} locale={locale} />
+      </div>
+      {bodyEntries.map((entry) => (
+        <div key={entry.id} className="cs-print-page">
+          {entry.node}
         </div>
       ))}
 

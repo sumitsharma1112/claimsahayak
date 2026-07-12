@@ -249,7 +249,10 @@ describe("Claim Package — no internal identifiers leak into visible text", () 
     await user.click(await generatePackageButton());
     await screen.findByRole("heading", { name: "Complete Claim Package" });
 
-    const missing = screen.getByText("Still missing — you can fill these in by hand instead");
+    // The Missing Document Report is now its own dedicated page (Milestone
+    // 8); the same title also appears once in the Print Index, so match on
+    // the section's own heading specifically, not just any matching text.
+    const missing = screen.getByRole("heading", { name: "Still missing — you can fill these in by hand instead" });
     expect(missing).toBeTruthy();
     const missingList = missing.closest("div");
     expect(missingList ? within(missingList).getAllByRole("listitem").length : 0).toBeGreaterThan(0);
@@ -257,5 +260,100 @@ describe("Claim Package — no internal identifiers leak into visible text", () 
     // The print button remains available even with information missing —
     // gaps can legitimately be completed by hand at the counter.
     expect(screen.getByRole("button", { name: "Print checklist (save as PDF)" })).toBeTruthy();
+  });
+});
+
+describe("Claim File assembly — cover page, index, pagination (Milestone 8)", () => {
+  it("renders a cover page and an index whose entries match the assembled document titles", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByRole("heading", { name: "Deceased Claim — Claim File" })).toBeTruthy();
+    const index = screen.getByRole("heading", { name: "Index" }).closest("div");
+    expect(index).toBeTruthy();
+    const indexItems = index ? within(index).getAllByRole("listitem") : [];
+    expect(indexItems.length).toBeGreaterThan(0);
+    // The decision summary and Form 11 are always in the assembled file for
+    // a payable account — their titles must appear in the index too.
+    expect(indexItems.some((li) => li.textContent?.includes("Decision Summary"))).toBe(true);
+    expect(indexItems.some((li) => li.textContent?.includes("Form 11"))).toBe(true);
+  });
+
+  it("gives every document its own print page and puts the cover page first", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    const pages = container.querySelectorAll(".cs-print-page");
+    // Cover, index, decision summary, authority/limit/references sheets,
+    // Form 11, 4 office documents, office checklist, missing report — at
+    // least 10 distinct pages for a single-account ROUTE_A claim.
+    expect(pages.length).toBeGreaterThanOrEqual(10);
+    expect(pages[0]?.textContent).toContain("Deceased Claim — Claim File");
+  });
+
+  it("renders the Competent Authority, Monetary Limit, and Rule References as their own dedicated sheets", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByRole("heading", { name: "Competent Authority Sheet" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Monetary Limit Sheet" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Rule References" })).toBeTruthy();
+    // The citation also appears in the reused ClaimDecisionSummary block —
+    // a dedicated Rule References sheet restating it is the intended,
+    // physical-file-consistent behavior, not an accidental duplicate.
+    expect(
+      screen.getAllByText(decisionForRoute("ROUTE_A").officialReferences[0]?.citation.en ?? "").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("includes the new Office Note and Witness Sheet composed documents", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(screen.getByRole("heading", { name: "Internal office note — case noting" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Witness sheet" })).toBeTruthy();
+  });
+
+  it("shows the entered claimant name on the cover page", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await user.type(screen.getByLabelText("Claimant's name"), "Cover Page Claimant");
+
+    const cover = screen.getByRole("heading", { name: "Deceased Claim — Claim File" }).closest("div");
+    expect(cover ? within(cover).getByText("Cover Page Claimant") : null).toBeTruthy();
   });
 });
