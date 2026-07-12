@@ -26,6 +26,28 @@ const OFFICE_DOCUMENT_TEMPLATE_IDS = [
 ];
 
 /**
+ * Milestone 10 — unlike the office documents above (unconditionally
+ * attached to every payable Claim File), this Rule-Book-sourced
+ * declaration is only relevant when the claim actually involves a minor
+ * nominee. Selected conditionally below by checking whether the account's
+ * own Rule-Engine-computed document selection already requires
+ * `doc_minor_alive_certificate` (T13's own OutputRule) — reusing data the
+ * engine already gets right, rather than a new hardcoded route check. See
+ * declarations.ts's header comment for the full research trail.
+ */
+const MINOR_ALIVE_DECLARATION_TEMPLATE_ID = "template_minor_alive_declaration";
+const MINOR_ALIVE_DOCUMENT_ID = "doc_minor_alive_certificate";
+
+/** The office/declaration template ids relevant to ONE account — shared between file assembly and validation so the two never disagree. */
+function officeTemplateIdsForAccount(rulePack: RulePack, account: AccountChecklist): readonly string[] {
+  const selection = resolveDocumentSelection(rulePack, account);
+  const includesMinorAliveDeclaration = selection.some((e) => e.document?.id === MINOR_ALIVE_DOCUMENT_ID);
+  return includesMinorAliveDeclaration
+    ? [...OFFICE_DOCUMENT_TEMPLATE_IDS, MINOR_ALIVE_DECLARATION_TEMPLATE_ID]
+    : OFFICE_DOCUMENT_TEMPLATE_IDS;
+}
+
+/**
  * Milestone 8 — the Claim Package (M7) becomes a full, paginated Claim
  * File: a cover page, a print index, and every document assembled in the
  * order a Postmaster actually files a physical claim (decision → authority
@@ -224,7 +246,8 @@ function buildAccountEntries(
   const layoutsById = new Map(officialFormLayouts.map((l) => [l.formId, l]));
   const selection = resolveDocumentSelection(rulePack, account);
   const officialEntries = selection.filter((e) => e.form && layoutsById.has(e.form.id));
-  const officeTemplates = rulePack.templates.filter((tpl) => OFFICE_DOCUMENT_TEMPLATE_IDS.includes(tpl.id));
+  const officeTemplateIds = officeTemplateIdsForAccount(rulePack, account);
+  const officeTemplates = rulePack.templates.filter((tpl) => officeTemplateIds.includes(tpl.id));
 
   const entries: FileEntry[] = [
     {
@@ -319,8 +342,19 @@ export function ClaimPackage({
     headingRef.current?.focus({ preventScroll: false });
   }, []);
 
-  const officeTemplates = rulePack.templates.filter((tpl) => OFFICE_DOCUMENT_TEMPLATE_IDS.includes(tpl.id));
-  const missingInfo = validateClaimPackage(rulePack, accounts, claimData, officialFormLayouts, officeTemplates);
+  // Milestone 10: which office/declaration templates apply differs per
+  // account (the minor-alive declaration only applies to accounts that
+  // actually need it) — validateClaimPackage takes one shared template
+  // list per call, so it's called once per account with that account's
+  // own correct list, rather than passing every template to every
+  // account, which would falsely flag the declaration's fields as
+  // "missing" on accounts that don't have that declaration at all.
+  const missingInfo = accounts.flatMap((account) => {
+    const officeTemplates = rulePack.templates.filter((tpl) =>
+      officeTemplateIdsForAccount(rulePack, account).includes(tpl.id),
+    );
+    return validateClaimPackage(rulePack, [account], claimData, officialFormLayouts, officeTemplates);
+  });
 
   const accountEntries = useMemo(
     () => accounts.flatMap((account) => buildAccountEntries(account, rulePack, officialFormLayouts, claimData, locale, onBack)),

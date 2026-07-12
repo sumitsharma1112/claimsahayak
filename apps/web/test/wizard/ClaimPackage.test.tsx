@@ -169,6 +169,44 @@ describe("Claim Package — minor nominee (T13)", () => {
     expect(screen.getByRole("heading", { name: decisionForRoute("ROUTE_A").decision.en })).toBeTruthy();
     expect(await generatePackageButton()).toBeTruthy();
   });
+
+  it("includes the Rule-Book-sourced minor-alive declaration in the Claim File (Milestone 10)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_complication") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q5a_complication", "nominee_is_minor") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+
+    expect(
+      await screen.findByRole("heading", { name: "Declaration — the minor is alive and the money is required for the minor" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "I declare that the above-named minor is alive on this day, and that the money now being withdrawn is required for the use and welfare of the minor.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("never includes the minor-alive declaration for a claim with no minor nominee", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    expect(
+      screen.queryByRole("heading", { name: "Declaration — the minor is alive and the money is required for the minor" }),
+    ).toBeNull();
+  });
 });
 
 describe("Claim Package — joint account (ROUTE_SURVIVOR, no claim needed)", () => {

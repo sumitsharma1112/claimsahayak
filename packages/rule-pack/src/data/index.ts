@@ -11,6 +11,7 @@ import { FORMS } from "./forms.js";
 import { CARDS } from "./cards.js";
 import { TEMPLATES } from "./templates.js";
 import { OFFICE_DOCUMENT_TEMPLATES } from "./office-documents.js";
+import { DECLARATION_TEMPLATES } from "./declarations.js";
 import { CONTENT } from "./content/index.js";
 import { VOCAB } from "./vocab.js";
 import { DECISIONS } from "./decisions.js";
@@ -60,11 +61,14 @@ export const RULE_PACK: RulePack = {
   cards: CARDS,
   /**
    * Milestone 7: the pack's own claimant-facing letter templates plus the
-   * new officer-facing composed documents (forwarding letter, sanction
-   * note) — one array, one schema/print pipeline, no second templating
-   * mechanism.
+   * officer-facing composed documents (forwarding letter, approval note,
+   * office note, witness sheet). Milestone 10 adds Rule-Book-sourced
+   * declarations (declarations.ts) as a third, structurally distinct
+   * group — one array, one schema/print pipeline, no second templating
+   * mechanism, but see declarations.ts's own header for why they're kept
+   * in a separate source file.
    */
-  templates: [...TEMPLATES, ...OFFICE_DOCUMENT_TEMPLATES],
+  templates: [...TEMPLATES, ...OFFICE_DOCUMENT_TEMPLATES, ...DECLARATION_TEMPLATES],
   content: CONTENT,
   vocab: VOCAB,
   decisions: DECISIONS,

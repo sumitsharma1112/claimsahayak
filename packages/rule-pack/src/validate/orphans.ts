@@ -1,17 +1,26 @@
 import type { OutputRule, RulePack } from "@claimsahayak/shared-types";
 import { issue, type ValidationIssue } from "../schema/issue.js";
 import { OFFICE_DOCUMENT_TEMPLATES } from "../data/office-documents.js";
+import { DECLARATION_TEMPLATES } from "../data/declarations.js";
 
 /**
  * Milestone 7's office-facing composed documents (forwarding letter,
- * approval note) are always available in the Claim Package view for every
- * payable decision — they are never gated behind a specific route/card the
- * way a claimant-facing letter template is, so they have no `OutputRule`/
- * `CardDefinition` reference to find. Treated as reachable-by-design here
- * rather than fabricating a fake output/card reference just to satisfy
- * this check.
+ * approval note, office note, witness sheet) are always available in the
+ * Claim Package view for every payable decision — they are never gated
+ * behind a specific route/card the way a claimant-facing letter template
+ * is, so they have no `OutputRule`/`CardDefinition` reference to find.
+ * Milestone 10's Rule-Book-sourced declarations (declarations.ts) are
+ * likewise never referenced via `OutputRule.refId` — they're selected
+ * conditionally in `apps/web`'s `ClaimPackage.tsx` by checking the
+ * account's own already-Rule-Engine-selected document requirements (see
+ * declarations.ts's header for why), not by an output/card reference.
+ * Both groups are treated as reachable-by-design here rather than
+ * fabricating a fake output/card reference just to satisfy this check.
  */
-const ALWAYS_AVAILABLE_TEMPLATE_IDS = new Set(OFFICE_DOCUMENT_TEMPLATES.map((t) => t.id));
+const ALWAYS_AVAILABLE_TEMPLATE_IDS = new Set([
+  ...OFFICE_DOCUMENT_TEMPLATES.map((t) => t.id),
+  ...DECLARATION_TEMPLATES.map((t) => t.id),
+]);
 
 /** All OutputRule instances in the pack — route outputs AND overlay items. */
 function allOutputs(pack: RulePack): readonly OutputRule[] {
