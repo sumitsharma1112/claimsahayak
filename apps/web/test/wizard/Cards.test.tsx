@@ -124,7 +124,9 @@ describe("Wizard Cards — pause, with printable letter", () => {
     expect(printButton).toBeTruthy();
     // The template's own fields render (from Rule Pack data, not hardcoded copy).
     expect(screen.getByText("Ask the Post Office about a registered nominee")).toBeTruthy();
-    expect(screen.getByText("Name of Post Office")).toBeTruthy();
+    // Milestone 15 — the label now renders as "Name of Post Office:" (a
+    // single numbered-field row, matching OfficialFormView's convention).
+    expect(screen.getByText(/Name of Post Office/)).toBeTruthy();
 
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
     printButton.click();

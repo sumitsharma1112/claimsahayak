@@ -10,7 +10,7 @@
  * render, and no internal id (route/decision/refId) ever leaks into
  * visible text.
  */
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { RULE_PACK, OFFICIAL_FORM_LAYOUTS } from "@claimsahayak/rule-pack";
@@ -515,5 +515,69 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     // "Claimant", once inside "Nominee(s)" (the claimant IS a nominee) —
     // so this checks presence, not uniqueness.
     expect(cover ? within(cover).getAllByText("Cover Page Claimant").length : 0).toBeGreaterThan(0);
+  });
+});
+
+describe("Production document quality (Milestone 15)", () => {
+  it("formats the amount claimed as Indian currency and the death date as DD-MM-YYYY, wherever they're auto-filled", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+
+    await user.type(screen.getByLabelText("Amount claimed (₹) — Savings Account"), "250000");
+    const dateInput: HTMLInputElement = screen.getByLabelText("Date of death (as on the death certificate)");
+    fireEvent.input(dateInput, { target: { value: "2025-03-14" } });
+    fireEvent.change(dateInput, { target: { value: "2025-03-14" } });
+    expect(dateInput.value).toBe("2025-03-14");
+
+    expect(screen.getAllByText("₹2,50,000").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("14-03-2025")).length).toBeGreaterThan(0);
+    // The raw, un-reformatted values must never appear as auto-filled text.
+    expect(screen.queryByText("250000")).toBeNull();
+  });
+
+  it("numbers every field on Tier B documents (forwarding letter) the same way Tier A forms are numbered", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await finishPaymentAndDocs(user);
+    await user.click(await generatePackageButton());
+
+    const forwardingLetter = screen.getByRole("heading", { name: /forwarding letter/i }).closest<HTMLElement>("div.cs-print-area");
+    expect(forwardingLetter).toBeTruthy();
+    expect(forwardingLetter ? within(forwardingLetter).getByText("Office-prepared document") : null).toBeTruthy();
+    // Numbered rows exist (at least "1." through "3.").
+    for (const n of ["1.", "2.", "3."]) {
+      expect(forwardingLetter ? within(forwardingLetter).getByText(n) : null).toBeTruthy();
+    }
+  });
+
+  it("shows the office-use footer only on the reconciliation-certificate request, not on the purely-internal forwarding letter", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q9_payment", "own_posb") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q10_docs_check", "name_mismatch_depositor") }));
+    await continueBtn(user);
+    await user.click(await generatePackageButton());
+
+    const reconciliation = screen
+      .getByRole("heading", { name: "Apply for a reconciliation certificate — depositor's name" })
+      .closest<HTMLElement>("div.cs-print-area");
+    const forwardingLetter = screen.getByRole("heading", { name: /forwarding letter/i }).closest<HTMLElement>("div.cs-print-area");
+    expect(reconciliation ? within(reconciliation).getByText("For office use only") : null).toBeTruthy();
+    expect(forwardingLetter ? within(forwardingLetter).queryByText("For office use only") : "missing").toBeNull();
   });
 });

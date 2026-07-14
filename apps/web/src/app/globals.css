@@ -162,3 +162,16 @@
     page-break-before: auto;
   }
 }
+
+/*
+ * Milestone 15 — production document quality. Browsers default to wildly
+ * different print margins (Chrome ~0.4in, others up to 1in); an explicit
+ * `@page` rule gives every generated document the same, consistent,
+ * generously-bordered margin an official government form is printed
+ * with, regardless of which browser a Post Office computer happens to
+ * run. Screen rendering is unaffected — `@page` only ever applies to the
+ * print/PDF output.
+ */
+@page {
+  margin: 20mm 18mm;
+}

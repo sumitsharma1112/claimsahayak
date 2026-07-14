@@ -58,18 +58,24 @@ function TextField({
   label,
   value,
   onChange,
+  type = "text",
 }: {
   readonly id: string;
   readonly label: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
+  /** Milestone 15 — "date" gives a native picker and a canonical ISO
+   * value, so `formatClaimFieldValue` can reliably reformat it for
+   * display on generated documents (DD-MM-YYYY) instead of printing
+   * whatever free-text shape a postmaster happened to type. */
+  readonly type?: "text" | "date";
 }) {
   return (
     <label className="flex flex-col gap-s1">
       <span className="text-ink-soft">{label}</span>
       <input
         id={id}
-        type="text"
+        type={type}
         className="min-h-touch rounded-control border-card border-ink-soft/30 bg-paper px-s3"
         value={value}
         onChange={(e) => {
@@ -391,6 +397,7 @@ export function ClaimDetailsForm({
       <div className="flex flex-wrap gap-s3">
         <TextField
           id="death-date"
+          type="date"
           label={t.claimDetailsDateOfDeathLabel}
           value={claimData.deathCertificate.dateOfDeath}
           onChange={(dateOfDeath) => {
@@ -551,6 +558,7 @@ export function ClaimDetailsForm({
           />
           <TextField
             id={`account-nomination-date-${String(account.accountIndex)}`}
+            type="date"
             label={`${t.claimDetailsNominationDateLabel} — ${pickText(account.schemeName, locale)}`}
             value={accountExtras(account.accountIndex).nominationDate}
             onChange={(nominationDate) => {

@@ -128,6 +128,21 @@ export const OFFICE_DOCUMENT_TEMPLATES: readonly TemplateDefinition[] = [
         claimDataField: "account.nominationDate",
       },
       {
+        // Milestone 15 — a genuine gap found during production-quality
+        // review: the Wizard has collected date/place of death since M11,
+        // but no document ever displayed them until now.
+        id: "death_date",
+        kind: "blankLine",
+        label: { en: "Date of death" },
+        claimDataField: "deathCertificate.dateOfDeath",
+      },
+      {
+        id: "death_place",
+        kind: "blankLine",
+        label: { en: "Place of death" },
+        claimDataField: "deathCertificate.placeOfDeath",
+      },
+      {
         id: "death_cert_number",
         kind: "blankLine",
         label: { en: "Death certificate number" },

@@ -118,6 +118,7 @@ export interface WizardDictionary {
   readonly officialFormMonthsLabel: string;
   readonly officialFormCopiesLabel: string;
   readonly officialFormSourceLabel: string;
+  readonly printableTemplateEyebrow: string;
   readonly officialFormOfficeUseHeading: string;
   readonly officialFormOfficeUseReceivedOnLabel: string;
   readonly officialFormOfficeUseVerifiedByLabel: string;
@@ -275,6 +276,7 @@ const en: WizardDictionary = {
   officialFormMonthsLabel: "months",
   officialFormCopiesLabel: "Copies required",
   officialFormSourceLabel: "Official source",
+  printableTemplateEyebrow: "Office-prepared document",
   officialFormOfficeUseHeading: "For office use only",
   officialFormOfficeUseReceivedOnLabel: "Received on",
   officialFormOfficeUseVerifiedByLabel: "Verified by (name and designation)",
@@ -444,6 +446,7 @@ const hi: WizardDictionary = {
   officialFormMonthsLabel: "महीने",
   officialFormCopiesLabel: "आवश्यक प्रतियाँ",
   officialFormSourceLabel: "आधिकारिक स्रोत",
+  printableTemplateEyebrow: "कार्यालय द्वारा तैयार दस्तावेज़",
   officialFormOfficeUseHeading: "केवल कार्यालय उपयोग हेतु",
   officialFormOfficeUseReceivedOnLabel: "प्राप्ति दिनांक",
   officialFormOfficeUseVerifiedByLabel: "सत्यापनकर्ता (नाम और पदनाम)",

@@ -3,6 +3,8 @@ import { formatInr } from "@claimsahayak/shared-utils";
 import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
+import { formatClaimFieldValue } from "@/lib/formatClaimFieldValue";
+import { OfficeUseFooter } from "./OfficeUseFooter";
 
 /**
  * Milestone 7 Part 4/6, Tier A of the document-fidelity model: renders one
@@ -58,9 +60,15 @@ export function OfficialFormView({
 
       <ol className="m-0 mt-s4 flex list-none flex-col gap-s2 pl-0">
         {layout.fields.map((field, i) => {
-          const value = field.claimDataField
+          const resolved = field.claimDataField
             ? resolveFieldValue(claimData, accountIndex, field.claimDataField)
             : undefined;
+          // Milestone 15 — formatting is purely presentational: it never
+          // changes what's stored, only how an already-resolved value
+          // prints (amounts as currency, dates as DD-MM-YYYY).
+          const value = resolved !== undefined && field.claimDataField
+            ? formatClaimFieldValue(field.claimDataField, resolved)
+            : resolved;
           return (
             <li
               key={field.id}
@@ -107,22 +115,7 @@ export function OfficialFormView({
         </p>
       ) : null}
 
-      <div className="mt-s4 rounded-control border border-dashed border-ink-soft/40 p-s3">
-        <p className="m-0 text-[16px] font-semibold uppercase tracking-wide text-ink-soft">
-          {t.officialFormOfficeUseHeading}
-        </p>
-        <div className="mt-s2 grid grid-cols-1 gap-s2 text-[16px] desktop:grid-cols-3">
-          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
-            {t.officialFormOfficeUseReceivedOnLabel}
-          </p>
-          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
-            {t.officialFormOfficeUseVerifiedByLabel}
-          </p>
-          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
-            {t.officialFormOfficeUseForwardedOnLabel}
-          </p>
-        </div>
-      </div>
+      <OfficeUseFooter locale={locale} />
     </div>
   );
 }

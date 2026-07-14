@@ -341,8 +341,20 @@ function nodeForDocument(
       if (!template) {
         return null;
       }
+      // Milestone 15 — only the two reconciliation-certificate requests
+      // are addressed to an external office (the Division office) that
+      // would receive/verify/forward them, so only those two carry the
+      // office-use footer, matching Form 11's own rationale.
+      const showOfficeUseFooter =
+        templateId === "template_reconciliation_depositor" || templateId === "template_reconciliation_claimant";
       return (
-        <PrintableTemplate template={template} locale={locale} claimData={claimData} accountIndex={account.accountIndex} />
+        <PrintableTemplate
+          template={template}
+          locale={locale}
+          claimData={claimData}
+          accountIndex={account.accountIndex}
+          showOfficeUseFooter={showOfficeUseFooter}
+        />
       );
     }
   }
