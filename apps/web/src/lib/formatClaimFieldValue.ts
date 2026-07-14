@@ -33,7 +33,11 @@ function formatDateForDisplay(raw: string): string {
   if (!match) {
     return raw.trim();
   }
-  const [, year, month, day] = match;
+  // Non-null: the regex has exactly 3 mandatory capture groups, so a
+  // successful match always populates all three.
+  const year = match[1] ?? "";
+  const month = match[2] ?? "";
+  const day = match[3] ?? "";
   return `${day}-${month}-${year}`;
 }
 

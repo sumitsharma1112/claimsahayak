@@ -121,7 +121,7 @@ function CoverPage({
 }
 
 /** Groups entries by section (in SECTION_ORDER), dropping empty sections, for both the table of contents and the body's section dividers. */
-function groupBySection(entries: readonly FileEntry[]): ReadonlyArray<readonly [ClaimFileSection, readonly FileEntry[]]> {
+function groupBySection(entries: readonly FileEntry[]): readonly (readonly [ClaimFileSection, readonly FileEntry[]])[] {
   const bySection = new Map<ClaimFileSection, FileEntry[]>();
   for (const entry of entries) {
     const list = bySection.get(entry.section) ?? [];
