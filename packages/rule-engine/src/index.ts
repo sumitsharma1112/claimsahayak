@@ -76,6 +76,21 @@ export {
 } from "./autofill.js";
 export { validateClaimPackage, type ClaimValidationIssue } from "./claim-validation.js";
 
+// Milestone 12 — the Document Engine: registry-driven Claim Package definition.
+export {
+  buildClaimPackageDefinition,
+  type AccountPackageDefinition,
+  type AutoFillCapability,
+  type ClaimPackageDefinition,
+  type DocumentRegistryEntry,
+  type DocumentRequirement,
+  type DocumentSource,
+  type DocumentTrigger,
+  type PackageDocument,
+  type PackageDocumentAutoFill,
+  type PackageSheetKind,
+} from "./document-engine.js";
+
 export { validateAnswers } from "./validate-answers.js";
 
 export { computeContentHash, isPlaceholderHash } from "./hash.js";

@@ -10,58 +10,38 @@ import type {
   RulePack,
 } from "@claimsahayak/shared-types";
 import { formatInr } from "@claimsahayak/shared-utils";
-import { resolveDocumentSelection, validateClaimPackage } from "@claimsahayak/rule-engine";
+import {
+  buildClaimPackageDefinition,
+  validateClaimPackage,
+  type AccountPackageDefinition,
+  type PackageDocument,
+  type PackageSheetKind,
+} from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
+import { CLAIM_DOCUMENT_REGISTRY } from "@/lib/claimDocumentRegistry";
 import { getWizardDictionary } from "@/i18n/wizard";
 import { ClaimDecisionSummary } from "./ClaimDecisionSummary";
 import { OfficialFormView } from "./OfficialFormView";
 import { PrintableTemplate } from "./PrintableTemplate";
 import { PreviousButton } from "./PreviousButton";
 
-const OFFICE_DOCUMENT_TEMPLATE_IDS = [
-  "template_forwarding_letter",
-  "template_approval_note",
-  "template_office_note",
-  "template_witness_sheet",
-];
-
-/**
- * Milestone 10 — unlike the office documents above (unconditionally
- * attached to every payable Claim File), this Rule-Book-sourced
- * declaration is only relevant when the claim actually involves a minor
- * nominee. Selected conditionally below by checking whether the account's
- * own Rule-Engine-computed document selection already requires
- * `doc_minor_alive_certificate` (T13's own OutputRule) — reusing data the
- * engine already gets right, rather than a new hardcoded route check. See
- * declarations.ts's header comment for the full research trail.
- */
-const MINOR_ALIVE_DECLARATION_TEMPLATE_ID = "template_minor_alive_declaration";
-const MINOR_ALIVE_DOCUMENT_ID = "doc_minor_alive_certificate";
-
-/** The office/declaration template ids relevant to ONE account — shared between file assembly and validation so the two never disagree. */
-function officeTemplateIdsForAccount(rulePack: RulePack, account: AccountChecklist): readonly string[] {
-  const selection = resolveDocumentSelection(rulePack, account);
-  const includesMinorAliveDeclaration = selection.some((e) => e.document?.id === MINOR_ALIVE_DOCUMENT_ID);
-  return includesMinorAliveDeclaration
-    ? [...OFFICE_DOCUMENT_TEMPLATE_IDS, MINOR_ALIVE_DECLARATION_TEMPLATE_ID]
-    : OFFICE_DOCUMENT_TEMPLATE_IDS;
-}
-
 /**
  * Milestone 8 — the Claim Package (M7) becomes a full, paginated Claim
- * File: a cover page, a print index, and every document assembled in the
- * order a Postmaster actually files a physical claim (decision → authority
- * sheets → auto-filled forms/letters → office checklist), each starting
- * on its own printed page (`.cs-print-page`, `globals.css`), plus a
- * Missing Document Report at the end covering every account together.
+ * File. Milestone 12 — WHICH documents the file contains is no longer
+ * decided here: the Document Engine (`buildClaimPackageDefinition`,
+ * rule-engine) evaluates the central Document Registry
+ * (`@/lib/claimDocumentRegistry`) against the Rule Engine's own resolved
+ * checklists, and this component renders whatever the resulting
+ * definition says, in the definition's print order. The M7–M10
+ * hardcoded selection (an office-template id list plus a special-cased
+ * minor-declaration condition) is gone — adding a document to the Claim
+ * File is now a registry entry, not a component change.
  *
- * All of this is a PRESENTATION layer over data that already existed
- * before this milestone (`ClaimDecision` since M5, `resolveDocumentSelection`/
- * `validateClaimPackage` since M7) — no new engine computation, no new
- * legal content. `ClaimDecisionSummary` itself is reused completely
- * unmodified for the decision+checklist unit (Parts 1-3, 11-15 of the
- * original brief); everything below is new page-level packaging around
- * data that component already had access to.
+ * All rendering stays the M7/M8 machinery: `ClaimDecisionSummary` reused
+ * unmodified, `OfficialFormView` for Tier A forms, `PrintableTemplate`
+ * for Tier B templates, each entry on its own printed page
+ * (`.cs-print-page`), and the print index built from the SAME entry list
+ * as the body so the two can never drift (M8 invariant).
  */
 
 interface FileEntry {
@@ -228,9 +208,37 @@ function MissingDocumentReport({
   );
 }
 
-/** Builds the ordered file entries for one account — decision through office checklist. Returns [] if the account has no decision (shouldn't happen: callers only pass payable accounts). */
+/** The web-chrome title for an engine-rendered sheet kind. */
+function sheetTitle(sheet: PackageSheetKind, t: ReturnType<typeof getWizardDictionary>): string {
+  switch (sheet) {
+    case "coverPage":
+      return t.claimFileCoverTitle;
+    case "fileIndex":
+      return t.claimFileIndexHeading;
+    case "decisionSummary":
+      return t.claimFileDecisionSummaryTitle;
+    case "competentAuthoritySheet":
+      return t.claimFileAuthoritySheetHeading;
+    case "monetaryLimitSheet":
+      return t.claimFileLimitSheetHeading;
+    case "ruleReferencesSheet":
+      return t.claimFileReferencesSheetHeading;
+    case "officeChecklist":
+      return t.claimPackageOfficeChecklistHeading;
+    case "missingDocumentReport":
+      return t.claimPackageMissingInfoHeading;
+  }
+}
+
+/**
+ * Renders one account's definition documents, in the definition's print
+ * order. Purely a mapping from `PackageDocument.source` to the existing
+ * renderer for that source kind — no document-selection decision is made
+ * here (that's the Document Engine's job).
+ */
 function buildAccountEntries(
   account: AccountChecklist,
+  accountDefinition: AccountPackageDefinition | undefined,
   rulePack: RulePack,
   officialFormLayouts: readonly OfficialFormLayout[],
   claimData: ClaimDataModel,
@@ -238,88 +246,97 @@ function buildAccountEntries(
   onBack: () => void,
 ): readonly FileEntry[] {
   const decision = account.decision;
-  if (!decision) {
+  if (!decision || !accountDefinition) {
     return [];
   }
   const t = getWizardDictionary(locale);
   const schemeName = pickText(account.schemeName, locale);
   const layoutsById = new Map(officialFormLayouts.map((l) => [l.formId, l]));
-  const selection = resolveDocumentSelection(rulePack, account);
-  const officialEntries = selection.filter((e) => e.form && layoutsById.has(e.form.id));
-  const officeTemplateIds = officeTemplateIdsForAccount(rulePack, account);
-  const officeTemplates = rulePack.templates.filter((tpl) => officeTemplateIds.includes(tpl.id));
 
-  const entries: FileEntry[] = [
-    {
-      id: `${String(account.accountIndex)}-decision`,
-      title: `${schemeName} — ${t.claimFileDecisionSummaryTitle}`,
-      node: (
-        <ClaimDecisionSummary
-          account={account}
-          decision={decision}
-          locale={locale}
-          onBack={onBack}
-          canGoBack={false}
-          focusOnMount={false}
-          showPrevious={false}
-        />
-      ),
-    },
-    {
-      id: `${String(account.accountIndex)}-authority`,
-      title: `${schemeName} — ${t.claimFileAuthoritySheetHeading}`,
-      node: <CompetentAuthoritySheet decision={decision} locale={locale} />,
-    },
-    {
-      id: `${String(account.accountIndex)}-limit`,
-      title: `${schemeName} — ${t.claimFileLimitSheetHeading}`,
-      node: <MonetaryLimitSheet decision={decision} locale={locale} />,
-    },
-    {
-      id: `${String(account.accountIndex)}-references`,
-      title: `${schemeName} — ${t.claimFileReferencesSheetHeading}`,
-      node: <RuleReferencesSheet decision={decision} locale={locale} />,
-    },
-  ];
-
-  for (const entry of officialEntries) {
-    if (!entry.form) {
+  const entries: FileEntry[] = [];
+  for (const doc of accountDefinition.documents) {
+    const entryId = `${String(account.accountIndex)}-${doc.registryId}`;
+    const node = nodeForDocument(doc, account, decision, rulePack, layoutsById, claimData, locale, onBack);
+    if (!node) {
       continue;
     }
-    const layout = layoutsById.get(entry.form.id);
-    if (!layout) {
-      continue;
-    }
-    entries.push({
-      id: `${String(account.accountIndex)}-form-${entry.form.id}`,
-      title: `${schemeName} — ${pickText(entry.form.name, locale)}`,
-      node: (
+    const title =
+      doc.source.kind === "sheet" ? sheetTitle(doc.source.sheet, t) : pickText(doc.title ?? { en: "" }, locale);
+    entries.push({ id: entryId, title: `${schemeName} — ${title}`, node });
+  }
+  return entries;
+}
+
+function nodeForDocument(
+  doc: PackageDocument,
+  account: AccountChecklist,
+  decision: ClaimDecision,
+  rulePack: RulePack,
+  layoutsById: ReadonlyMap<string, OfficialFormLayout>,
+  claimData: ClaimDataModel,
+  locale: LocaleCode,
+  onBack: () => void,
+): ReactNode | null {
+  switch (doc.source.kind) {
+    case "sheet":
+      switch (doc.source.sheet) {
+        case "decisionSummary":
+          return (
+            <ClaimDecisionSummary
+              account={account}
+              decision={decision}
+              locale={locale}
+              onBack={onBack}
+              canGoBack={false}
+              focusOnMount={false}
+              showPrevious={false}
+            />
+          );
+        case "competentAuthoritySheet":
+          return <CompetentAuthoritySheet decision={decision} locale={locale} />;
+        case "monetaryLimitSheet":
+          return <MonetaryLimitSheet decision={decision} locale={locale} />;
+        case "ruleReferencesSheet":
+          return <RuleReferencesSheet decision={decision} locale={locale} />;
+        case "officeChecklist":
+          return <OfficeChecklistTable account={account} locale={locale} />;
+        // Cover/index/missing report are file-level chrome rendered by the
+        // ClaimPackage component itself, never per account.
+        case "coverPage":
+        case "fileIndex":
+        case "missingDocumentReport":
+          return null;
+      }
+      break;
+    case "officialForm": {
+      const formId = doc.source.formId;
+      const form = rulePack.forms.find((f) => f.id === formId);
+      const layout = layoutsById.get(formId);
+      if (!form || !layout) {
+        return null;
+      }
+      return (
         <OfficialFormView
-          form={entry.form}
+          form={form}
           layout={layout}
           claimData={claimData}
           accountIndex={account.accountIndex}
           locale={locale}
         />
-      ),
-    });
+      );
+    }
+    case "template": {
+      const templateId = doc.source.templateId;
+      const template = rulePack.templates.find((tpl) => tpl.id === templateId);
+      if (!template) {
+        return null;
+      }
+      return (
+        <PrintableTemplate template={template} locale={locale} claimData={claimData} accountIndex={account.accountIndex} />
+      );
+    }
   }
-
-  for (const tpl of officeTemplates) {
-    entries.push({
-      id: `${String(account.accountIndex)}-doc-${tpl.id}`,
-      title: `${schemeName} — ${pickText(tpl.title, locale)}`,
-      node: <PrintableTemplate template={tpl} locale={locale} claimData={claimData} accountIndex={account.accountIndex} />,
-    });
-  }
-
-  entries.push({
-    id: `${String(account.accountIndex)}-checklist`,
-    title: `${schemeName} — ${t.claimPackageOfficeChecklistHeading}`,
-    node: <OfficeChecklistTable account={account} locale={locale} />,
-  });
-
-  return entries;
+  return null;
 }
 
 export function ClaimPackage({
@@ -346,30 +363,57 @@ export function ClaimPackage({
     headingRef.current?.focus({ preventScroll: false });
   }, []);
 
-  // Milestone 10: which office/declaration templates apply differs per
-  // account (the minor-alive declaration only applies to accounts that
-  // actually need it) — validateClaimPackage takes one shared template
-  // list per call, so it's called once per account with that account's
-  // own correct list, rather than passing every template to every
-  // account, which would falsely flag the declaration's fields as
-  // "missing" on accounts that don't have that declaration at all.
-  const missingInfo = accounts.flatMap((account) => {
-    const officeTemplates = rulePack.templates.filter((tpl) =>
-      officeTemplateIdsForAccount(rulePack, account).includes(tpl.id),
-    );
-    return validateClaimPackage(rulePack, [account], claimData, officialFormLayouts, officeTemplates);
-  });
+  // Milestone 12 — the Document Engine decides the file's contents once;
+  // assembly, the print index, and the missing-information validation all
+  // read the same definition, so they can never disagree (the M10
+  // per-account-template-list lesson, now structural rather than manual).
+  const definition = useMemo(
+    () => buildClaimPackageDefinition(rulePack, accounts, claimData, officialFormLayouts, CLAIM_DOCUMENT_REGISTRY),
+    [rulePack, accounts, claimData, officialFormLayouts],
+  );
+
+  const missingInfo = useMemo(
+    () =>
+      accounts.flatMap((account) => {
+        const accountDefinition = definition.accounts.find((a) => a.accountIndex === account.accountIndex);
+        const templateIds = (accountDefinition?.documents ?? []).flatMap((d) =>
+          d.source.kind === "template" ? [d.source.templateId] : [],
+        );
+        const templates = rulePack.templates.filter((tpl) => templateIds.includes(tpl.id));
+        return validateClaimPackage(rulePack, [account], claimData, officialFormLayouts, templates);
+      }),
+    [definition, accounts, rulePack, claimData, officialFormLayouts],
+  );
 
   const accountEntries = useMemo(
-    () => accounts.flatMap((account) => buildAccountEntries(account, rulePack, officialFormLayouts, claimData, locale, onBack)),
-    [accounts, rulePack, officialFormLayouts, claimData, locale, onBack],
+    () =>
+      accounts.flatMap((account) =>
+        buildAccountEntries(
+          account,
+          definition.accounts.find((a) => a.accountIndex === account.accountIndex),
+          rulePack,
+          officialFormLayouts,
+          claimData,
+          locale,
+          onBack,
+        ),
+      ),
+    [accounts, definition, rulePack, officialFormLayouts, claimData, locale, onBack],
   );
-  const missingReportEntry: FileEntry = {
-    id: "missing-report",
-    title: t.claimPackageMissingInfoHeading,
-    node: <MissingDocumentReport missingInfo={missingInfo} locale={locale} />,
-  };
-  const bodyEntries: readonly FileEntry[] = [...accountEntries, missingReportEntry];
+
+  const hasMissingReport = definition.fileDocuments.some(
+    (d) => d.source.kind === "sheet" && d.source.sheet === "missingDocumentReport",
+  );
+  const missingReportEntries: readonly FileEntry[] = hasMissingReport
+    ? [
+        {
+          id: "missing-report",
+          title: t.claimPackageMissingInfoHeading,
+          node: <MissingDocumentReport missingInfo={missingInfo} locale={locale} />,
+        },
+      ]
+    : [];
+  const bodyEntries: readonly FileEntry[] = [...accountEntries, ...missingReportEntries];
 
   return (
     <section aria-labelledby="claim-package-heading" className="flex flex-col gap-s4">

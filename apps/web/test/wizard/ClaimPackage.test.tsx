@@ -467,6 +467,29 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     expect(screen.queryByLabelText("Post Office savings account number (for payment)")).toBeNull();
   });
 
+  it("assembles the reconciliation-certificate request into the Claim File when the depositor name-difference flag is ticked (Milestone 12)", async () => {
+    const user = userEvent.setup();
+    render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
+    await tickSchemeAndContinue(user);
+    await answerCommonPathToNomination(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q5_nomination", "yes_alive") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("radio", { name: optionLabel("q9_payment", "own_posb") }));
+    await continueBtn(user);
+    await user.click(screen.getByRole("checkbox", { name: optionLabel("q10_docs_check", "name_mismatch_depositor") }));
+    await continueBtn(user);
+    await user.click(await generatePackageButton());
+    await screen.findByRole("heading", { name: "Complete Claim Package" });
+
+    // The Document Engine's registry includes the pack-authored request
+    // template whenever the engine selected it — it renders as its own
+    // page AND appears in the index (both derive from one definition).
+    expect(screen.getByRole("heading", { name: "Apply for a reconciliation certificate — depositor's name" })).toBeTruthy();
+    const index = screen.getByRole("heading", { name: "Index" }).closest("div");
+    const indexItems = index ? within(index).getAllByRole("listitem") : [];
+    expect(indexItems.some((li) => li.textContent?.includes("reconciliation certificate"))).toBe(true);
+  });
+
   it("shows the entered claimant name on the cover page", async () => {
     const user = userEvent.setup();
     render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
