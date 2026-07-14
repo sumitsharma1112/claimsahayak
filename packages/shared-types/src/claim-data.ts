@@ -240,5 +240,78 @@ export interface OfficialFormField {
 export interface OfficialFormLayout {
   /** Joins `FormDefinition.id` (rule-pack forms.ts) — the source of truth for name/purpose/signatories/etc. */
   readonly formId: string;
+  /**
+   * The pre-M16 flat field-list representation, rendered as numbered
+   * label:value rows. Still used by forms that haven't yet been checked
+   * against a real specimen (see official-forms.ts's header comment for
+   * which is which) — empty (`[]`) for any form that has a `body` instead,
+   * since `body` is then the single source of truth for that form.
+   */
   readonly fields: readonly OfficialFormField[];
+  /**
+   * Milestone 16 — a verbatim, paragraph-level transcription of the real
+   * prescribed form (SB Order 31/2020's own specimen text, or the
+   * GSPR-2018 gazette specimen) — present only for forms actually checked
+   * against a real source document. Where `body` is present, it
+   * supersedes `fields` entirely (every consumer must prefer `body` when
+   * set); `fields` stays `[]` for these forms rather than a stale
+   * duplicate.
+   */
+  readonly body?: OfficialFormBody;
+}
+
+/**
+ * Milestone 16 — one fillable or static segment within a line of a real
+ * form's body. A `blank` prints the resolved Claim Data Model value when
+ * available, or a visible blank line for hand-fill — the same never-
+ * invent guarantee `OfficialFormField` has always had, just composable
+ * within a flowing sentence instead of only a standalone row.
+ */
+export type FormSegment =
+  | { readonly kind: 'text'; readonly text: string }
+  | {
+      readonly kind: 'blank';
+      /** Unique within the form; never rendered as visible text. */
+      readonly id: string;
+      readonly claimDataField?: ClaimDataField;
+      /**
+       * Present when the true value isn't in the Claim Data Model at all
+       * (e.g. the scheme name, a Rule-Engine-computed fact belonging to
+       * `AccountChecklist`, never duplicated into the Claim Data Model
+       * per this file's own design principle) — the renderer resolves
+       * this from its own account-level props, not from `claimData`.
+       */
+      readonly computed?: 'schemeName';
+    };
+
+/**
+ * Milestone 16 — one printed line of a real form's body: a flowing
+ * declaration paragraph, a numbered/lettered supporting-document list
+ * item, a signature line, a section heading (e.g. "For office use
+ * only"), or a small explanatory note/footnote. `marker` is the exact
+ * printed marker for `listItem` (e.g. "(i)", "2.") — ignored otherwise.
+ */
+export interface FormLine {
+  readonly kind: 'paragraph' | 'listItem' | 'signatureLine' | 'sectionHeading' | 'note';
+  readonly marker?: string;
+  readonly segments: readonly FormSegment[];
+}
+
+/**
+ * Milestone 16 — the verbatim body of a real prescribed form. `lines` is
+ * the claim application itself; `officeUseLines` is the form's own "For
+ * office use only" / sanction / acquittance section, kept structurally
+ * separate because the real forms print it as a clearly distinct block
+ * (often introduced by its own "For office use only" heading) — never
+ * merged into the claimant-facing application text.
+ */
+export interface OfficialFormBody {
+  /** e.g. "FORM-11" — printed exactly as the form itself prints it. */
+  readonly formNumber: string;
+  /** e.g. "(See Rule 15 of Government Savings Promotion General Rules, 2018)" */
+  readonly ruleCitation: string;
+  /** e.g. "Application for settlement of an account of the deceased depositor..." */
+  readonly heading: string;
+  readonly lines: readonly FormLine[];
+  readonly officeUseLines: readonly FormLine[];
 }

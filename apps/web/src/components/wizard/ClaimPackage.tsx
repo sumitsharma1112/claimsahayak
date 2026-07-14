@@ -332,6 +332,7 @@ function nodeForDocument(
           claimData={claimData}
           accountIndex={account.accountIndex}
           locale={locale}
+          schemeName={account.schemeName}
         />
       );
     }

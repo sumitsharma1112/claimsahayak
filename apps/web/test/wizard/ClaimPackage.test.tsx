@@ -98,9 +98,12 @@ describe("Claim Package — nomination exists (ROUTE_A)", () => {
     // than one occurrence is the correct, intended outcome.
     expect(screen.getAllByText("Asha Devi").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ram Prasad").length).toBeGreaterThan(0);
-    // The OfficialFormView's own heading — distinct from the same form name
-    // also appearing in the checklist section and the office-checklist table.
-    expect(screen.getByRole("heading", { name: "Form 11 — claim application" })).toBeTruthy();
+    // Milestone 16 — Form 11 renders from its real, verbatim SB Order
+    // 31/2020 body; its own printed heading is "FORM-11" (the same text
+    // the actual gazetted form itself prints), distinct from
+    // FormDefinition's "Form 11 — claim application" (still used by the
+    // index/checklist, unaffected).
+    expect(screen.getByRole("heading", { name: "FORM-11" })).toBeTruthy();
   });
 });
 
@@ -126,12 +129,18 @@ describe("Claim Package — no nomination (ROUTE_C, affidavit route)", () => {
     await user.click(await generatePackageButton());
     await user.click(screen.getByRole("button", { name: "Add Legal heir" }));
     await user.type(screen.getByLabelText(/Legal heir 1/), "Legal Heir One");
+    // Milestone 16 — Form 14's body correctly reads the `disclaimant`
+    // entity (a real correctness fix from M13, proven by this test having
+    // to add one explicitly instead of relying on legalHeir.0.name
+    // silently also filling Form 14, which was the M13 bug).
+    await user.click(screen.getByRole("button", { name: "Add Disclaiming nominee / heir (signs Form 14)" }));
+    await user.type(screen.getByLabelText(/Disclaiming nominee \/ heir \(signs Form 14\) 1/), "Disclaiming Heir One");
 
     expect(await screen.findByRole("heading", { name: "Form 13 — affidavit" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Form 14 — letter of disclaimer" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "FORM-14" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Form 15 — indemnity bond" })).toBeTruthy();
-    // legalHeir.0.name is auto-filled on both Form 13 and Form 14.
     expect(screen.getAllByText("Legal Heir One").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Disclaiming Heir One").length).toBeGreaterThan(0);
   });
 });
 
@@ -150,7 +159,7 @@ describe("Claim Package — multiple nominees (T14, cannot come together)", () =
     expect(screen.getByRole("heading", { name: decisionForRoute("ROUTE_A").decision.en })).toBeTruthy();
     await user.click(await generatePackageButton());
 
-    expect(await screen.findByText("Form 14 — letter of disclaimer")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "FORM-14" })).toBeTruthy();
   });
 });
 

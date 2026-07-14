@@ -215,6 +215,29 @@ function formFields(
   if (!layout) {
     return [];
   }
+  // Milestone 16 — a `body`-based form (the real, verbatim specimen text)
+  // supersedes `fields` entirely; its blanks are flattened out of every
+  // line (claim lines + office-use/acquittance lines) the same way.
+  if (layout.body) {
+    const allLines = [...layout.body.lines, ...layout.body.officeUseLines];
+    const fields: FillableField[] = [];
+    for (const line of allLines) {
+      for (const segment of line.segments) {
+        if (segment.kind !== "blank") {
+          continue;
+        }
+        const label: LocalizedText = { en: segment.id };
+        const autoFillable = segment.claimDataField !== undefined;
+        fields.push({
+          id: segment.id,
+          label,
+          autoFillable,
+          filled: autoFillable && resolveFieldValue(claimData, accountIndex, segment.claimDataField!) !== undefined,
+        });
+      }
+    }
+    return fields;
+  }
   return layout.fields.map((f) => ({
     id: f.id,
     label: f.label,
@@ -224,6 +247,37 @@ function formFields(
       f.manual !== true &&
       resolveFieldValue(claimData, accountIndex, f.claimDataField) !== undefined,
   }));
+}
+
+/** Milestone 16 — signature/execution spots in a `body`-based form are its `signatureLine` lines, not id-pattern-matched blanks (there often isn't a blank at all, just a printed line to sign). */
+function bodySignatureLabels(layout: OfficialFormLayout): readonly LocalizedText[] {
+  if (!layout.body) {
+    return [];
+  }
+  const allLines = [...layout.body.lines, ...layout.body.officeUseLines];
+  return allLines
+    .filter((line) => line.kind === "signatureLine")
+    .map((line) => {
+      const firstText = line.segments.find((s) => s.kind === "text");
+      return { en: firstText && firstText.kind === "text" ? firstText.text : "Signature" };
+    });
+}
+
+/** Milestone 16 — witness blanks in a `body`-based form, by blank id (the same convention `witnessLabels` already uses for `fields`). */
+function bodyWitnessLabels(layout: OfficialFormLayout): readonly LocalizedText[] {
+  if (!layout.body) {
+    return [];
+  }
+  const allLines = [...layout.body.lines, ...layout.body.officeUseLines];
+  const labels: LocalizedText[] = [];
+  for (const line of allLines) {
+    for (const segment of line.segments) {
+      if (segment.kind === "blank" && /witness/i.test(segment.id)) {
+        labels.push({ en: segment.id });
+      }
+    }
+  }
+  return labels;
 }
 
 function templateFields(
@@ -302,14 +356,17 @@ function buildDocument(
     case "officialForm": {
       const formId = entry.source.formId;
       const form = rulePack.forms.find((f) => f.id === formId);
-      const fields = formFields(layoutsById.get(formId), claimData, accountIndex);
+      const layout = layoutsById.get(formId);
+      const fields = formFields(layout, claimData, accountIndex);
       const ruleReference = entry.ruleReference ?? (form ? formRuleReference(form) : undefined);
       return {
         ...base,
         ...(form ? { title: form.name, purpose: form.purpose, signatories: form.signatories } : {}),
         ...(ruleReference !== undefined ? { ruleReference } : {}),
-        signatureFieldLabels: signatureLabels(fields),
-        witnessFieldLabels: witnessLabels(fields),
+        // Milestone 16 — a body-based form's signature/witness spots are
+        // real printed lines, not id-pattern-matched blanks.
+        signatureFieldLabels: layout?.body ? bodySignatureLabels(layout) : signatureLabels(fields),
+        witnessFieldLabels: layout?.body ? bodyWitnessLabels(layout) : witnessLabels(fields),
         autoFill: autoFillOf(fields),
       };
     }

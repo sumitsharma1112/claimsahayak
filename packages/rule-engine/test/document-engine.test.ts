@@ -156,10 +156,14 @@ describe("Document Engine — auto-fill capability (computed, never authored)", 
     const definition = build();
     const form11 = definition.accounts[0]?.documents.find((d) => d.registryId === "t_form_11");
     expect(form11?.autoFill.capability).toBe("partial");
-    // form_11's layout (Milestone 13): 9 claimDataField slots (incl. the
-    // newly-wired amount_claimed), 3 manual (to-line, date/place, signature).
-    expect(form11?.autoFill.autoFillableFields).toBe(9);
-    expect(form11?.autoFill.manualFields).toBe(3);
+    // form_11's layout (Milestone 16: verbatim SB Order 31/2020 body): 15
+    // claimDataField blanks (office/claimant/depositor/account/claimant
+    // address+mobile/both witnesses' name+address+mobile/POSB+bank
+    // account+IFSC), 10 manual (the scheme-name computed blank, the two
+    // predeceased-nominee/succession-court blanks, and the sanction/
+    // acquittance amounts+dates — all genuinely future acts).
+    expect(form11?.autoFill.autoFillableFields).toBe(15);
+    expect(form11?.autoFill.manualFields).toBe(10);
     expect(form11?.autoFill.filledFields).toBe(0); // empty model
   });
 
@@ -229,10 +233,18 @@ describe("Document Engine — pack-record metadata resolution (no data stated tw
     expect(fwd?.ruleReference).toContain("Blueprint v2 §3.4");
   });
 
-  it("derives signature and witness field labels from the document's own fields", () => {
+  it("derives signature and witness field labels from the document's own body lines (Milestone 16: signatureLine kind, and blank ids matching /witness/i)", () => {
     const definition = build();
     const form11 = definition.accounts[0]?.documents.find((d) => d.registryId === "t_form_11");
-    expect(form11?.signatureFieldLabels.map((l) => l.en)).toEqual(["Signature of claimant"]);
-    expect(form11?.witnessFieldLabels.map((l) => l.en)).toEqual(["Witness 1 — name", "Witness 2 — name"]);
+    expect(form11?.signatureFieldLabels.length).toBe(8); // every signatureLine in the real form's body + office-use section
+    expect(form11?.signatureFieldLabels.map((l) => l.en)).toContain("Signature/thumb impression of Claimant/s");
+    expect(form11?.witnessFieldLabels.map((l) => l.en)).toEqual([
+      "witness_1_name",
+      "witness_1_address",
+      "witness_1_mobile",
+      "witness_2_name",
+      "witness_2_address",
+      "witness_2_mobile",
+    ]);
   });
 });

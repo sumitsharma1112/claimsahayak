@@ -50,26 +50,38 @@ describe("validateClaimPackage", () => {
     expect(issues.some((i) => i.fieldId === "signature")).toBe(false);
   });
 
-  it("flags account.amountClaimed once it's wired (Milestone 13), and stops once entered", () => {
+  it("flags account.amountClaimed on the forwarding letter once it's wired (Milestone 13), and stops once entered", () => {
+    // Milestone 16 note: form_11's own application text has no "amount
+    // claimed" blank at all — the real form (SB Order 31/2020) only ever
+    // asks for "the entire amount", never a specific figure; the amount
+    // only appears in the office-use/acquittance section as the
+    // sanctioning/receiving authority's own future act. account.amountClaimed
+    // still auto-fills the (ClaimSahayak-composed) forwarding letter, so
+    // this test moved there.
     const account = routeAAccount(EMPTY_CLAIM_DATA);
     const empty = validateClaimPackage(RULE_PACK, [account], EMPTY_CLAIM_DATA, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
-    expect(empty.some((i) => i.documentId === "form_11" && i.fieldId === "amount_claimed")).toBe(true);
+    expect(empty.some((i) => i.documentId === "template_forwarding_letter" && i.fieldId === "amount_claimed")).toBe(true);
 
     const filled: ClaimDataModel = {
       ...EMPTY_CLAIM_DATA,
       accountDetails: { 0: { amountClaimed: "250000", nominationRegistrationNumber: "", nominationDate: "" } },
     };
     const withAmount = validateClaimPackage(RULE_PACK, [account], filled, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
-    expect(withAmount.some((i) => i.documentId === "form_11" && i.fieldId === "amount_claimed")).toBe(false);
+    expect(withAmount.some((i) => i.documentId === "template_forwarding_letter" && i.fieldId === "amount_claimed")).toBe(
+      false,
+    );
   });
 
   it("returns no issues once every mandatory field across forms and office documents is filled", () => {
     const account = routeAAccount(EMPTY_CLAIM_DATA);
     const fullyFilled: ClaimDataModel = {
       ...EMPTY_CLAIM_DATA,
-      claimant: { name: "Asha Devi", address: "12 MG Road", relationship: "Daughter" },
+      claimant: { name: "Asha Devi", address: "12 MG Road", relationship: "Daughter", mobile: "9811100000" },
       depositor: { name: "Ram Prasad" },
-      witnesses: [{ name: "Witness One" }, { name: "Witness Two" }],
+      witnesses: [
+        { name: "Witness One", address: "1 Some Road", mobile: "9811100001" },
+        { name: "Witness Two", address: "2 Some Road", mobile: "9811100002" },
+      ],
       accountNumbers: { 0: "SB-12345" },
       officeName: "Connaught Place HO",
       officeDetails: {
@@ -81,6 +93,12 @@ describe("validateClaimPackage", () => {
       },
       preparer: { name: "K. Sharma", designation: "Sub Postmaster" },
       accountDetails: { 0: { amountClaimed: "250000", nominationRegistrationNumber: "", nominationDate: "" } },
+      // Milestone 16: the real Form 11 acquittance prints BOTH "PO Savings
+      // Account No." and "Bank Account No." as alternatives ("transfer to
+      // ... or ...") — a real claim only ever uses one, so this fixture
+      // (which must leave zero issues) fills both; a genuine claim leaving
+      // the unused one blank is expected and correct, not a bug.
+      payment: { bankName: "", bankBranch: "", bankAccountNumber: "1234567890", bankIfsc: "IPOS0000001", posbAccountNumber: "SB-99999" },
     };
     const issues = validateClaimPackage(RULE_PACK, [account], fullyFilled, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
     expect(issues).toEqual([]);

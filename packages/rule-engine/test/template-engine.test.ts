@@ -62,6 +62,18 @@ function resolveForm(formId: string, model: ClaimDataModel, accountIndex = 0) {
     throw new Error(`no layout for ${formId}`);
   }
   const resolved: Record<string, string | undefined> = {};
+  // Milestone 16 — a body-based form's blanks live inside its lines
+  // (verbatim SB Order text), not a flat `fields` array.
+  if (layout.body) {
+    for (const line of [...layout.body.lines, ...layout.body.officeUseLines]) {
+      for (const segment of line.segments) {
+        if (segment.kind === "blank" && segment.claimDataField) {
+          resolved[segment.id] = resolveFieldValue(model, accountIndex, segment.claimDataField);
+        }
+      }
+    }
+    return resolved;
+  }
   for (const field of layout.fields) {
     if (field.claimDataField) {
       resolved[field.id] = resolveFieldValue(model, accountIndex, field.claimDataField);
@@ -85,17 +97,22 @@ function resolveTemplate(templateId: string, model: ClaimDataModel, accountIndex
 }
 
 describe("Template Engine — Scenario 1: single nominee, Form 11 auto-fill", () => {
-  it("every collected field appears correctly on Form 11", () => {
+  it("every collected field appears correctly on Form 11 (Milestone 16: verbatim SB Order 31/2020 body)", () => {
     const resolved = resolveForm("form_11", SAMPLE);
-    expect(resolved.post_office_name).toBe("Connaught Place HO");
+    expect(resolved.office_name).toBe("Connaught Place HO");
     expect(resolved.depositor_name).toBe("Ram Prasad");
     expect(resolved.account_number).toBe("SB-778899");
     expect(resolved.claimant_name).toBe("Asha Devi");
-    expect(resolved.claimant_relationship).toBe("Daughter");
     expect(resolved.claimant_address).toBe("12 MG Road, New Delhi");
-    expect(resolved.amount_claimed).toBe("250000");
+    expect(resolved.claimant_mobile).toBeUndefined(); // not in SAMPLE
     expect(resolved.witness_1_name).toBe("Suresh Kumar");
+    expect(resolved.witness_1_address).toBe("8 Karol Bagh, New Delhi");
     expect(resolved.witness_2_name).toBe("Geeta Rani");
+    // The real form's own application text has no "amount claimed" blank
+    // at all (it asks for the "entire amount", never a specific figure) —
+    // only the office-use/acquittance section states a rupee amount, and
+    // that's the sanctioning authority's own future act, correctly manual.
+    expect(Object.keys(resolved)).not.toContain("amount_claimed");
   });
 
   it("never invents a value for a field genuinely left blank", () => {
@@ -103,7 +120,6 @@ describe("Template Engine — Scenario 1: single nominee, Form 11 auto-fill", ()
     const resolved = resolveForm("form_11", sparse);
     expect(resolved.claimant_name).toBe("Asha Devi");
     expect(resolved.claimant_address).toBeUndefined();
-    expect(resolved.claimant_relationship).toBeUndefined();
     expect(resolved.depositor_name).toBeUndefined();
     expect(resolved.witness_1_name).toBeUndefined();
   });
@@ -181,15 +197,16 @@ describe("Template Engine — Scenario 3: claimant (nominee) name difference", (
 });
 
 describe("Template Engine — Scenario 4: multiple nominees (Form 14 disclaimer)", () => {
-  it("Form 14 auto-fills the disclaiming nominees' names/addresses from the disclaimant entity, never legalHeir", () => {
+  it("Form 14 auto-fills the lead disclaiming nominee's name/address and depositor/account/claimant from the disclaimant entity, never legalHeir (Milestone 16: verbatim SB Order 31/2020 body)", () => {
     const resolved = resolveForm("form_14", SAMPLE);
-    expect(resolved.disclaiming_party_1).toBe("Vinod Kumar");
-    expect(resolved.disclaiming_party_1_address).toBe("9 Green Park, New Delhi");
-    expect(resolved.disclaiming_party_2).toBe("Meena Kumari");
-    expect(resolved.disclaiming_party_2_address).toBe("17 Saket, New Delhi");
-    expect(resolved.depositor_name).toBe("Ram Prasad");
+    expect(resolved.disclaimant_name).toBe("Vinod Kumar");
+    expect(resolved.disclaimant_address).toBe("9 Green Park, New Delhi");
+    expect(resolved.depositor_name_1).toBe("Ram Prasad");
     expect(resolved.account_number).toBe("SB-778899");
     expect(resolved.claimant_name).toBe("Asha Devi");
+    expect(resolved.amount_relinquished).toBe("250000");
+    // Deponents 2/3 are separate signature-line blanks (see FORM_14_LINES).
+    expect(resolved.disclaimant_2_name).toBe("Meena Kumari");
   });
 
   it("does not cross-wire disclaimants with legal heirs — a legalHeir-only model leaves Form 14's disclaimant fields blank", () => {
@@ -198,24 +215,29 @@ describe("Template Engine — Scenario 4: multiple nominees (Form 14 disclaimer)
       legalHeirs: [{ name: "Someone Else Entirely" }],
     };
     const resolved = resolveForm("form_14", legalHeirOnly);
-    expect(resolved.disclaiming_party_1).toBeUndefined();
-    expect(resolved.disclaiming_party_1).not.toBe("Someone Else Entirely");
+    expect(resolved.disclaimant_name).toBeUndefined();
+    expect(resolved.disclaimant_name).not.toBe("Someone Else Entirely");
   });
 
   it("a third disclaimant slot left empty stays genuinely blank, not fabricated", () => {
     const twoOnly: ClaimDataModel = { ...SAMPLE, disclaimants: [SAMPLE.disclaimants[0]!] };
     const resolved = resolveForm("form_14", twoOnly);
-    expect(resolved.disclaiming_party_1).toBe("Vinod Kumar");
-    expect(resolved.disclaiming_party_2).toBeUndefined();
-    expect(resolved.disclaiming_party_3).toBeUndefined();
+    expect(resolved.disclaimant_name).toBe("Vinod Kumar");
+    expect(resolved.disclaimant_2_name).toBeUndefined();
+    expect(resolved.disclaimant_3_name).toBeUndefined();
   });
 });
 
 describe("Template Engine — manual fields never carry a claimDataField (future acts stay hand-fill)", () => {
-  it("Form 11's date/place/signature have no claimDataField", () => {
+  it("Form 11's sanction/acquittance amounts and dates have no claimDataField — the sanctioning/receiving act hasn't happened yet", () => {
     const layout = OFFICIAL_FORM_LAYOUTS.find((l) => l.formId === "form_11")!;
-    const manualIds = layout.fields.filter((f) => f.manual).map((f) => f.id);
-    expect(manualIds).toEqual(expect.arrayContaining(["to_line", "date_place", "signature"]));
+    const allSegments = [...layout.body!.lines, ...layout.body!.officeUseLines].flatMap((l) => l.segments);
+    const manualBlankIds = allSegments
+      .filter((s) => s.kind === "blank" && !s.claimDataField && !s.computed)
+      .map((s) => (s.kind === "blank" ? s.id : ""));
+    expect(manualBlankIds).toEqual(
+      expect.arrayContaining(["sanction_memo_no", "withdrawal_amount", "received_amount_figures", "cheque_no"]),
+    );
   });
 
   it("the approval note's authority-exercised and amount-approved lines stay manual (the approving officer's own future act)", () => {

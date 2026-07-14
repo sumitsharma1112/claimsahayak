@@ -1,4 +1,4 @@
-import type { OfficialFormLayout } from "@claimsahayak/shared-types";
+import type { FormLine, OfficialFormLayout } from "@claimsahayak/shared-types";
 
 /**
  * Milestone 7 (extended Milestone 9), Tier A of the document-fidelity
@@ -8,11 +8,25 @@ import type { OfficialFormLayout } from "@claimsahayak/shared-types";
  * is `manual` — completed by hand at the counter (signatures, today's
  * date, amounts the Post Office itself computes).
  *
- * Field order/labels approximate the real prescribed form at a level
- * useful for auto-fill; a future session with the actual gazetted form
- * image should re-verify field-for-field against
- * `knowledge-base/forms/document-library.md` before this is treated as a
- * certified transcription.
+ * Milestone 16 — `form_11` and `form_14` (the only two official forms
+ * the four supported nomination scenarios actually use) were rebuilt
+ * from a REAL specimen: `knowledge-base/sources/sb-order-31-2020.pdf`
+ * (the SB Order's own "FORMAT"/"FORM-14" specimen pages), cross-checked
+ * against `knowledge-base/sources/gspr-form-11-nsi.pdf` (the GSPR-2018
+ * gazette's own Form-11 specimen) for Form 11. This replaces the earlier
+ * approximated numbered-field-list rendering entirely — every word,
+ * clause, numbered document, footnote, and the "For office use
+ * only"/Acquittance section is now the ACTUAL printed text, via the new
+ * `body` (see claim-data.ts's `OfficialFormBody`), not a UI-friendly
+ * paraphrase. `fields` stays `[]` for these two; `body` is the one
+ * source of truth.
+ *
+ * Everything else in this file (`form_13`/`form_15`/the 6 other forms)
+ * still uses the pre-M16 `fields` approximation — none of them render
+ * for the four supported scenarios, so they were out of this fidelity
+ * pass's scope; a future session extending scope beyond nomination
+ * claims should give each the same real-specimen treatment before
+ * trusting its layout the way form_11/form_14 can now be trusted.
  *
  * Correction to the M7 record: M7's own comment here claimed the other 6
  * `FormDefinition`s (SCSS Form-4, NC-54(a)/(b), SB-7B, AOF/KYC, Form 10)
@@ -30,47 +44,318 @@ import type { OfficialFormLayout } from "@claimsahayak/shared-types";
  * this step" — i.e. even the M2-authored source material treats these as
  * lower-certainty than the others. Their layouts below are a reasonable
  * structural approximation (claimant/depositor/certificate identity +
- * surety/guarantee details), not a claim of verified fidelity — flagged
- * explicitly rather than presented with the same confidence as
- * `form_11`/`form_13`/`form_14`/`form_15`.
+ * surety/guarantee details), not a claim of verified fidelity.
  */
+
+// ---- Form 11 body (verbatim from sb-order-31-2020.pdf's own "FORMAT" specimen) ----
+
+const FORM_11_LINES: readonly FormLine[] = [
+  { kind: "paragraph", segments: [{ kind: "text", text: "To" }] },
+  { kind: "paragraph", segments: [{ kind: "text", text: "The Postmaster," }] },
+  {
+    kind: "paragraph",
+    segments: [{ kind: "blank", id: "office_name", claimDataField: "office.name" }],
+  },
+  {
+    kind: "listItem",
+    marker: "1.",
+    segments: [
+      { kind: "text", text: "I/we " },
+      // Only the lead claimant's name fills this inline blank — a real
+      // multi-claimant case additionally lists co-claimants on the cover
+      // page and their own signature lines, but this one printed blank
+      // has no repeating mechanism to hold a variable-length name list.
+      { kind: "blank", id: "claimant_name", claimDataField: "claimant.name" },
+      { kind: "text", text: " the nominee(s)/ legal heirs of late " },
+      { kind: "blank", id: "depositor_name", claimDataField: "depositor.name" },
+      { kind: "text", text: " the depositor to Account no./Savings certificate(s)* " },
+      { kind: "blank", id: "account_number", claimDataField: "account.number" },
+      { kind: "text", text: " under " },
+      { kind: "blank", id: "scheme_name", computed: "schemeName" },
+      {
+        kind: "text",
+        text: " (Name of scheme), apply for withdrawal of entire amount/transfer of the account/certificate(s) in my/our name standing to the credit of the deceased in the said account. In support of the claim, I hereby submit the following documents:-",
+      },
+    ],
+  },
+  { kind: "listItem", marker: "(i)", segments: [{ kind: "text", text: "Death certificate of depositor/s" }] },
+  {
+    kind: "listItem",
+    marker: "(ii)",
+    segments: [
+      { kind: "text", text: "Death certificate of Sh./Smt. " },
+      { kind: "blank", id: "predeceased_nominee_name" },
+      { kind: "text", text: ", also the nominee(s) appointed by the depositor(s). (***)" },
+    ],
+  },
+  {
+    kind: "listItem",
+    marker: "(iii)",
+    segments: [
+      {
+        kind: "text",
+        text: "Succession certificate/letters of administration with attested copy of probated will of the deceased depositor issued by ",
+      },
+      { kind: "blank", id: "issuing_court" },
+      { kind: "text", text: " competent court. (**)" },
+    ],
+  },
+  { kind: "listItem", marker: "(iv)", segments: [{ kind: "text", text: "Letter of Indemnity (*)" }] },
+  { kind: "listItem", marker: "(v)", segments: [{ kind: "text", text: "Affidavit (*)" }] },
+  { kind: "listItem", marker: "(vi)", segments: [{ kind: "text", text: "Letter of disclaimer on affidavit (*)" }] },
+  {
+    kind: "listItem",
+    marker: "(vii)",
+    segments: [{ kind: "text", text: "Pass book/deposit receipt/statement of account" }],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Signature/thumb impression of Claimant/s" }] },
+  {
+    kind: "note",
+    segments: [{ kind: "text", text: "(Thumb impression should be attested by a person known to the Post office)" }],
+  },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Address: " },
+      { kind: "blank", id: "claimant_address", claimDataField: "claimant.address" },
+    ],
+  },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Mobile No.: " },
+      { kind: "blank", id: "claimant_mobile", claimDataField: "claimant.mobile" },
+    ],
+  },
+  { kind: "note", segments: [{ kind: "text", text: "(ID and Address proof of claimant(s) must be attached)" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Witness (1) ......................... (Signature)" }] },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Name & Address: " },
+      { kind: "blank", id: "witness_1_name", claimDataField: "witness.0.name" },
+      { kind: "text", text: ", " },
+      { kind: "blank", id: "witness_1_address", claimDataField: "witness.0.address" },
+    ],
+  },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Mobile Number: " },
+      { kind: "blank", id: "witness_1_mobile", claimDataField: "witness.0.mobile" },
+    ],
+  },
+  { kind: "note", segments: [{ kind: "text", text: "(ID and Address proof must be attached)" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Witness (2) ......................... (Signature)" }] },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Name & Address: " },
+      { kind: "blank", id: "witness_2_name", claimDataField: "witness.1.name" },
+      { kind: "text", text: ", " },
+      { kind: "blank", id: "witness_2_address", claimDataField: "witness.1.address" },
+    ],
+  },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Mobile Number: " },
+      { kind: "blank", id: "witness_2_mobile", claimDataField: "witness.1.mobile" },
+    ],
+  },
+  { kind: "note", segments: [{ kind: "text", text: "(ID and Address proof must be attached)" }] },
+  { kind: "paragraph", segments: [{ kind: "text", text: "Witnesses accepted" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Signature of Sr. PM/PM/SPM/GDS BPM" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Date" }] },
+  {
+    kind: "note",
+    segments: [{ kind: "text", text: "(*) To be produced by legal heirs, in the absence of nomination for claims upto Rs.5 lakh." }],
+  },
+  { kind: "note", segments: [{ kind: "text", text: "(**) Strike off if there is a valid nomination." }] },
+  { kind: "note", segments: [{ kind: "text", text: "(***) Strike off if not applicable" }] },
+];
+
+const FORM_11_OFFICE_USE_LINES: readonly FormLine[] = [
+  { kind: "sectionHeading", segments: [{ kind: "text", text: "For office use only" }] },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "No.- Claim has been sanctioned by competent authority vide Sanction Memo " },
+      { kind: "blank", id: "sanction_memo_no" },
+      { kind: "text", text: " dated " },
+      { kind: "blank", id: "sanction_memo_date" },
+      { kind: "text", text: " (copy attached)." },
+    ],
+  },
+  { kind: "note", segments: [{ kind: "text", text: "(to be filled if claim is sanctioned by any administrative authority)" }] },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Withdrawal of Rs. " },
+      { kind: "blank", id: "withdrawal_amount" },
+      { kind: "text", text: " or transfer of account/certificate(s) in the name of claimant(s) is sanctioned." },
+    ],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Signature of Postmaster" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Date" }] },
+  { kind: "sectionHeading", segments: [{ kind: "text", text: "Acquittance (to be filled by claimant/s)" }] },
+  {
+    kind: "paragraph",
+    segments: [
+      { kind: "text", text: "Received Rs. " },
+      { kind: "blank", id: "received_amount_figures" },
+      { kind: "text", text: " (In figures) " },
+      { kind: "blank", id: "received_amount_words" },
+      { kind: "text", text: " (in words) By cheque bearing no " },
+      { kind: "blank", id: "cheque_no" },
+      { kind: "text", text: " Dated " },
+      { kind: "blank", id: "cheque_date" },
+      { kind: "text", text: " transfer to PO Savings Account No. " },
+      { kind: "blank", id: "posb_account_number", claimDataField: "payment.posbAccountNumber" },
+      { kind: "text", text: " or Bank Account No " },
+      { kind: "blank", id: "bank_account_number", claimDataField: "payment.bankAccountNumber" },
+      { kind: "text", text: " (IFSC " },
+      { kind: "blank", id: "bank_ifsc", claimDataField: "payment.bankIfsc" },
+      { kind: "text", text: ") in full settlement of my/our claim." },
+    ],
+  },
+  {
+    kind: "paragraph",
+    segments: [
+      {
+        kind: "text",
+        text: "OR (In case of RD/TD/Savings Certificates) Please transfer the account/Certificate(s) in my/our name for which Account Opening Form (AOF) alongwith Annexure-II (KYC Form) and KYC documents are submitted.",
+      },
+    ],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Signature/thumb impression of claimant/s" }] },
+];
+
+// ---- Form 14 body (verbatim from sb-order-31-2020.pdf's own "FORM-14" specimen) ----
+
+const FORM_14_LINES: readonly FormLine[] = [
+  { kind: "paragraph", segments: [{ kind: "text", text: "To," }] },
+  {
+    kind: "paragraph",
+    segments: [{ kind: "text", text: "The Postmaster" }],
+  },
+  { kind: "paragraph", segments: [{ kind: "text", text: "Sir," }] },
+  {
+    kind: "listItem",
+    marker: "1.",
+    segments: [
+      { kind: "text", text: "I/We " },
+      { kind: "blank", id: "disclaimant_name", claimDataField: "disclaimant.0.name" },
+      { kind: "text", text: " husband of/wife of/son of/daughter of late " },
+      { kind: "blank", id: "depositor_name_1", claimDataField: "depositor.name" },
+      { kind: "text", text: " (deceased depositor) resident of " },
+      { kind: "blank", id: "disclaimant_address", claimDataField: "disclaimant.0.address" },
+      { kind: "text", text: " do hereby declare and solemnly affirm as under:-" },
+    ],
+  },
+  {
+    kind: "listItem",
+    marker: "2.",
+    segments: [
+      { kind: "text", text: "That late " },
+      { kind: "blank", id: "depositor_name_2", claimDataField: "depositor.name" },
+      { kind: "text", text: " (deceased depositor) died intestate on " },
+      { kind: "blank", id: "date_of_death" },
+      { kind: "text", text: " leaving behind us as his/her only heirs" },
+    ],
+  },
+  {
+    kind: "listItem",
+    marker: "3.",
+    segments: [
+      { kind: "text", text: "That, I/we " },
+      { kind: "blank", id: "disclaimant_names", claimDataField: "disclaimant.0.name" },
+      { kind: "text", text: " heirs of late " },
+      { kind: "blank", id: "depositor_name_3", claimDataField: "depositor.name" },
+      {
+        kind: "text",
+        text: " (deceased depositor) for ourselves and on behalf of our heirs, executors, representatives and assigns do hereby relinquish our claims to the balance of Rs. ",
+      },
+      { kind: "blank", id: "amount_relinquished", claimDataField: "account.amountClaimed" },
+      { kind: "text", text: " payable to the heirs of late " },
+      { kind: "blank", id: "depositor_name_4", claimDataField: "depositor.name" },
+      { kind: "text", text: " (the deceased) which may be credited to the account sought by Mr./Ms. " },
+      { kind: "blank", id: "claimant_name", claimDataField: "claimant.name" },
+      { kind: "text", text: " (claimant), our " },
+      // Genuinely a different fact from `disclaimant.relationship` (which
+      // means "relationship to the depositor," per the same convention
+      // every other party field uses) — this blank asks for the
+      // disclaimant's relationship to the CLAIMANT instead ("our
+      // brother"), which the Claim Data Model has no field for. Wiring
+      // `disclaimant.relationship` here would silently print the wrong
+      // fact, the same mistake M9 already caught once for Form 10.
+      { kind: "blank", id: "relation_to_claimant" },
+      {
+        kind: "text",
+        text: " (mention relation). We have no objection whatsoever in the balance in the above referred account No. ",
+      },
+      { kind: "blank", id: "account_number", claimDataField: "account.number" },
+      {
+        kind: "text",
+        text: " together with interest, if any, accrued thereon being paid by the Post Office to said Mr./Ms. ",
+      },
+      { kind: "blank", id: "claimant_name_2", claimDataField: "claimant.name" },
+      { kind: "text", text: " (claimant)." },
+    ],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Deponent 1 — signature" }] },
+  {
+    kind: "signatureLine",
+    segments: [
+      { kind: "text", text: "Deponent 2 — " },
+      { kind: "blank", id: "disclaimant_2_name", claimDataField: "disclaimant.1.name" },
+      { kind: "text", text: " — signature" },
+    ],
+  },
+  {
+    kind: "signatureLine",
+    segments: [
+      { kind: "text", text: "Deponent 3 — " },
+      { kind: "blank", id: "disclaimant_3_name", claimDataField: "disclaimant.2.name" },
+      { kind: "text", text: " — signature" },
+    ],
+  },
+  {
+    kind: "note",
+    segments: [
+      {
+        kind: "text",
+        text: "Verification: I/we, the above named deponents do hereby verify on solemn affirmation that the contents of this affidavit are true to my/our knowledge and nothing material has been concealed.",
+      },
+    ],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Dated:-" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Deponents" }] },
+  {
+    kind: "note",
+    segments: [
+      {
+        kind: "text",
+        text: "I identify the deponent(s) who is/are personally known to me and who has/have signed in my presence.",
+      },
+    ],
+  },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Dated:-" }] },
+  { kind: "signatureLine", segments: [{ kind: "text", text: "Attested — Oath Commissioner/Notary Public" }] },
+];
+
 export const OFFICIAL_FORM_LAYOUTS: readonly OfficialFormLayout[] = [
   {
     formId: "form_11",
-    fields: [
-      { id: "to_line", label: { en: "To the Postmaster" }, manual: true },
-      { id: "post_office_name", label: { en: "Name of Post Office" }, claimDataField: "office.name" },
-      { id: "depositor_name", label: { en: "Name of the deceased depositor" }, claimDataField: "depositor.name" },
-      { id: "account_number", label: { en: "Account / certificate number" }, claimDataField: "account.number" },
-      { id: "claimant_name", label: { en: "Name of claimant" }, claimDataField: "claimant.name" },
-      { id: "claimant_relationship", label: { en: "Relationship to the depositor" }, claimDataField: "claimant.relationship" },
-      { id: "claimant_address", label: { en: "Claimant's address" }, claimDataField: "claimant.address" },
-      {
-        // Milestone 13 — was manual until now; the Universal Claim Data
-        // Model (M11) gained a per-account amountClaimed field specifically
-        // so this could auto-fill instead of asking the claimant to write
-        // it twice (once in the Wizard, once by hand here).
-        id: "amount_claimed",
-        label: { en: "Amount claimed" },
-        claimDataField: "account.amountClaimed",
-      },
-      {
-        // Milestone 13 note: payment-routing fields (POSB / bank + IFSC)
-        // were considered here and deliberately NOT added. Only ONE of
-        // the three would ever be relevant per claim (per Q9's answer),
-        // and `validateClaimPackage` has no per-field conditionality — it
-        // would flag the two genuinely-inapplicable fields as "missing
-        // information" on every claim, a false-positive noise problem
-        // worse than staying manual. Revisit only alongside a conditional-
-        // field mechanism in OfficialFormLayout, not by forcing it in here.
-        id: "witness_1_name",
-        label: { en: "Witness 1 — name" },
-        claimDataField: "witness.0.name",
-      },
-      { id: "witness_2_name", label: { en: "Witness 2 — name" }, claimDataField: "witness.1.name" },
-      { id: "date_place", label: { en: "Date and place" }, manual: true },
-      { id: "signature", label: { en: "Signature of claimant" }, manual: true },
-    ],
+    fields: [],
+    body: {
+      formNumber: "FORM-11",
+      ruleCitation: "(See Rule 15 of Government Savings Promotion General Rules, 2018)",
+      heading:
+        "Application for settlement of an account of the deceased depositor by nominee or legal heirs under National (Small) Savings Scheme",
+      lines: FORM_11_LINES,
+      officeUseLines: FORM_11_OFFICE_USE_LINES,
+    },
   },
   {
     formId: "form_13",
@@ -93,32 +378,32 @@ export const OFFICIAL_FORM_LAYOUTS: readonly OfficialFormLayout[] = [
     ],
   },
   {
-    // Milestone 13 correctness fix — this layout previously wired the
-    // disclaiming party's name to legalHeir.N, which is wrong whenever
-    // Form 14 fires from the multiple-nominees/cannot-come-together
-    // context (T14, ROUTE_A): the people disclaiming are the deceased's
-    // NOMINEES who cannot attend, not legal heirs — a legal-heir claim
-    // (ROUTE_C) never reaches T14 at all. Wiring legalHeir.N here would
-    // have auto-filled the wrong array's names whenever this milestone's
-    // Scenario 4 (multiple nominees) fires. `disclaimant` (added to the
-    // Claim Data Model in M11 for exactly this reason) is the correct,
-    // context-neutral entity: "whoever is relinquishing in this
-    // claimant's favour," regardless of whether they're a nominee or an
-    // heir in some future context.
+    // Milestone 13 correctness fix (still the reason `disclaimant`, not
+    // `legalHeir`, is used below): Form 14 fires from the multiple-
+    // nominees/cannot-come-together context (T14, ROUTE_A) in every
+    // scenario this form is actually used for today — the people
+    // disclaiming are the deceased's NOMINEES who cannot attend, not
+    // legal heirs.
+    //
+    // Milestone 16 — rebuilt as a verbatim `body` from
+    // `knowledge-base/sources/sb-order-31-2020.pdf`'s own "FORM-14"
+    // specimen (the real "Letter of disclaimer" affidavit, with its
+    // actual declaration/verification/attestation wording) — see
+    // `FORM_14_LINES` above for the full transcription and its own
+    // per-blank notes (in particular: the "our ___ (mention relation)"
+    // blank stays manual, since it asks the disclaimant's relationship
+    // to the CLAIMANT, a fact the Claim Data Model doesn't carry —
+    // `disclaimant.relationship` means relationship to the depositor,
+    // a different fact).
     formId: "form_14",
-    fields: [
-      { id: "disclaiming_party_1", label: { en: "Nominee / legal heir disclaiming — name 1" }, claimDataField: "disclaimant.0.name" },
-      { id: "disclaiming_party_1_address", label: { en: "Name 1 — address" }, claimDataField: "disclaimant.0.address" },
-      { id: "disclaiming_party_2", label: { en: "Name 2" }, claimDataField: "disclaimant.1.name" },
-      { id: "disclaiming_party_2_address", label: { en: "Name 2 — address" }, claimDataField: "disclaimant.1.address" },
-      { id: "disclaiming_party_3", label: { en: "Name 3" }, claimDataField: "disclaimant.2.name" },
-      { id: "disclaiming_party_3_address", label: { en: "Name 3 — address" }, claimDataField: "disclaimant.2.address" },
-      { id: "depositor_name", label: { en: "In the matter of the deceased depositor" }, claimDataField: "depositor.name" },
-      { id: "account_number", label: { en: "Account / certificate number" }, claimDataField: "account.number" },
-      { id: "claimant_name", label: { en: "I/we relinquish my/our share in favour of (claimant's name)" }, claimDataField: "claimant.name" },
-      { id: "date_place", label: { en: "Date and place" }, manual: true },
-      { id: "notary_seal", label: { en: "Before (notary public / oath commissioner) — seal and signature" }, manual: true },
-    ],
+    fields: [],
+    body: {
+      formNumber: "FORM-14",
+      ruleCitation: "(See Rule 15 of Government Savings Promotion General Rules, 2018)",
+      heading: "Letter of disclaimer",
+      lines: FORM_14_LINES,
+      officeUseLines: [],
+    },
   },
   {
     formId: "form_15",

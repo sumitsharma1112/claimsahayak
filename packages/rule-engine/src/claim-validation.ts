@@ -49,6 +49,31 @@ export function validateClaimPackage(
       if (!layout) {
         continue;
       }
+      // Milestone 16 — a `body`-based form's blanks live inside its lines
+      // (claim lines + office-use/acquittance lines), not in `fields`
+      // (which stays `[]` once a form has a `body` — see claim-data.ts).
+      if (layout.body) {
+        const allLines = [...layout.body.lines, ...layout.body.officeUseLines];
+        for (const line of allLines) {
+          for (const segment of line.segments) {
+            if (segment.kind !== "blank" || !segment.claimDataField) {
+              continue;
+            }
+            const value = resolveFieldValue(claimData, account.accountIndex, segment.claimDataField);
+            if (value === undefined) {
+              issues.push({
+                accountIndex: account.accountIndex,
+                documentId: entry.form.id,
+                documentLabel: entry.form.name.en,
+                fieldId: segment.id,
+                fieldLabel: segment.id,
+                message: `A field on ${entry.form.name.en} is not filled in yet.`,
+              });
+            }
+          }
+        }
+        continue;
+      }
       for (const field of layout.fields) {
         if (field.manual || !field.claimDataField) {
           continue;

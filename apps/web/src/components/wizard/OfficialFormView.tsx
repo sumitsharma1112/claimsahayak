@@ -1,4 +1,4 @@
-import type { ClaimDataModel, FormDefinition, LocaleCode, OfficialFormLayout } from "@claimsahayak/shared-types";
+import type { ClaimDataModel, FormDefinition, FormLine, LocaleCode, LocalizedText, OfficialFormLayout } from "@claimsahayak/shared-types";
 import { formatInr } from "@claimsahayak/shared-utils";
 import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
@@ -13,28 +13,18 @@ import { OfficeUseFooter } from "./OfficeUseFooter";
  * Claim Data Model value when available, or a visible blank for the
  * claimant/officer to complete by hand.
  *
- * Milestone 11 revision — the original rendering (a plain label/value
- * list) was functionally correct but didn't visually read as an official
- * form, and dropped `FormDefinition`'s own execution metadata
- * (signatories/executedBefore/stampPaper/officialSourceUrl) entirely,
- * even though that data was always there. This version: (a) a bordered,
- * letterhead-style page instead of a plain card, (b) numbered fields in a
- * single-line label:value form, matching how the real forms are laid
- * out, with auto-filled values visually distinct (solid) from hand-fill
- * blanks (dotted, italic), and (c) a certification block surfacing who
- * signs, where it's executed, the stamp-paper requirement, copies
- * needed, and the official source link — all Rule-Book-sourced data that
- * already existed on `FormDefinition`, just never rendered.
- *
- * Milestone 13 — a boxed "For Office Use Only" footer, the way many real
- * government forms carry one: received-on / verified-by / forwarded-on.
- * Deliberately chrome, not data: there is no `ClaimDataField` for any of
- * these (each is a future act by office staff — receiving, verifying,
- * forwarding — not a fact the Wizard or Claim Data Model could ever
- * supply), so every line always prints blank. Present on Tier A official
- * forms only; Tier B office documents (forwarding letter, approval note,
- * office note) already end in their own office-authored signature/
- * verification blocks and don't need a second one.
+ * Milestone 16 — a form with a `body` (the real, verbatim SB Order
+ * 31/2020 specimen text — see official-forms.ts) renders as FLOWING
+ * PARAGRAPHS with inline blanks, numbered/lettered supporting-document
+ * clauses, signature lines, and its own real "For office use only"/
+ * Acquittance section — not a numbered label:value list. This is the
+ * fix for the earlier approximated rendering: the numbered-row layout
+ * below (`layout.fields`) is a UI-friendly paraphrase that never matched
+ * how an actual government form reads; the `body` branch is pixel-level
+ * text fidelity to the real document instead. Forms not yet checked
+ * against a real specimen keep rendering from `layout.fields` (see
+ * official-forms.ts's header comment for which is which) until they too
+ * get the same treatment.
  */
 export function OfficialFormView({
   form,
@@ -42,14 +32,97 @@ export function OfficialFormView({
   claimData,
   accountIndex,
   locale,
+  schemeName,
 }: {
   readonly form: FormDefinition;
   readonly layout: OfficialFormLayout;
   readonly claimData: ClaimDataModel;
   readonly accountIndex: number;
   readonly locale: LocaleCode;
+  /** Milestone 16 — Rule-Engine output (`AccountChecklist.schemeName`), needed only by a `body` blank marked `computed: "schemeName"`. Never duplicated into the Claim Data Model — read directly from the engine's own resolved account, same as competent authority/monetary limit elsewhere. */
+  readonly schemeName?: LocalizedText;
 }) {
   const t = getWizardDictionary(locale);
+
+  function resolveSegmentValue(segment: Extract<FormLine["segments"][number], { kind: "blank" }>): string | undefined {
+    if (segment.computed === "schemeName") {
+      return schemeName ? pickText(schemeName, locale) : undefined;
+    }
+    if (!segment.claimDataField) {
+      return undefined;
+    }
+    const resolved = resolveFieldValue(claimData, accountIndex, segment.claimDataField);
+    return resolved !== undefined ? formatClaimFieldValue(segment.claimDataField, resolved) : undefined;
+  }
+
+  function renderLine(line: FormLine, key: string) {
+    if (line.kind === "sectionHeading") {
+      return (
+        <p key={key} className="m-0 mt-s3 text-center font-display font-semibold uppercase tracking-wide text-ink">
+          {line.segments.map((s) => (s.kind === "text" ? s.text : "")).join("")}
+        </p>
+      );
+    }
+    if (line.kind === "note") {
+      return (
+        <p key={key} className="m-0 text-[15px] italic text-ink-soft">
+          {line.segments.map((s) => (s.kind === "text" ? s.text : "")).join("")}
+        </p>
+      );
+    }
+    if (line.kind === "signatureLine") {
+      return (
+        <p key={key} className="m-0 mt-s3 border-b border-dotted border-ink-soft/50 pb-s2 text-ink">
+          {line.segments.map((segment, i) =>
+            segment.kind === "text" ? (
+              <span key={i}>{segment.text}</span>
+            ) : (
+              <InlineBlank key={i} value={resolveSegmentValue(segment)} blankLabel={t.officialFormBlankFieldLabel} />
+            ),
+          )}
+        </p>
+      );
+    }
+    // 'paragraph' and 'listItem'
+    return (
+      <p key={key} className="m-0 leading-relaxed text-ink">
+        {line.kind === "listItem" ? <span className="mr-s2 font-semibold text-ink-soft">{line.marker}</span> : null}
+        {line.segments.map((segment, i) =>
+          segment.kind === "text" ? (
+            <span key={i}>{segment.text}</span>
+          ) : (
+            <InlineBlank key={i} value={resolveSegmentValue(segment)} blankLabel={t.officialFormBlankFieldLabel} />
+          ),
+        )}
+      </p>
+    );
+  }
+
+  if (layout.body) {
+    return (
+      <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
+        <div className="border-b-2 border-ink/20 pb-s3 text-center">
+          <p className="m-0 text-[16px] uppercase tracking-wide text-ink-soft">{t.officialFormEyebrow}</p>
+          <h3 className="m-0 mt-s1 font-display text-question font-semibold text-ink">{layout.body.formNumber}</h3>
+          <p className="m-0 mt-s1 text-[15px] text-ink-soft">{layout.body.ruleCitation}</p>
+          <p className="m-0 mt-s2 font-semibold text-ink">{layout.body.heading}</p>
+        </div>
+
+        <div className="mt-s4 flex flex-col gap-s2">
+          {layout.body.lines.map((line, i) => renderLine(line, `line-${String(i)}`))}
+        </div>
+
+        {layout.body.officeUseLines.length > 0 ? (
+          <div className="mt-s4 flex flex-col gap-s2 border-t-2 border-ink/20 pt-s3">
+            {layout.body.officeUseLines.map((line, i) => renderLine(line, `office-${String(i)}`))}
+          </div>
+        ) : (
+          <OfficeUseFooter locale={locale} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
       <div className="border-b-2 border-ink/20 pb-s3 text-center">
@@ -118,4 +191,12 @@ export function OfficialFormView({
       <OfficeUseFooter locale={locale} />
     </div>
   );
+}
+
+/** Milestone 16 — one inline blank within a flowing paragraph: the resolved (and formatted) value when known, visually distinct (solid) from a genuinely empty blank (an underline run — matching how the real, printed form shows unfilled space, not a phrase). */
+function InlineBlank({ value, blankLabel }: { readonly value: string | undefined; readonly blankLabel: string }) {
+  if (value) {
+    return <span className="font-semibold text-ink">{` ${value} `}</span>;
+  }
+  return <span className="inline-block min-w-[6em] border-b border-ink-soft/60 align-baseline" title={blankLabel}>{" "}</span>;
 }
