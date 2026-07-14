@@ -195,12 +195,16 @@ describe("Document Engine — auto-fill capability (computed, never authored)", 
       registry,
     );
     const recon = definition.accounts[0]?.documents.find((d) => d.registryId === "t_reconciliation");
-    // Milestone 13 wired this template fully; only scheme_type (no
-    // matching ClaimDataField exists) and the two witness signatures +
-    // date/place stay manual.
+    // Milestone 13 wired the application section fully; Milestone 16
+    // appended the real certificate text (3 more auto-fillable blanks:
+    // account number, name-in-records, name-on-death-certificate — the
+    // scheme-name blank is `computed`, not a claimDataField, so it counts
+    // as manual here same as before). scheme_type (no matching
+    // ClaimDataField), the two witness signatures, date/place, and the
+    // certificate's own date/place/signature/issuer fields stay manual.
     expect(recon?.autoFill.capability).toBe("partial");
-    expect(recon?.autoFill.autoFillableFields).toBe(10);
-    expect(recon?.autoFill.manualFields).toBe(4);
+    expect(recon?.autoFill.autoFillableFields).toBe(13);
+    expect(recon?.autoFill.manualFields).toBe(9);
     const sheet = definition.accounts[0]?.documents.find((d) => d.registryId === "t_always_sheet");
     expect(sheet?.autoFill.capability).toBe("not_applicable");
   });

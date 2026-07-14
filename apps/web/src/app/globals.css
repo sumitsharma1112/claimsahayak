@@ -175,3 +175,25 @@
 @page {
   margin: 20mm 18mm;
 }
+
+/*
+ * Fixes a real reported bug: every document inside the assembled Complete
+ * Claim File shares one `.cs-print-area`, so a per-document "Print"
+ * button (PrintableTemplate.tsx / OfficialFormView.tsx) that just called
+ * `window.print()` always printed the WHOLE file. `printSingleDocument`
+ * (apps/web/src/lib/printSingleDocument.ts) marks exactly one
+ * `.cs-print-page` as the print target before invoking print — this rule
+ * is what actually hides every OTHER page while that's active. Additive
+ * to the M8 pagination rule above, not a replacement for it (printing the
+ * whole file, unmarked, is completely unaffected).
+ */
+@media print {
+  body.cs-print-isolate .cs-print-page {
+    display: none !important;
+  }
+  body.cs-print-isolate .cs-print-page.cs-print-isolate-target {
+    display: block !important;
+    break-before: auto !important;
+    page-break-before: auto !important;
+  }
+}

@@ -94,6 +94,27 @@ export function validateClaimPackage(
 
     for (const template of officeDocumentTemplates) {
       for (const field of template.fields) {
+        // Milestone 16 — a `richParagraph` field carries its blanks in
+        // `segments`, not a top-level `claimDataField`.
+        if (field.kind === "richParagraph") {
+          for (const segment of field.segments ?? []) {
+            if (segment.kind !== "blank" || !segment.claimDataField) {
+              continue;
+            }
+            const value = resolveFieldValue(claimData, account.accountIndex, segment.claimDataField);
+            if (value === undefined) {
+              issues.push({
+                accountIndex: account.accountIndex,
+                documentId: template.id,
+                documentLabel: template.title.en,
+                fieldId: segment.id,
+                fieldLabel: segment.id,
+                message: `A field on ${template.title.en} is not filled in yet.`,
+              });
+            }
+          }
+          continue;
+        }
         if (!field.claimDataField) {
           continue;
         }

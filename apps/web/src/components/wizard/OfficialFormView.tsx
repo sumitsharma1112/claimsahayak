@@ -1,10 +1,15 @@
+"use client";
+
+import { useRef } from "react";
 import type { ClaimDataModel, FormDefinition, FormLine, LocaleCode, LocalizedText, OfficialFormLayout } from "@claimsahayak/shared-types";
 import { formatInr } from "@claimsahayak/shared-utils";
 import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 import { formatClaimFieldValue } from "@/lib/formatClaimFieldValue";
+import { printSingleDocument } from "@/lib/printSingleDocument";
 import { OfficeUseFooter } from "./OfficeUseFooter";
+import { InlineBlank } from "./InlineBlank";
 
 /**
  * Milestone 7 Part 4/6, Tier A of the document-fidelity model: renders one
@@ -43,6 +48,20 @@ export function OfficialFormView({
   readonly schemeName?: LocalizedText;
 }) {
   const t = getWizardDictionary(locale);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const printButton = (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="cs-btn-secondary mb-s3"
+      onClick={() => {
+        printSingleDocument(buttonRef.current);
+      }}
+    >
+      {t.printLetterLabel}
+    </button>
+  );
 
   function resolveSegmentValue(segment: Extract<FormLine["segments"][number], { kind: "blank" }>): string | undefined {
     if (segment.computed === "schemeName") {
@@ -100,7 +119,9 @@ export function OfficialFormView({
 
   if (layout.body) {
     return (
-      <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
+      <div>
+        {printButton}
+        <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
         <div className="border-b-2 border-ink/20 pb-s3 text-center">
           <p className="m-0 text-[16px] uppercase tracking-wide text-ink-soft">{t.officialFormEyebrow}</p>
           <h3 className="m-0 mt-s1 font-display text-question font-semibold text-ink">{layout.body.formNumber}</h3>
@@ -119,12 +140,15 @@ export function OfficialFormView({
         ) : (
           <OfficeUseFooter locale={locale} />
         )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
+    <div>
+      {printButton}
+      <div className="rounded-control border-2 border-ink/30 bg-paper p-s4">
       <div className="border-b-2 border-ink/20 pb-s3 text-center">
         <p className="m-0 text-[16px] uppercase tracking-wide text-ink-soft">{t.officialFormEyebrow}</p>
         <h3 className="m-0 mt-s1 font-display text-question font-semibold text-ink">{pickText(form.name, locale)}</h3>
@@ -189,14 +213,7 @@ export function OfficialFormView({
       ) : null}
 
       <OfficeUseFooter locale={locale} />
+      </div>
     </div>
   );
-}
-
-/** Milestone 16 — one inline blank within a flowing paragraph: the resolved (and formatted) value when known, visually distinct (solid) from a genuinely empty blank (an underline run — matching how the real, printed form shows unfilled space, not a phrase). */
-function InlineBlank({ value, blankLabel }: { readonly value: string | undefined; readonly blankLabel: string }) {
-  if (value) {
-    return <span className="font-semibold text-ink">{` ${value} `}</span>;
-  }
-  return <span className="inline-block min-w-[6em] border-b border-ink-soft/60 align-baseline" title={blankLabel}>{" "}</span>;
 }

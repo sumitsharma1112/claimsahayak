@@ -95,6 +95,46 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
       { id: "witness_2_address", kind: "blankLine", label: { en: "Witness 2 — address" }, claimDataField: "witness.1.address" },
       { id: "witness_2_signature", kind: "blankLine", label: { en: "Witness 2 — signature" } },
       { id: "date_place", kind: "blankLine", label: { en: "Date and place" } },
+      {
+        // Milestone 16 — the ACTUAL certificate text (SB Order 31/2020's
+        // own "Reconciliation certificate in case of a difference in name
+        // of deceased depositor/investor" specimen), appended after the
+        // claimant's own application above rather than replacing it — the
+        // real process is genuinely two documents (an informal manuscript
+        // application, then this fixed-format certificate the Divisional/
+        // GPO/Gazetted authority issues and signs). The account/scheme
+        // clause ("of Account/Certificate No. ___ under ___") follows the
+        // exact phrasing convention Form 11 itself uses for the identical
+        // fact, since the specimen's own text has a scan gap there.
+        id: "certificate_divider",
+        kind: "staticText",
+        label: { en: "Reconciliation Certificate" },
+        text: { en: "Reconciliation Certificate (official format — for the issuing authority to complete and sign)" },
+      },
+      {
+        id: "certificate_text",
+        kind: "richParagraph",
+        label: { en: "Certificate text" },
+        segments: [
+          { kind: "text", text: "Certified that the real name of the deceased depositor/investor of Account/Certificate No. " },
+          { kind: "blank", id: "certificate_account_no", claimDataField: "account.number" },
+          { kind: "text", text: " under " },
+          { kind: "blank", id: "certificate_scheme_name", computed: "schemeName" },
+          { kind: "text", text: " (Name of scheme) is " },
+          { kind: "blank", id: "certificate_name_in_records", claimDataField: "depositor.name" },
+          { kind: "text", text: ". He/she also used to be called by " },
+          { kind: "blank", id: "certificate_name_on_death_cert", claimDataField: "nameDifference.depositorNameOnDeathCertificate" },
+          {
+            kind: "text",
+            text: " (name as per the Death Certificate). The name mentioned in the Post Office's records and in the Death Certificate is that of one and the same person, viz., the deceased depositor/investor.",
+          },
+        ],
+      },
+      { id: "certificate_date_place", kind: "blankLine", label: { en: "Date / Place" } },
+      { id: "certificate_signature", kind: "blankLine", label: { en: "Signature" } },
+      { id: "certificate_issuer_name", kind: "blankLine", label: { en: "Name (in block letters)" } },
+      { id: "certificate_issuer_designation", kind: "blankLine", label: { en: "Designation" } },
+      { id: "certificate_stamp_note", kind: "staticText", label: { en: "Note" }, text: { en: "(Office seal / stamp)" } },
     ],
   },
   {
@@ -145,6 +185,46 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
       { id: "witness_2_address", kind: "blankLine", label: { en: "Witness 2 — address" }, claimDataField: "witness.1.address" },
       { id: "witness_2_signature", kind: "blankLine", label: { en: "Witness 2 — signature" } },
       { id: "date_place", kind: "blankLine", label: { en: "Date and place" } },
+      {
+        // Milestone 16 — the same real certificate specimen as the
+        // depositor version, adapted to the claimant/nominee name-
+        // difference case: SB Order 31/2020's §15 only spells out the
+        // depositor scenario verbatim, but the pack's own `forms-catalog.md`
+        // research (M10) already established that a claimant/nominee name
+        // difference goes through the identical Reconciliation Certificate
+        // mechanism — this reapplies the same certified-statement pattern
+        // to that already-established case, substituting "the claimant/
+        // nominee" for "the deceased depositor/investor"; it is not a
+        // separately-sourced specimen.
+        id: "certificate_divider",
+        kind: "staticText",
+        label: { en: "Reconciliation Certificate" },
+        text: { en: "Reconciliation Certificate (official format — for the issuing authority to complete and sign)" },
+      },
+      {
+        id: "certificate_text",
+        kind: "richParagraph",
+        label: { en: "Certificate text" },
+        segments: [
+          { kind: "text", text: "Certified that the real name of the claimant/nominee in respect of Account/Certificate No. " },
+          { kind: "blank", id: "certificate_account_no", claimDataField: "account.number" },
+          { kind: "text", text: " under " },
+          { kind: "blank", id: "certificate_scheme_name", computed: "schemeName" },
+          { kind: "text", text: " (Name of scheme) is " },
+          { kind: "blank", id: "certificate_name_in_records", claimDataField: "claimant.name" },
+          { kind: "text", text: ". He/she also used to be called by " },
+          { kind: "blank", id: "certificate_name_on_id", claimDataField: "nameDifference.claimantNameAsPerId" },
+          {
+            kind: "text",
+            text: " (name as per the claimant's ID). The name mentioned in the Post Office's records and in the claimant's ID is that of one and the same person.",
+          },
+        ],
+      },
+      { id: "certificate_date_place", kind: "blankLine", label: { en: "Date / Place" } },
+      { id: "certificate_signature", kind: "blankLine", label: { en: "Signature" } },
+      { id: "certificate_issuer_name", kind: "blankLine", label: { en: "Name (in block letters)" } },
+      { id: "certificate_issuer_designation", kind: "blankLine", label: { en: "Designation" } },
+      { id: "certificate_stamp_note", kind: "staticText", label: { en: "Note" }, text: { en: "(Office seal / stamp)" } },
     ],
   },
   {

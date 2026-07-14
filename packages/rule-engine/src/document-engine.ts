@@ -285,8 +285,7 @@ function templateFields(
   claimData: ClaimDataModel,
   accountIndex: number,
 ): readonly FillableField[] {
-  // Only blank lines are fillable; static text and checkbox rows are fixed content.
-  return template.fields
+  const blankLineFields = template.fields
     .filter((f) => f.kind === "blankLine")
     .map((f) => ({
       id: f.id,
@@ -296,6 +295,21 @@ function templateFields(
         f.claimDataField !== undefined &&
         resolveFieldValue(claimData, accountIndex, f.claimDataField) !== undefined,
     }));
+  // Milestone 16 — a `richParagraph` field's own inline blanks (its
+  // `segments`) are fillable the same way a `blankLine` is; static text
+  // and checkbox rows remain fixed content either way.
+  const richParagraphFields = template.fields
+    .filter((f) => f.kind === "richParagraph")
+    .flatMap((f) => f.segments ?? [])
+    .filter((s) => s.kind === "blank")
+    .map((s) => ({
+      id: s.id,
+      label: { en: s.id },
+      autoFillable: s.claimDataField !== undefined,
+      filled:
+        s.claimDataField !== undefined && resolveFieldValue(claimData, accountIndex, s.claimDataField) !== undefined,
+    }));
+  return [...blankLineFields, ...richParagraphFields];
 }
 
 function autoFillOf(fields: readonly FillableField[]): PackageDocumentAutoFill {

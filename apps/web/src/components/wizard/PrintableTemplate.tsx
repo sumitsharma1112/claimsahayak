@@ -1,9 +1,12 @@
-import type { ClaimDataModel, LocaleCode, TemplateDefinition } from "@claimsahayak/shared-types";
+import { useRef } from "react";
+import type { ClaimDataModel, FormSegment, LocaleCode, LocalizedText, TemplateDefinition } from "@claimsahayak/shared-types";
 import { resolveFieldValue } from "@claimsahayak/rule-engine";
 import { pickText } from "@/lib/locale";
 import { getWizardDictionary } from "@/i18n/wizard";
 import { formatClaimFieldValue } from "@/lib/formatClaimFieldValue";
+import { printSingleDocument } from "@/lib/printSingleDocument";
 import { OfficeUseFooter } from "./OfficeUseFooter";
+import { InlineBlank } from "./InlineBlank";
 
 /**
  * Renders one Rule Pack `TemplateDefinition` as a printable letter, and a
@@ -38,6 +41,7 @@ export function PrintableTemplate({
   claimData,
   accountIndex,
   showOfficeUseFooter = false,
+  schemeName,
 }: {
   readonly template: TemplateDefinition;
   readonly locale: LocaleCode;
@@ -49,15 +53,32 @@ export function PrintableTemplate({
    * Purely a rendering choice, set by the caller that already knows the
    * document's identity — not a document-selection decision. */
   readonly showOfficeUseFooter?: boolean;
+  /** Milestone 16 — needed only by a `richParagraph` field's blank marked `computed: "schemeName"` (see OfficialFormView for the same convention). */
+  readonly schemeName?: LocalizedText;
 }) {
   const t = getWizardDictionary(locale);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  let numberedRow = 0;
+
+  function resolveSegmentValue(segment: Extract<FormSegment, { kind: "blank" }>): string | undefined {
+    if (segment.computed === "schemeName") {
+      return schemeName ? pickText(schemeName, locale) : undefined;
+    }
+    if (!segment.claimDataField || !claimData) {
+      return undefined;
+    }
+    const resolved = resolveFieldValue(claimData, accountIndex ?? -1, segment.claimDataField);
+    return resolved !== undefined ? formatClaimFieldValue(segment.claimDataField, resolved) : undefined;
+  }
+
   return (
     <div>
       <button
+        ref={buttonRef}
         type="button"
         className="cs-btn-secondary"
         onClick={() => {
-          window.print();
+          printSingleDocument(buttonRef.current);
         }}
       >
         {t.printLetterLabel}
@@ -67,8 +88,30 @@ export function PrintableTemplate({
           <p className="m-0 text-[16px] uppercase tracking-wide text-ink-soft">{t.printableTemplateEyebrow}</p>
           <h3 className="m-0 mt-s1 font-display font-semibold text-ink">{pickText(template.title, locale)}</h3>
         </div>
-        <ol className="m-0 mt-s4 flex list-none flex-col gap-s2 pl-0">
-          {template.fields.map((field, i) => {
+        <div className="m-0 mt-s4 flex flex-col gap-s2">
+          {template.fields.map((field) => {
+            // Milestone 16 — a `richParagraph` is a flowing sentence with
+            // inline blanks (e.g. the reconciliation certificate's own
+            // wording), not a numbered label:value row.
+            if (field.kind === "richParagraph") {
+              return (
+                <p key={field.id} className="m-0 leading-relaxed text-ink">
+                  {(field.segments ?? []).map((segment, i) =>
+                    segment.kind === "text" ? (
+                      <span key={i}>{segment.text}</span>
+                    ) : (
+                      <InlineBlank
+                        key={i}
+                        value={resolveSegmentValue(segment)}
+                        blankLabel={t.officialFormBlankFieldLabel}
+                      />
+                    ),
+                  )}
+                </p>
+              );
+            }
+
+            numberedRow += 1;
             const resolved =
               claimData && field.kind === "blankLine" && field.claimDataField
                 ? resolveFieldValue(claimData, accountIndex ?? -1, field.claimDataField)
@@ -78,11 +121,11 @@ export function PrintableTemplate({
                 ? formatClaimFieldValue(field.claimDataField, resolved)
                 : resolved;
             return (
-              <li
+              <div
                 key={field.id}
                 className="flex flex-wrap items-baseline gap-x-s2 border-b border-dotted border-ink-soft/40 pb-s1"
               >
-                <span className="shrink-0 font-semibold text-ink-soft">{i + 1}.</span>
+                <span className="shrink-0 font-semibold text-ink-soft">{numberedRow}.</span>
                 <span className="shrink-0 text-ink-soft">{pickText(field.label, locale)}:</span>
                 {field.kind === "blankLine" ? (
                   <span className={`flex-1 ${value ? "font-semibold text-ink" : "italic text-ink-soft"}`}>
@@ -94,10 +137,10 @@ export function PrintableTemplate({
                     {field.text ? pickText(field.text, locale) : ""}
                   </span>
                 )}
-              </li>
+              </div>
             );
           })}
-        </ol>
+        </div>
         {showOfficeUseFooter ? <OfficeUseFooter locale={locale} /> : null}
       </div>
     </div>

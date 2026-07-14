@@ -355,6 +355,7 @@ function nodeForDocument(
           claimData={claimData}
           accountIndex={account.accountIndex}
           showOfficeUseFooter={showOfficeUseFooter}
+          schemeName={account.schemeName}
         />
       );
     }

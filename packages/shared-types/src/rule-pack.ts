@@ -1,7 +1,7 @@
 import type { Condition } from "./condition.js";
 import type { LocaleCode, LocalizedText, PortableTextBlock } from "./locale.js";
 import type { SchemeDefinition } from "./scheme.js";
-import type { ClaimDataField } from "./claim-data.js";
+import type { ClaimDataField, FormSegment } from "./claim-data.js";
 
 export type { SchemeDefinition } from "./scheme.js";
 
@@ -205,7 +205,7 @@ export interface TemplateDefinition {
 export interface TemplateField {
   readonly id: string;
   readonly label: LocalizedText;
-  readonly kind: 'staticText' | 'blankLine' | 'checkboxRow';
+  readonly kind: 'staticText' | 'blankLine' | 'checkboxRow' | 'richParagraph';
   readonly text?: LocalizedText;
   /**
    * Milestone 7 — when this `blankLine` field corresponds to a Claim Data
@@ -215,6 +215,16 @@ export interface TemplateField {
    * a blank line for the claimant to hand-fill.
    */
   readonly claimDataField?: ClaimDataField;
+  /**
+   * Milestone 16 — present only when `kind === 'richParagraph'`: a flowing
+   * sentence mixing verbatim static text and inline blanks (the same
+   * `FormSegment` shape `OfficialFormBody` uses for Tier A forms), for a
+   * ClaimSahayak-composed (Tier B) document whose real specimen wording is
+   * a paragraph with embedded blanks rather than a list of label:value
+   * rows — e.g. the reconciliation certificate's "Certified that the real
+   * name of ... is ___. He/she also used to be called by ___."
+   */
+  readonly segments?: readonly FormSegment[];
 }
 
 export interface ContentPage {
