@@ -47,7 +47,20 @@ describe("validateClaimPackage", () => {
     const account = routeAAccount(EMPTY_CLAIM_DATA);
     const issues = validateClaimPackage(RULE_PACK, [account], EMPTY_CLAIM_DATA, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
     expect(issues.some((i) => i.fieldId === "date_place")).toBe(false);
-    expect(issues.some((i) => i.fieldId === "amount_claimed")).toBe(false);
+    expect(issues.some((i) => i.fieldId === "signature")).toBe(false);
+  });
+
+  it("flags account.amountClaimed once it's wired (Milestone 13), and stops once entered", () => {
+    const account = routeAAccount(EMPTY_CLAIM_DATA);
+    const empty = validateClaimPackage(RULE_PACK, [account], EMPTY_CLAIM_DATA, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
+    expect(empty.some((i) => i.documentId === "form_11" && i.fieldId === "amount_claimed")).toBe(true);
+
+    const filled: ClaimDataModel = {
+      ...EMPTY_CLAIM_DATA,
+      accountDetails: { 0: { amountClaimed: "250000", nominationRegistrationNumber: "", nominationDate: "" } },
+    };
+    const withAmount = validateClaimPackage(RULE_PACK, [account], filled, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
+    expect(withAmount.some((i) => i.documentId === "form_11" && i.fieldId === "amount_claimed")).toBe(false);
   });
 
   it("returns no issues once every mandatory field across forms and office documents is filled", () => {
@@ -59,6 +72,15 @@ describe("validateClaimPackage", () => {
       witnesses: [{ name: "Witness One" }, { name: "Witness Two" }],
       accountNumbers: { 0: "SB-12345" },
       officeName: "Connaught Place HO",
+      officeDetails: {
+        address: "1 CP Block",
+        pin: "110001",
+        code: "DL01",
+        phone: "011-12345678",
+        headOfficeName: "New Delhi GPO",
+      },
+      preparer: { name: "K. Sharma", designation: "Sub Postmaster" },
+      accountDetails: { 0: { amountClaimed: "250000", nominationRegistrationNumber: "", nominationDate: "" } },
     };
     const issues = validateClaimPackage(RULE_PACK, [account], fullyFilled, OFFICIAL_FORM_LAYOUTS, OFFICE_DOCUMENT_TEMPLATES);
     expect(issues).toEqual([]);

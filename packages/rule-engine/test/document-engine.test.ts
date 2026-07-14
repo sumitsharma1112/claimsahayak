@@ -134,9 +134,10 @@ describe("Document Engine — auto-fill capability (computed, never authored)", 
     const definition = build();
     const form11 = definition.accounts[0]?.documents.find((d) => d.registryId === "t_form_11");
     expect(form11?.autoFill.capability).toBe("partial");
-    // form_11's layout: 8 claimDataField slots, 4 manual (to-line, amount, date/place, signature).
-    expect(form11?.autoFill.autoFillableFields).toBe(8);
-    expect(form11?.autoFill.manualFields).toBe(4);
+    // form_11's layout (Milestone 13): 9 claimDataField slots (incl. the
+    // newly-wired amount_claimed), 3 manual (to-line, date/place, signature).
+    expect(form11?.autoFill.autoFillableFields).toBe(9);
+    expect(form11?.autoFill.manualFields).toBe(3);
     expect(form11?.autoFill.filledFields).toBe(0); // empty model
   });
 
@@ -153,7 +154,7 @@ describe("Document Engine — auto-fill capability (computed, never authored)", 
     expect(form11?.autoFill.filledFields).toBe(4);
   });
 
-  it("computes a template with no claimDataField wiring as 'manual', and sheets as 'not_applicable'", () => {
+  it("computes a fully-wired template as 'partial' (its own signature/date lines still manual), and sheets as 'not_applicable'", () => {
     // Force-include the reconciliation template via an 'always' trigger so
     // its capability is observable on a plain nomination claim.
     const registry: readonly DocumentRegistryEntry[] = [
@@ -168,17 +169,22 @@ describe("Document Engine — auto-fill capability (computed, never authored)", 
       registry,
     );
     const recon = definition.accounts[0]?.documents.find((d) => d.registryId === "t_reconciliation");
-    expect(recon?.autoFill.capability).toBe("manual"); // authored fields carry no claimDataField yet
-    expect(recon?.autoFill.autoFillableFields).toBe(0);
+    // Milestone 13 wired this template fully; only scheme_type (no
+    // matching ClaimDataField exists) and the two witness signatures +
+    // date/place stay manual.
+    expect(recon?.autoFill.capability).toBe("partial");
+    expect(recon?.autoFill.autoFillableFields).toBe(10);
+    expect(recon?.autoFill.manualFields).toBe(4);
     const sheet = definition.accounts[0]?.documents.find((d) => d.registryId === "t_always_sheet");
     expect(sheet?.autoFill.capability).toBe("not_applicable");
   });
 
-  it("computes the forwarding letter as partial (its blank lines are part-wired since M7)", () => {
+  it("computes the forwarding letter as partial (its blank lines are part-wired since M7, extended in M13)", () => {
     const definition = build();
     const fwd = definition.accounts[0]?.documents.find((d) => d.registryId === "t_forwarding");
     expect(fwd?.autoFill.capability).toBe("partial");
-    expect(fwd?.autoFill.autoFillableFields).toBe(4); // office/depositor/account/claimant
+    // office/head-office/depositor/account/amount/claimant/preparer name+designation
+    expect(fwd?.autoFill.autoFillableFields).toBe(8);
     expect(fwd?.autoFill.manualFields).toBe(2); // date+place, signature
   });
 });

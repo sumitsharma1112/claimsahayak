@@ -23,6 +23,16 @@ import { getWizardDictionary } from "@/i18n/wizard";
  * signs, where it's executed, the stamp-paper requirement, copies
  * needed, and the official source link — all Rule-Book-sourced data that
  * already existed on `FormDefinition`, just never rendered.
+ *
+ * Milestone 13 — a boxed "For Office Use Only" footer, the way many real
+ * government forms carry one: received-on / verified-by / forwarded-on.
+ * Deliberately chrome, not data: there is no `ClaimDataField` for any of
+ * these (each is a future act by office staff — receiving, verifying,
+ * forwarding — not a fact the Wizard or Claim Data Model could ever
+ * supply), so every line always prints blank. Present on Tier A official
+ * forms only; Tier B office documents (forwarding letter, approval note,
+ * office note) already end in their own office-authored signature/
+ * verification blocks and don't need a second one.
  */
 export function OfficialFormView({
   form,
@@ -96,6 +106,23 @@ export function OfficialFormView({
           {t.officialFormSourceLabel}: {form.officialSourceUrl}
         </p>
       ) : null}
+
+      <div className="mt-s4 rounded-control border border-dashed border-ink-soft/40 p-s3">
+        <p className="m-0 text-[16px] font-semibold uppercase tracking-wide text-ink-soft">
+          {t.officialFormOfficeUseHeading}
+        </p>
+        <div className="mt-s2 grid grid-cols-1 gap-s2 text-[16px] desktop:grid-cols-3">
+          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
+            {t.officialFormOfficeUseReceivedOnLabel}
+          </p>
+          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
+            {t.officialFormOfficeUseVerifiedByLabel}
+          </p>
+          <p className="m-0 border-b border-dotted border-ink-soft/40 pb-s1 text-ink-soft">
+            {t.officialFormOfficeUseForwardedOnLabel}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

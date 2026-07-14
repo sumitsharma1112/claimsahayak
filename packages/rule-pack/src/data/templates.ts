@@ -46,6 +46,13 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
     ],
   },
   {
+    // Milestone 13 — fully wired to the Claim Data Model (M11). Previously
+    // this template carried zero claimDataField mappings at all — every
+    // field was a hand-fill blank even when the Wizard had already
+    // collected the exact same fact. The witness field is split into
+    // name/address/signature (matching template_witness_sheet's own
+    // pattern) so the name — the one part of it the model can supply —
+    // auto-fills instead of the whole compound line staying manual.
     id: "template_reconciliation_depositor",
     title: { en: "Apply for a reconciliation certificate — depositor's name" },
     handbookRef: "Annexure 7; §5.4-1; FAQ 12",
@@ -58,25 +65,42 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
           en: "A difference between the name of the DECEASED ACCOUNT HOLDER in the Post Office's records and the name on the death certificate.",
         },
       },
-      { id: "claimant_name", kind: "blankLine", label: { en: "Your name" } },
-      { id: "claimant_address", kind: "blankLine", label: { en: "Your address" } },
+      { id: "claimant_name", kind: "blankLine", label: { en: "Your name" }, claimDataField: "claimant.name" },
+      { id: "claimant_address", kind: "blankLine", label: { en: "Your address" }, claimDataField: "claimant.address" },
       { id: "scheme_type", kind: "blankLine", label: { en: "Type of account (e.g. Savings, RD, NSC, KVP)" } },
-      { id: "account_no", kind: "blankLine", label: { en: "Account or registration number" } },
-      { id: "post_office_name", kind: "blankLine", label: { en: "Name of Post Office" } },
-      { id: "name_in_records", kind: "blankLine", label: { en: "Name of the account holder as per Post Office records" } },
-      { id: "name_on_id", kind: "blankLine", label: { en: "Name of the account holder as per the death certificate / Aadhaar" } },
+      { id: "account_no", kind: "blankLine", label: { en: "Account or registration number" }, claimDataField: "account.number" },
+      { id: "post_office_name", kind: "blankLine", label: { en: "Name of Post Office" }, claimDataField: "office.name" },
+      {
+        id: "name_in_records",
+        kind: "blankLine",
+        label: { en: "Name of the account holder as per Post Office records" },
+        claimDataField: "depositor.name",
+      },
+      {
+        id: "name_on_id",
+        kind: "blankLine",
+        label: { en: "Name of the account holder as per the death certificate / Aadhaar" },
+        claimDataField: "nameDifference.depositorNameOnDeathCertificate",
+      },
       {
         id: "enclosures_note",
         kind: "staticText",
         label: { en: "Enclose" },
         text: { en: "Copies of the documents that show both versions of the name." },
       },
-      { id: "witness_1", kind: "blankLine", label: { en: "Witness 1 — name, address, signature" } },
-      { id: "witness_2", kind: "blankLine", label: { en: "Witness 2 — name, address, signature" } },
+      { id: "witness_1_name", kind: "blankLine", label: { en: "Witness 1 — name" }, claimDataField: "witness.0.name" },
+      { id: "witness_1_address", kind: "blankLine", label: { en: "Witness 1 — address" }, claimDataField: "witness.0.address" },
+      { id: "witness_1_signature", kind: "blankLine", label: { en: "Witness 1 — signature" } },
+      { id: "witness_2_name", kind: "blankLine", label: { en: "Witness 2 — name" }, claimDataField: "witness.1.name" },
+      { id: "witness_2_address", kind: "blankLine", label: { en: "Witness 2 — address" }, claimDataField: "witness.1.address" },
+      { id: "witness_2_signature", kind: "blankLine", label: { en: "Witness 2 — signature" } },
       { id: "date_place", kind: "blankLine", label: { en: "Date and place" } },
     ],
   },
   {
+    // Milestone 13 — same wiring pattern as the depositor version above;
+    // the two name-difference facts are the mirror image of each other
+    // (see NameDifferenceDetails, claim-data.ts).
     id: "template_reconciliation_claimant",
     title: { en: "Apply for a reconciliation certificate — your own name" },
     handbookRef: "Annexure 7; §5.4-2; FAQ 13",
@@ -89,13 +113,23 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
           en: "A difference between YOUR name (as nominee or claimant) in the Post Office's records and the name on your ID.",
         },
       },
-      { id: "claimant_name", kind: "blankLine", label: { en: "Your name" } },
-      { id: "claimant_address", kind: "blankLine", label: { en: "Your address" } },
+      { id: "claimant_name", kind: "blankLine", label: { en: "Your name" }, claimDataField: "claimant.name" },
+      { id: "claimant_address", kind: "blankLine", label: { en: "Your address" }, claimDataField: "claimant.address" },
       { id: "scheme_type", kind: "blankLine", label: { en: "Type of account (e.g. Savings, RD, NSC, KVP)" } },
-      { id: "account_no", kind: "blankLine", label: { en: "Account or registration number" } },
-      { id: "post_office_name", kind: "blankLine", label: { en: "Name of Post Office" } },
-      { id: "name_in_records", kind: "blankLine", label: { en: "Your name as per Post Office records (nomination/claimant)" } },
-      { id: "name_on_id", kind: "blankLine", label: { en: "Your name as per your ID (e.g. Aadhaar)" } },
+      { id: "account_no", kind: "blankLine", label: { en: "Account or registration number" }, claimDataField: "account.number" },
+      { id: "post_office_name", kind: "blankLine", label: { en: "Name of Post Office" }, claimDataField: "office.name" },
+      {
+        id: "name_in_records",
+        kind: "blankLine",
+        label: { en: "Your name as per Post Office records (nomination/claimant)" },
+        claimDataField: "claimant.name",
+      },
+      {
+        id: "name_on_id",
+        kind: "blankLine",
+        label: { en: "Your name as per your ID (e.g. Aadhaar)" },
+        claimDataField: "nameDifference.claimantNameAsPerId",
+      },
       {
         id: "alternate_note",
         kind: "staticText",
@@ -104,8 +138,12 @@ export const TEMPLATES: readonly TemplateDefinition[] = [
           en: "Instead of this application, you may also bring a reconciliation certificate from any Gazetted Officer in the prescribed format.",
         },
       },
-      { id: "witness_1", kind: "blankLine", label: { en: "Witness 1 — name, address, signature" } },
-      { id: "witness_2", kind: "blankLine", label: { en: "Witness 2 — name, address, signature" } },
+      { id: "witness_1_name", kind: "blankLine", label: { en: "Witness 1 — name" }, claimDataField: "witness.0.name" },
+      { id: "witness_1_address", kind: "blankLine", label: { en: "Witness 1 — address" }, claimDataField: "witness.0.address" },
+      { id: "witness_1_signature", kind: "blankLine", label: { en: "Witness 1 — signature" } },
+      { id: "witness_2_name", kind: "blankLine", label: { en: "Witness 2 — name" }, claimDataField: "witness.1.name" },
+      { id: "witness_2_address", kind: "blankLine", label: { en: "Witness 2 — address" }, claimDataField: "witness.1.address" },
+      { id: "witness_2_signature", kind: "blankLine", label: { en: "Witness 2 — signature" } },
       { id: "date_place", kind: "blankLine", label: { en: "Date and place" } },
     ],
   },

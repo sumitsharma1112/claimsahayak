@@ -117,6 +117,10 @@ export interface WizardDictionary {
   readonly officialFormMonthsLabel: string;
   readonly officialFormCopiesLabel: string;
   readonly officialFormSourceLabel: string;
+  readonly officialFormOfficeUseHeading: string;
+  readonly officialFormOfficeUseReceivedOnLabel: string;
+  readonly officialFormOfficeUseVerifiedByLabel: string;
+  readonly officialFormOfficeUseForwardedOnLabel: string;
   readonly claimPackageHeading: string;
   readonly claimPackageMissingInfoHeading: string;
   readonly claimPackageAutoFilledHeading: string;
@@ -265,6 +269,10 @@ const en: WizardDictionary = {
   officialFormMonthsLabel: "months",
   officialFormCopiesLabel: "Copies required",
   officialFormSourceLabel: "Official source",
+  officialFormOfficeUseHeading: "For office use only",
+  officialFormOfficeUseReceivedOnLabel: "Received on",
+  officialFormOfficeUseVerifiedByLabel: "Verified by (name and designation)",
+  officialFormOfficeUseForwardedOnLabel: "Forwarded on",
   claimPackageHeading: "Complete Claim Package",
   claimPackageMissingInfoHeading: "Still missing — you can fill these in by hand instead",
   claimPackageAutoFilledHeading: "Auto-filled forms and letters",
@@ -413,6 +421,10 @@ const hi: WizardDictionary = {
   officialFormMonthsLabel: "महीने",
   officialFormCopiesLabel: "आवश्यक प्रतियाँ",
   officialFormSourceLabel: "आधिकारिक स्रोत",
+  officialFormOfficeUseHeading: "केवल कार्यालय उपयोग हेतु",
+  officialFormOfficeUseReceivedOnLabel: "प्राप्ति दिनांक",
+  officialFormOfficeUseVerifiedByLabel: "सत्यापनकर्ता (नाम और पदनाम)",
+  officialFormOfficeUseForwardedOnLabel: "अग्रेषण दिनांक",
   claimPackageHeading: "पूरा क्लेम पैकेज",
   claimPackageMissingInfoHeading: "अभी भी शेष — इन्हें आप हाथ से भर सकते हैं",
   claimPackageAutoFilledHeading: "अपने आप भरे गए फ़ॉर्म और पत्र",

@@ -45,8 +45,28 @@ export const OFFICIAL_FORM_LAYOUTS: readonly OfficialFormLayout[] = [
       { id: "claimant_name", label: { en: "Name of claimant" }, claimDataField: "claimant.name" },
       { id: "claimant_relationship", label: { en: "Relationship to the depositor" }, claimDataField: "claimant.relationship" },
       { id: "claimant_address", label: { en: "Claimant's address" }, claimDataField: "claimant.address" },
-      { id: "amount_claimed", label: { en: "Amount claimed" }, manual: true },
-      { id: "witness_1_name", label: { en: "Witness 1 — name" }, claimDataField: "witness.0.name" },
+      {
+        // Milestone 13 — was manual until now; the Universal Claim Data
+        // Model (M11) gained a per-account amountClaimed field specifically
+        // so this could auto-fill instead of asking the claimant to write
+        // it twice (once in the Wizard, once by hand here).
+        id: "amount_claimed",
+        label: { en: "Amount claimed" },
+        claimDataField: "account.amountClaimed",
+      },
+      {
+        // Milestone 13 note: payment-routing fields (POSB / bank + IFSC)
+        // were considered here and deliberately NOT added. Only ONE of
+        // the three would ever be relevant per claim (per Q9's answer),
+        // and `validateClaimPackage` has no per-field conditionality — it
+        // would flag the two genuinely-inapplicable fields as "missing
+        // information" on every claim, a false-positive noise problem
+        // worse than staying manual. Revisit only alongside a conditional-
+        // field mechanism in OfficialFormLayout, not by forcing it in here.
+        id: "witness_1_name",
+        label: { en: "Witness 1 — name" },
+        claimDataField: "witness.0.name",
+      },
       { id: "witness_2_name", label: { en: "Witness 2 — name" }, claimDataField: "witness.1.name" },
       { id: "date_place", label: { en: "Date and place" }, manual: true },
       { id: "signature", label: { en: "Signature of claimant" }, manual: true },
@@ -73,11 +93,26 @@ export const OFFICIAL_FORM_LAYOUTS: readonly OfficialFormLayout[] = [
     ],
   },
   {
+    // Milestone 13 correctness fix — this layout previously wired the
+    // disclaiming party's name to legalHeir.N, which is wrong whenever
+    // Form 14 fires from the multiple-nominees/cannot-come-together
+    // context (T14, ROUTE_A): the people disclaiming are the deceased's
+    // NOMINEES who cannot attend, not legal heirs — a legal-heir claim
+    // (ROUTE_C) never reaches T14 at all. Wiring legalHeir.N here would
+    // have auto-filled the wrong array's names whenever this milestone's
+    // Scenario 4 (multiple nominees) fires. `disclaimant` (added to the
+    // Claim Data Model in M11 for exactly this reason) is the correct,
+    // context-neutral entity: "whoever is relinquishing in this
+    // claimant's favour," regardless of whether they're a nominee or an
+    // heir in some future context.
     formId: "form_14",
     fields: [
-      { id: "disclaiming_heir_1", label: { en: "Legal heir / nominee disclaiming — name 1" }, claimDataField: "legalHeir.0.name" },
-      { id: "disclaiming_heir_2", label: { en: "Name 2" }, claimDataField: "legalHeir.1.name" },
-      { id: "disclaiming_heir_3", label: { en: "Name 3" }, claimDataField: "legalHeir.2.name" },
+      { id: "disclaiming_party_1", label: { en: "Nominee / legal heir disclaiming — name 1" }, claimDataField: "disclaimant.0.name" },
+      { id: "disclaiming_party_1_address", label: { en: "Name 1 — address" }, claimDataField: "disclaimant.0.address" },
+      { id: "disclaiming_party_2", label: { en: "Name 2" }, claimDataField: "disclaimant.1.name" },
+      { id: "disclaiming_party_2_address", label: { en: "Name 2 — address" }, claimDataField: "disclaimant.1.address" },
+      { id: "disclaiming_party_3", label: { en: "Name 3" }, claimDataField: "disclaimant.2.name" },
+      { id: "disclaiming_party_3_address", label: { en: "Name 3 — address" }, claimDataField: "disclaimant.2.address" },
       { id: "depositor_name", label: { en: "In the matter of the deceased depositor" }, claimDataField: "depositor.name" },
       { id: "account_number", label: { en: "Account / certificate number" }, claimDataField: "account.number" },
       { id: "claimant_name", label: { en: "I/we relinquish my/our share in favour of (claimant's name)" }, claimDataField: "claimant.name" },
