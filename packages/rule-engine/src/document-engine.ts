@@ -10,13 +10,21 @@ import type {
 import { resolveFieldValue } from "./autofill.js";
 
 /**
- * Milestone 12 — the Document Engine. Decides WHICH printable documents
- * belong in a Claim File, producing a `ClaimPackageDefinition` — the
- * complete, ordered document list with per-document metadata (requirement,
- * trigger source, auto-fill capability, signature/witness fields,
- * supporting documents, print order).
+ * Milestone 12 — the Document Engine. Milestone 14 — the Complete Claim
+ * File Generator: documents are no longer just an ordered flat list, they
+ * belong to one of 12 named, fixed-order SECTIONS (`ClaimFileSection`)
+ * matching how an experienced Senior Postmaster actually assembles a
+ * physical claim file — Decision Summary, Rule References, Office
+ * Processing Notes, Customer Applications, Official India Post Forms,
+ * Declarations, Affidavits, Indemnity Bonds, Reconciliation Certificates,
+ * Verification Certificates, Supporting Documents Checklist, Missing
+ * Information Report, in that order. Cover page and table of contents are
+ * file-level chrome, outside this section list — the web layer renders
+ * them once, not per section.
  *
- * It contains NO business rules. It consumes exactly two inputs:
+ * Decides WHICH printable documents belong in a Claim File and in what
+ * order, producing a `ClaimPackageDefinition`. It contains NO business
+ * rules. It consumes exactly two inputs:
  *   1. Rule Engine output — the already-resolved `AccountChecklist`s
  *      (whose checklist items carry the `refId`s of every form/document/
  *      template the authored `OutputRule`s/overlays selected), and
@@ -31,20 +39,54 @@ import { resolveFieldValue } from "./autofill.js";
  * decided by its registry entry's `trigger`, a closed two-member union —
  * `always` (every payable account's file) or `engineSelected` (the Rule
  * Engine's own resolved checklist references the given refId). Adding a
- * future document to the Claim File means adding ONE registry entry; no
- * engine or component code changes.
+ * future document to the Claim File means adding ONE registry entry (with
+ * its section); no engine or component code changes.
  *
- * This module determines WHAT belongs. It does not render, populate, or
- * template anything — presentation stays in the existing M7/M8 renderers.
+ * Ordering is now derived entirely from data: a document's position is
+ * `(SECTION_ORDER.indexOf(section), original registry array index)` — no
+ * hand-maintained numeric `printOrder` to keep in sync (M12's design) and
+ * no possibility of two documents silently claiming the same order.
+ *
+ * "No duplicate data" (M14's own principle): the M8-era standalone
+ * Competent Authority Sheet and Monetary Limit Sheet are GONE — that
+ * information was always a restatement of what `ClaimDecisionSummary`
+ * already renders inline (competent authority, monetary limit, court-
+ * order-required, references, processing notes, next action, all in one
+ * place). Only the Rule References sheet remains standalone, because the
+ * approved 14-section Claim File structure calls for it explicitly as its
+ * own numbered section.
+ *
+ * This module determines WHAT belongs and in what order. It does not
+ * render, populate, or template anything — presentation stays in the
+ * existing M7/M8 renderers.
  */
 
-/** Engine-rendered pages (cover, index, decision/authority/limit/reference sheets, checklist, missing report) — chrome the web layer titles and renders itself. */
+/**
+ * The 12 named sections of a Complete Claim File, in filing order. Cover
+ * page and table of contents are rendered once by the web layer and are
+ * not part of this list — every other document belongs to exactly one of
+ * these.
+ */
+export const SECTION_ORDER = [
+  "decisionSummary",
+  "ruleReferences",
+  "officeProcessingNotes",
+  "customerApplications",
+  "officialForms",
+  "declarations",
+  "affidavits",
+  "indemnityBonds",
+  "reconciliationCertificates",
+  "verificationCertificates",
+  "supportingDocumentsChecklist",
+  "missingInformationReport",
+] as const;
+
+export type ClaimFileSection = (typeof SECTION_ORDER)[number];
+
+/** Engine-rendered pages (decision/rule-references sheets, checklist, missing report) — chrome the web layer titles and renders itself. */
 export type PackageSheetKind =
-  | "coverPage"
-  | "fileIndex"
   | "decisionSummary"
-  | "competentAuthoritySheet"
-  | "monetaryLimitSheet"
   | "ruleReferencesSheet"
   | "officeChecklist"
   | "missingDocumentReport";
@@ -76,8 +118,8 @@ export interface DocumentRegistryEntry {
   readonly scope: "account" | "file";
   readonly requirement: DocumentRequirement;
   readonly trigger: DocumentTrigger;
-  /** Physical filing position; the definition is sorted by this. */
-  readonly printOrder: number;
+  /** Which of the 12 named Claim File sections this document files under — see `SECTION_ORDER`. */
+  readonly section: ClaimFileSection;
   /** Ids of claimant-brought `DocumentDefinition`s that accompany this document. */
   readonly supportingDocumentIds?: readonly string[];
   /** Only for entries whose rule reference can't be resolved from the pack record itself. */
@@ -99,7 +141,7 @@ export interface PackageDocument {
   readonly registryId: string;
   readonly source: DocumentSource;
   readonly requirement: DocumentRequirement;
-  readonly printOrder: number;
+  readonly section: ClaimFileSection;
   /** Resolved from the pack record (form name / template title); absent for sheets (web chrome titles those). */
   readonly title?: LocalizedText;
   /** Resolved from `FormDefinition.purpose`; absent elsewhere. */
@@ -118,13 +160,13 @@ export interface PackageDocument {
 
 export interface AccountPackageDefinition {
   readonly accountIndex: number;
-  /** Sorted by printOrder. */
+  /** Sorted by section (per `SECTION_ORDER`), then by original registry order within a section. */
   readonly documents: readonly PackageDocument[];
 }
 
 /** The Complete Claim Package definition — WHAT belongs in the file, in order. */
 export interface ClaimPackageDefinition {
-  /** File-level documents (cover page, index, missing-document report), sorted by printOrder. */
+  /** File-level documents (the Missing Information Report today), sorted the same way as account documents. */
   readonly fileDocuments: readonly PackageDocument[];
   /** One entry per payable account, in the order given. */
   readonly accounts: readonly AccountPackageDefinition[];
@@ -244,7 +286,7 @@ function buildDocument(
     registryId: entry.id,
     source: entry.source,
     requirement: entry.requirement,
-    printOrder: entry.printOrder,
+    section: entry.section,
     supportingDocumentIds: entry.supportingDocumentIds ?? [],
   };
 
@@ -303,7 +345,18 @@ export function buildClaimPackageDefinition(
   registry: readonly DocumentRegistryEntry[],
 ): ClaimPackageDefinition {
   const layoutsById = new Map(officialFormLayouts.map((l) => [l.formId, l]));
-  const byOrder = (a: PackageDocument, b: PackageDocument) => a.printOrder - b.printOrder;
+  // Ordering is derived, never hand-maintained: primarily by each
+  // document's section position in SECTION_ORDER, then by the entry's own
+  // position in the registry array — a stable tiebreak with no numeric
+  // field to keep in sync as the registry grows.
+  const registryIndexById = new Map(registry.map((e, i) => [e.id, i]));
+  const byOrder = (a: PackageDocument, b: PackageDocument): number => {
+    const sectionDelta = SECTION_ORDER.indexOf(a.section) - SECTION_ORDER.indexOf(b.section);
+    if (sectionDelta !== 0) {
+      return sectionDelta;
+    }
+    return (registryIndexById.get(a.registryId) ?? 0) - (registryIndexById.get(b.registryId) ?? 0);
+  };
 
   // File-level triggers see the union of every account's selection, so a
   // file-scoped conditional document appears if ANY account needs it.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_CLAIM_DATA } from "@claimsahayak/shared-types";
 import { RULE_PACK, OFFICIAL_FORM_LAYOUTS } from "@claimsahayak/rule-pack";
-import { buildClaimPackageDefinition, evaluateAccount } from "@claimsahayak/rule-engine";
+import { buildClaimPackageDefinition, evaluateAccount, SECTION_ORDER } from "@claimsahayak/rule-engine";
 import { CLAIM_DOCUMENT_REGISTRY } from "@/lib/claimDocumentRegistry";
 
 /**
@@ -38,11 +38,14 @@ function accountRegistryIds(definition: ReturnType<typeof definitionFor>): reado
   return definition.accounts[0]?.documents.map((d) => d.registryId) ?? [];
 }
 
-/** Every document a plain payable nomination file always carries. */
+/**
+ * Every document a plain payable nomination file always carries.
+ * Milestone 14 dropped the standalone Competent Authority/Monetary Limit
+ * sheets (`reg_authority_sheet`/`reg_limit_sheet`) — that data is now only
+ * ever rendered once, inline in the Decision Summary ("no duplicate data").
+ */
 const ALWAYS_EXPECTED = [
   "reg_decision_summary",
-  "reg_authority_sheet",
-  "reg_limit_sheet",
   "reg_references_sheet",
   "reg_form_11",
   "reg_forwarding_letter",
@@ -62,12 +65,8 @@ describe("Scenario 1 — valid nomination, single nominee", () => {
     }
   });
 
-  it("contains the file chrome (cover, index, missing-document report)", () => {
-    expect(definition.fileDocuments.map((d) => d.registryId)).toEqual([
-      "reg_cover_page",
-      "reg_file_index",
-      "reg_missing_report",
-    ]);
+  it("contains only the file-level Missing Information Report (cover page and table of contents are file-level chrome, outside the registry — Milestone 14)", () => {
+    expect(definition.fileDocuments.map((d) => d.registryId)).toEqual(["reg_missing_report"]);
   });
 
   it("contains nothing this scenario does not need", () => {
@@ -85,9 +84,11 @@ describe("Scenario 1 — valid nomination, single nominee", () => {
     }
   });
 
-  it("orders the documents by physical filing position", () => {
-    const orders = definition.accounts[0]?.documents.map((d) => d.printOrder) ?? [];
-    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+  it("orders the documents by section, matching physical filing position (Decision Summary before Rule References before Office Processing Notes before Official Forms)", () => {
+    const sections = definition.accounts[0]?.documents.map((d) => d.section) ?? [];
+    const indexOf = (s: string) => SECTION_ORDER.indexOf(s as (typeof SECTION_ORDER)[number]);
+    const sectionIndices = sections.map(indexOf);
+    expect(sectionIndices).toEqual([...sectionIndices].sort((a, b) => a - b));
   });
 });
 
@@ -171,11 +172,15 @@ describe("Out-of-scope regression — minor nominee (M10 behavior preserved)", (
 });
 
 describe("Document Registry integrity", () => {
-  it("has globally unique registry ids and print orders", () => {
+  it("has globally unique registry ids", () => {
     const ids = CLAIM_DOCUMENT_REGISTRY.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    const orders = CLAIM_DOCUMENT_REGISTRY.map((e) => e.printOrder);
-    expect(new Set(orders).size).toBe(orders.length);
+  });
+
+  it("assigns every entry one of the 12 valid Claim File sections (Milestone 14)", () => {
+    for (const entry of CLAIM_DOCUMENT_REGISTRY) {
+      expect(SECTION_ORDER, entry.id).toContain(entry.section);
+    }
   });
 
   it("references only form/template ids that exist in the Rule Pack", () => {

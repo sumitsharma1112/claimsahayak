@@ -290,7 +290,7 @@ describe("Claim Package — no internal identifiers leak into visible text", () 
     // The Missing Document Report is now its own dedicated page (Milestone
     // 8); the same title also appears once in the Print Index, so match on
     // the section's own heading specifically, not just any matching text.
-    const missing = screen.getByRole("heading", { name: "Still missing — you can fill these in by hand instead" });
+    const missing = screen.getByRole("heading", { name: "Missing Information Report" });
     expect(missing).toBeTruthy();
     const missingList = missing.closest("div");
     expect(missingList ? within(missingList).getAllByRole("listitem").length : 0).toBeGreaterThan(0);
@@ -314,12 +314,15 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     await screen.findByRole("heading", { name: "Complete Claim Package" });
 
     expect(screen.getByRole("heading", { name: "Deceased Claim — Claim File" })).toBeTruthy();
-    const index = screen.getByRole("heading", { name: "Index" }).closest("div");
+    const index = screen.getByRole("heading", { name: "Table of Contents" }).closest("div");
     expect(index).toBeTruthy();
     const indexItems = index ? within(index).getAllByRole("listitem") : [];
     expect(indexItems.length).toBeGreaterThan(0);
     // The decision summary and Form 11 are always in the assembled file for
-    // a payable account — their titles must appear in the index too.
+    // a payable account — their titles must appear in the index too, each
+    // grouped under its own named section (Milestone 14).
+    expect(index ? within(index).getByText("Decision Summary") : null).toBeTruthy();
+    expect(index ? within(index).getByText("Official India Post Forms") : null).toBeTruthy();
     expect(indexItems.some((li) => li.textContent?.includes("Decision Summary"))).toBe(true);
     expect(indexItems.some((li) => li.textContent?.includes("Form 11"))).toBe(true);
   });
@@ -336,14 +339,16 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     await screen.findByRole("heading", { name: "Complete Claim Package" });
 
     const pages = container.querySelectorAll(".cs-print-page");
-    // Cover, index, decision summary, authority/limit/references sheets,
-    // Form 11, 4 office documents, office checklist, missing report — at
-    // least 10 distinct pages for a single-account ROUTE_A claim.
-    expect(pages.length).toBeGreaterThanOrEqual(10);
+    // Cover, table of contents, decision summary, rule references, Form 11,
+    // 4 office documents, witness sheet, supporting-documents checklist,
+    // missing-information report — at least 9 distinct pages for a
+    // single-account ROUTE_A claim (Milestone 14 dropped the standalone
+    // Competent Authority/Monetary Limit sheets — see the next test).
+    expect(pages.length).toBeGreaterThanOrEqual(9);
     expect(pages[0]?.textContent).toContain("Deceased Claim — Claim File");
   });
 
-  it("renders the Competent Authority, Monetary Limit, and Rule References as their own dedicated sheets", async () => {
+  it("consolidates competent authority and monetary limit into the Decision Summary, keeping Rule References as its own sheet (Milestone 14: no duplicate data)", async () => {
     const user = userEvent.setup();
     render(<Wizard rulePack={RULE_PACK} officialFormLayouts={OFFICIAL_FORM_LAYOUTS} />);
     await tickSchemeAndContinue(user);
@@ -354,8 +359,12 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     await user.click(await generatePackageButton());
     await screen.findByRole("heading", { name: "Complete Claim Package" });
 
-    expect(screen.getByRole("heading", { name: "Competent Authority Sheet" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Monetary Limit Sheet" })).toBeTruthy();
+    // The standalone M8-era sheets are gone.
+    expect(screen.queryByRole("heading", { name: "Competent Authority Sheet" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Monetary Limit Sheet" })).toBeNull();
+    // Their data still appears exactly once, inline in the Decision Summary.
+    expect(screen.getByText("Who approves this")).toBeTruthy();
+    expect(screen.getByText(/Monetary limit/)).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Rule References" })).toBeTruthy();
     // The citation also appears in the reused ClaimDecisionSummary block —
     // a dedicated Rule References sheet restating it is the intended,
@@ -485,7 +494,7 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     // template whenever the engine selected it — it renders as its own
     // page AND appears in the index (both derive from one definition).
     expect(screen.getByRole("heading", { name: "Apply for a reconciliation certificate — depositor's name" })).toBeTruthy();
-    const index = screen.getByRole("heading", { name: "Index" }).closest("div");
+    const index = screen.getByRole("heading", { name: "Table of Contents" }).closest("div");
     const indexItems = index ? within(index).getAllByRole("listitem") : [];
     expect(indexItems.some((li) => li.textContent?.includes("reconciliation certificate"))).toBe(true);
   });
@@ -502,6 +511,9 @@ describe("Claim File assembly — cover page, index, pagination (Milestone 8)", 
     await user.type(screen.getByLabelText("Claimant's name"), "Cover Page Claimant");
 
     const cover = screen.getByRole("heading", { name: "Deceased Claim — Claim File" }).closest("div");
-    expect(cover ? within(cover).getByText("Cover Page Claimant") : null).toBeTruthy();
+    // Milestone 14's cover page shows the name twice by design — once as
+    // "Claimant", once inside "Nominee(s)" (the claimant IS a nominee) —
+    // so this checks presence, not uniqueness.
+    expect(cover ? within(cover).getAllByText("Cover Page Claimant").length : 0).toBeGreaterThan(0);
   });
 });

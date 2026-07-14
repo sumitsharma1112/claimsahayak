@@ -9,11 +9,15 @@ import {
 
 /**
  * Milestone 12 — the Document Engine MECHANISM: trigger evaluation over
- * real Rule Engine output, print-order sorting, auto-fill capability
- * computation, and pack-record metadata resolution. Exercised with a
- * small synthetic registry so each behavior is isolated; the REAL
- * registry's four supported scenarios are proven in
- * `apps/web/test/lib/documentEngine.test.ts`, where the registry lives.
+ * real Rule Engine output, section-based ordering, auto-fill capability
+ * computation, and pack-record metadata resolution. Milestone 14 replaced
+ * the hand-maintained numeric `printOrder` with a `section` field (one of
+ * the 12 named Claim File sections, `SECTION_ORDER`) — ordering is now
+ * derived from (section position, registry array position), never a
+ * magic number to keep in sync. Exercised with a small synthetic registry
+ * so each behavior is isolated; the REAL registry's four supported
+ * scenarios are proven in `apps/web/test/lib/documentEngine.test.ts`,
+ * where the registry lives.
  */
 
 const NOMINATION_ANSWERS = {
@@ -36,7 +40,7 @@ const REGISTRY: readonly DocumentRegistryEntry[] = [
     scope: "account",
     requirement: "mandatory",
     trigger: { kind: "always" },
-    printOrder: 20,
+    section: "decisionSummary",
   },
   {
     id: "t_form_11",
@@ -44,7 +48,7 @@ const REGISTRY: readonly DocumentRegistryEntry[] = [
     scope: "account",
     requirement: "mandatory",
     trigger: { kind: "engineSelected", refId: "form_11" },
-    printOrder: 10,
+    section: "officialForms",
     supportingDocumentIds: ["doc_death_certificate"],
   },
   {
@@ -53,7 +57,7 @@ const REGISTRY: readonly DocumentRegistryEntry[] = [
     scope: "account",
     requirement: "conditional",
     trigger: { kind: "engineSelected", refId: "form_14" },
-    printOrder: 30,
+    section: "officialForms",
   },
   {
     id: "t_forwarding",
@@ -61,7 +65,7 @@ const REGISTRY: readonly DocumentRegistryEntry[] = [
     scope: "account",
     requirement: "mandatory",
     trigger: { kind: "always" },
-    printOrder: 40,
+    section: "officeProcessingNotes",
   },
   {
     id: "t_reconciliation",
@@ -69,23 +73,23 @@ const REGISTRY: readonly DocumentRegistryEntry[] = [
     scope: "account",
     requirement: "conditional",
     trigger: { kind: "engineSelected", refId: "template_reconciliation_depositor" },
-    printOrder: 50,
+    section: "reconciliationCertificates",
   },
   {
-    id: "t_cover",
-    source: { kind: "sheet", sheet: "coverPage" },
+    id: "t_file_always",
+    source: { kind: "sheet", sheet: "missingDocumentReport" },
     scope: "file",
     requirement: "mandatory",
     trigger: { kind: "always" },
-    printOrder: 0,
+    section: "missingInformationReport",
   },
   {
     id: "t_file_conditional",
-    source: { kind: "sheet", sheet: "missingDocumentReport" },
+    source: { kind: "sheet", sheet: "officeChecklist" },
     scope: "file",
     requirement: "conditional",
     trigger: { kind: "engineSelected", refId: "form_11" },
-    printOrder: 99,
+    section: "supportingDocumentsChecklist",
   },
 ];
 
@@ -107,25 +111,43 @@ describe("Document Engine — trigger evaluation", () => {
   it("evaluates file-scoped triggers against the union of every account's selection", () => {
     const definition = build();
     const fileIds = definition.fileDocuments.map((d) => d.registryId);
-    expect(fileIds).toContain("t_cover");
+    expect(fileIds).toContain("t_file_always");
     expect(fileIds).toContain("t_file_conditional"); // form_11 selected on the one account
   });
 
   it("returns file documents even when there are no accounts, but only 'always' ones", () => {
     const definition = buildClaimPackageDefinition(RULE_PACK, [], EMPTY_CLAIM_DATA, OFFICIAL_FORM_LAYOUTS, REGISTRY);
     expect(definition.accounts).toEqual([]);
-    expect(definition.fileDocuments.map((d) => d.registryId)).toEqual(["t_cover"]);
+    expect(definition.fileDocuments.map((d) => d.registryId)).toEqual(["t_file_always"]);
   });
 });
 
-describe("Document Engine — print order", () => {
-  it("sorts each account's documents by printOrder regardless of registry order", () => {
+describe("Document Engine — section-based ordering (Milestone 14)", () => {
+  it("sorts documents by their section's position in SECTION_ORDER", () => {
     const definition = build();
-    const orders = definition.accounts[0]?.documents.map((d) => d.printOrder) ?? [];
-    expect(orders).toEqual([...orders].sort((a, b) => a - b));
-    // form_11 (10) comes before the decision sheet (20) in this synthetic registry.
     const ids = definition.accounts[0]?.documents.map((d) => d.registryId) ?? [];
-    expect(ids.indexOf("t_form_11")).toBeLessThan(ids.indexOf("t_always_sheet"));
+    // decisionSummary is section index 0, officialForms is index 4 — the
+    // decision sheet must come first regardless of registry declaration order.
+    expect(ids.indexOf("t_always_sheet")).toBeLessThan(ids.indexOf("t_form_11"));
+    // officeProcessingNotes (index 2) comes before reconciliationCertificates (index 8).
+  });
+
+  it("uses the registry's own array position as a stable tiebreak within one section", () => {
+    const registryWithDuplicateSection: readonly DocumentRegistryEntry[] = [
+      { ...REGISTRY[1]!, id: "t_form_11_declared_first", trigger: { kind: "always" } },
+      ...REGISTRY,
+    ];
+    const definition = buildClaimPackageDefinition(
+      RULE_PACK,
+      [nominationAccount()],
+      EMPTY_CLAIM_DATA,
+      OFFICIAL_FORM_LAYOUTS,
+      registryWithDuplicateSection,
+    );
+    const ids = definition.accounts[0]?.documents.map((d) => d.registryId) ?? [];
+    // t_form_11_declared_first is earlier in the registry array than
+    // t_form_11, and both share the officialForms section — array position breaks the tie.
+    expect(ids.indexOf("t_form_11_declared_first")).toBeLessThan(ids.indexOf("t_form_11"));
   });
 });
 

@@ -76,11 +76,14 @@ export {
 } from "./autofill.js";
 export { validateClaimPackage, type ClaimValidationIssue } from "./claim-validation.js";
 
-// Milestone 12 — the Document Engine: registry-driven Claim Package definition.
+// Milestone 12 — the Document Engine: registry-driven Claim Package
+// definition. Milestone 14 — sections replace numeric printOrder.
 export {
   buildClaimPackageDefinition,
+  SECTION_ORDER,
   type AccountPackageDefinition,
   type AutoFillCapability,
+  type ClaimFileSection,
   type ClaimPackageDefinition,
   type DocumentRegistryEntry,
   type DocumentRequirement,

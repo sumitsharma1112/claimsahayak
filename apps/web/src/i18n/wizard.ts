@@ -1,4 +1,5 @@
 import { type CardKind, type CourtOrderRequired, type DecisionStatus, type LocaleCode } from "@claimsahayak/shared-types";
+import type { ClaimFileSection } from "@claimsahayak/rule-engine";
 
 /**
  * Wizard-SHELL strings only — UI chrome around the Rule-Pack-driven
@@ -131,14 +132,19 @@ export interface WizardDictionary {
   readonly claimFileCoverEyebrow: string;
   readonly claimFileCoverTitle: string;
   readonly claimFileCoverPreparedOnLabel: string;
+  readonly claimFileCoverAccountNumberLabel: string;
+  readonly claimFileCoverClaimTypeLabel: string;
+  readonly claimFileCoverDecisionLabel: string;
+  readonly claimFileCoverNomineesLabel: string;
+  readonly claimFileCoverPreparedByLabel: string;
   readonly claimFileIndexHeading: string;
   readonly claimFileDecisionSummaryTitle: string;
-  readonly claimFileAuthoritySheetHeading: string;
-  readonly claimFileLimitSheetHeading: string;
   readonly claimFileReferencesSheetHeading: string;
   readonly claimFileEscalatesToLabel: string;
   readonly claimFileApplicableRuleIdsLabel: string;
   readonly claimFileMissingReportNoneLabel: string;
+  /** Milestone 14 — the 12 named Claim File sections, in the fixed order `SECTION_ORDER` declares. */
+  readonly claimFileSectionLabels: Readonly<Record<ClaimFileSection, string>>;
 }
 
 const en: WizardDictionary = {
@@ -274,23 +280,40 @@ const en: WizardDictionary = {
   officialFormOfficeUseVerifiedByLabel: "Verified by (name and designation)",
   officialFormOfficeUseForwardedOnLabel: "Forwarded on",
   claimPackageHeading: "Complete Claim Package",
-  claimPackageMissingInfoHeading: "Still missing — you can fill these in by hand instead",
+  claimPackageMissingInfoHeading: "Missing Information Report",
   claimPackageAutoFilledHeading: "Auto-filled forms and letters",
-  claimPackageOfficeChecklistHeading: "Office checklist",
+  claimPackageOfficeChecklistHeading: "Supporting Documents Checklist",
   claimPackageOfficeChecklistItemColumn: "Item",
   claimPackageOfficeChecklistSectionColumn: "Category",
   claimPackageOfficeChecklistVerifiedByColumn: "Verified by",
   claimFileCoverEyebrow: "Complete Claim File",
   claimFileCoverTitle: "Deceased Claim — Claim File",
   claimFileCoverPreparedOnLabel: "Prepared on",
-  claimFileIndexHeading: "Index",
+  claimFileCoverAccountNumberLabel: "Account / certificate number",
+  claimFileCoverClaimTypeLabel: "Claim type",
+  claimFileCoverDecisionLabel: "Decision",
+  claimFileCoverNomineesLabel: "Nominee(s)",
+  claimFileCoverPreparedByLabel: "Prepared by",
+  claimFileIndexHeading: "Table of Contents",
   claimFileDecisionSummaryTitle: "Decision Summary",
-  claimFileAuthoritySheetHeading: "Competent Authority Sheet",
-  claimFileLimitSheetHeading: "Monetary Limit Sheet",
   claimFileReferencesSheetHeading: "Rule References",
   claimFileEscalatesToLabel: "escalates to",
   claimFileApplicableRuleIdsLabel: "Applicable rule IDs",
   claimFileMissingReportNoneLabel: "Nothing missing — every auto-fillable field has been entered.",
+  claimFileSectionLabels: {
+    decisionSummary: "Decision Summary",
+    ruleReferences: "Rule References",
+    officeProcessingNotes: "Office Processing Notes",
+    customerApplications: "Customer Applications",
+    officialForms: "Official India Post Forms",
+    declarations: "Declarations",
+    affidavits: "Affidavits",
+    indemnityBonds: "Indemnity Bonds",
+    reconciliationCertificates: "Reconciliation Certificates",
+    verificationCertificates: "Verification Certificates",
+    supportingDocumentsChecklist: "Supporting Documents Checklist",
+    missingInformationReport: "Missing Information Report",
+  },
 };
 
 const hi: WizardDictionary = {
@@ -426,23 +449,40 @@ const hi: WizardDictionary = {
   officialFormOfficeUseVerifiedByLabel: "सत्यापनकर्ता (नाम और पदनाम)",
   officialFormOfficeUseForwardedOnLabel: "अग्रेषण दिनांक",
   claimPackageHeading: "पूरा क्लेम पैकेज",
-  claimPackageMissingInfoHeading: "अभी भी शेष — इन्हें आप हाथ से भर सकते हैं",
+  claimPackageMissingInfoHeading: "अपूर्ण जानकारी रिपोर्ट",
   claimPackageAutoFilledHeading: "अपने आप भरे गए फ़ॉर्म और पत्र",
-  claimPackageOfficeChecklistHeading: "कार्यालय चेकलिस्ट",
+  claimPackageOfficeChecklistHeading: "सहायक दस्तावेज़ चेकलिस्ट",
   claimPackageOfficeChecklistItemColumn: "वस्तु",
   claimPackageOfficeChecklistSectionColumn: "श्रेणी",
   claimPackageOfficeChecklistVerifiedByColumn: "किसके द्वारा सत्यापित",
   claimFileCoverEyebrow: "पूरा क्लेम फ़ाइल",
   claimFileCoverTitle: "मृतक दावा — क्लेम फ़ाइल",
   claimFileCoverPreparedOnLabel: "तैयार करने की तारीख",
-  claimFileIndexHeading: "अनुक्रमणिका",
+  claimFileCoverAccountNumberLabel: "खाता / प्रमाणपत्र संख्या",
+  claimFileCoverClaimTypeLabel: "दावे का प्रकार",
+  claimFileCoverDecisionLabel: "निर्णय",
+  claimFileCoverNomineesLabel: "नामांकित व्यक्ति",
+  claimFileCoverPreparedByLabel: "तैयारकर्ता",
+  claimFileIndexHeading: "विषय-सूची",
   claimFileDecisionSummaryTitle: "निर्णय सारांश",
-  claimFileAuthoritySheetHeading: "सक्षम प्राधिकारी पत्रक",
-  claimFileLimitSheetHeading: "राशि सीमा पत्रक",
   claimFileReferencesSheetHeading: "नियम संदर्भ",
   claimFileEscalatesToLabel: "आगे भेजा जाता है",
   claimFileApplicableRuleIdsLabel: "लागू नियम आईडी",
   claimFileMissingReportNoneLabel: "कुछ भी शेष नहीं — हर स्वतः-भरने योग्य फ़ील्ड भर दी गई है।",
+  claimFileSectionLabels: {
+    decisionSummary: "निर्णय सारांश",
+    ruleReferences: "नियम संदर्भ",
+    officeProcessingNotes: "कार्यालय प्रक्रिया टिप्पणियाँ",
+    customerApplications: "ग्राहक आवेदन",
+    officialForms: "आधिकारिक डाकघर फ़ॉर्म",
+    declarations: "घोषणाएँ",
+    affidavits: "शपथ-पत्र",
+    indemnityBonds: "क्षतिपूर्ति बॉन्ड",
+    reconciliationCertificates: "सुलह प्रमाणपत्र",
+    verificationCertificates: "सत्यापन प्रमाणपत्र",
+    supportingDocumentsChecklist: "सहायक दस्तावेज़ चेकलिस्ट",
+    missingInformationReport: "अपूर्ण जानकारी रिपोर्ट",
+  },
 };
 
 const dictionaries: Record<LocaleCode, WizardDictionary> = { en, hi };
